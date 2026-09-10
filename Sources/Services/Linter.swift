@@ -52,7 +52,67 @@ enum Linter {
             issues.append(.init(severity: .info, message: "Archivo vacío."))
         }
 
+        // --- unknown top-level keys (typo / deprecated)
+        if let dict = tree as? [String: Any], let known = knownKeys(for: path) {
+            for k in dict.keys where !known.contains(k) {
+                issues.append(.init(severity: .info,
+                                    message: "Clave no reconocida: «\(k)» — ¿typo o key nueva del agente?"))
+            }
+        }
+
         return (issues, managed)
+    }
+
+    // MARK: - known top-level keys per file
+
+    private static func knownKeys(for path: String) -> Set<String>? {
+        let home = NSHomeDirectory()
+        switch path {
+        case "\(home)/.claude/settings.json":
+            return [
+                "$schema", "env", "attribution", "permissions", "model", "modelSettings",
+                "skillOverrides", "hooks", "statusLine", "enabledPlugins", "extraKnownMarketplaces",
+                "language", "alwaysThinkingEnabled", "effortLevel", "remote", "tui", "voice",
+                "voiceEnabled", "verbose", "apiKeyHelper", "cleanupPeriodDays",
+                "includeCoAuthoredBy", "autoUpdates", "theme", "editor", "teammateMode",
+                "autoMode", "skipDangerousModePermissionPrompt", "skipWorkflowUsageWarning",
+                "remoteControlAtStartup", "inputNeededNotifEnabled", "agentPushNotifEnabled",
+                "skipAutoPermissionPrompt", "feedbackSurveyState", "spinnerVerbs",
+                "terminalProgressBarEnabled", "respectGitignore", "outputStyle",
+                "forceLoginMethod", "disableAllHooks", "allowManagedHooksOnly",
+            ]
+        case "\(home)/.codex/config.toml":
+            return [
+                "model", "model_provider", "model_providers", "model_reasoning_effort",
+                "model_context_window", "model_auto_compact_token_limit",
+                "model_auto_compact_token_limit_scope", "review_model", "service_tier",
+                "approval_policy", "sandbox_mode", "approvals_reviewer", "personality",
+                "notify", "projects", "mcp_servers", "features", "plugins", "marketplaces",
+                "desktop", "shell_environment_policy", "tui", "hooks", "profiles", "profile",
+                "oss_provider", "openai_base_url", "chatgpt_base_url", "otel", "log_dir",
+                "tool_output_token_limit", "background_terminal_max_timeout",
+                "hide_agent_reasoning", "show_raw_agent_reasoning", "model_supports_reasoning_summaries",
+                "experimental_realtime_ws_base_url", "apps_mcp_product_sku", "agents",
+            ]
+        case "\(home)/.config/opencode/opencode.json":
+            return [
+                "$schema", "provider", "mcp", "agent", "model", "small_model", "theme",
+                "keybinds", "autoshare", "autoupdate", "disabled_providers", "plugin",
+                "snapshot", "share", "formatter", "lsp", "instructions", "layout",
+                "permission", "tools", "watcher", "compaction", "experimental",
+                "default_agent", "mode", "username",
+            ]
+        case "\(home)/.gemini/settings.json":
+            return [
+                "selectedAuthType", "theme", "ide", "security", "mcpServers",
+                "contextFileName", "bugCommand", "fileFiltering", "checkpointing",
+                "telemetry", "usageStatisticsEnabled", "hideTips", "hideBanner",
+                "maxSessionTurns", "enableOpenAILogging", "sampling", "customThemes",
+                "model", "preferredEditor", "coreTools", "excludeTools", "autoAccept",
+            ]
+        default:
+            return nil
+        }
     }
 
     // MARK: - managed markers

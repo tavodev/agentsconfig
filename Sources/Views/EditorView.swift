@@ -135,17 +135,29 @@ struct EditorView: View {
         switch tab {
         case .structured:
             StructuredView(path: path, doc: doc, format: format,
-                           readOnly: !(format == .json || format == .jsonc))
+                           readOnly: fileInfo(path)?.readOnly ?? false)
         case .source:
-            CodeEditor(
-                text: Binding(
-                    get: { store.text(for: path) },
-                    set: { store.updateEdit(path: path, text: $0) }
-                ),
-                format: format,
-                readOnly: fileInfo(path)?.readOnly ?? false,
-                refreshToken: doc.map { $0.hash.hashValue } ?? 0
-            )
+            if fileInfo(path)?.readOnly ?? false {
+                // read-only: show masked text — never editable
+                CodeEditor(
+                    text: .constant(Secrets.maskText(doc?.text ?? "", format: format)),
+                    format: format,
+                    readOnly: true,
+                    refreshToken: doc.map { $0.hash.hashValue } ?? 0,
+                    findToken: store.findRequest
+                )
+            } else {
+                CodeEditor(
+                    text: Binding(
+                        get: { store.text(for: path) },
+                        set: { store.updateEdit(path: path, text: $0) }
+                    ),
+                    format: format,
+                    readOnly: false,
+                    refreshToken: doc.map { $0.hash.hashValue } ?? 0,
+                    findToken: store.findRequest
+                )
+            }
         case .history:
             HistoryView(path: path)
         }

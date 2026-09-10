@@ -158,6 +158,19 @@ struct ExternalChange: Identifiable {
     var previousContent: String?     // kept in memory for revert
 }
 
+/// One entry in the cross-agent activity feed.
+struct ActivityEvent: Identifiable, Hashable {
+    var id = UUID()
+    var date: Date
+    var path: String
+    var agentID: String?
+    var agentName: String
+    var origin: FileVersion.Origin
+    var summary: String
+    var changeCount: Int
+    var changes: [SemanticChange] = []   // populated for in-session events
+}
+
 // MARK: - Live document
 
 struct ConfigDocument {

@@ -105,4 +105,41 @@ enum Parsers {
         if !s.hasSuffix("\n") { s += "\n" }
         return s
     }
+
+    /// Serialize a Foundation tree back to TOML text via TOMLKit.
+    /// Note: normalizes formatting and drops comments — Codex rewrites this
+    /// file itself, so that's acceptable.
+    static func serializeTOML(_ obj: Any) -> String? {
+        guard let dict = obj as? [String: Any] else { return nil }
+        let table = TOMLTable()
+        for (k, v) in dict { table[k] = toTOMLValue(v) }
+        var s = table.convert(to: .toml)
+        if !s.hasSuffix("\n") { s += "\n" }
+        return s
+    }
+
+    static func toTOMLValue(_ v: Any) -> TOMLValueConvertible? {
+        switch v {
+        case is NSNull:
+            return nil
+        case let n as NSNumber:
+            if CFGetTypeID(n) == CFBooleanGetTypeID() { return n.boolValue }
+            if n.doubleValue == n.doubleValue.rounded() && abs(n.doubleValue) < 9e15 {
+                return n.intValue
+            }
+            return n.doubleValue
+        case let s as String:
+            return s
+        case let d as [String: Any]:
+            let t = TOMLTable()
+            for (k, val) in d { t[k] = toTOMLValue(val) }
+            return t
+        case let a as [Any]:
+            let arr = TOMLArray()
+            for e in a { if let tv = toTOMLValue(e) { arr.append(tv) } }
+            return arr
+        default:
+            return String(describing: v)
+        }
+    }
 }

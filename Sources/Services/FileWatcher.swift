@@ -72,6 +72,6 @@ final class FileWatcher: @unchecked Sendable {
             DispatchQueue.main.async { handler(path) }
         }
         pending[path] = work
-        queue.asyncAfter(deadline: .now() + 0.35, execute: work)
+        queue.asyncAfter(deadline: .now() + AppSettings.watchDebounce, execute: work)
     }
 }

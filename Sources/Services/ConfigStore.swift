@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AppKit
 
 @Observable
 @MainActor
@@ -19,6 +20,11 @@ final class ConfigStore {
     private(set) var saveErrors: [String: String] = [:]
     private(set) var lastEventAt: Date?
     private(set) var watchedCount = 0
+    private(set) var activity: [ActivityEvent] = []
+    var selectedEventID: UUID?
+    var findRequest = 0
+
+    static let activityID = "__activity__"
 
     // MARK: internals
     private let snapshots = SnapshotStore()
@@ -35,7 +41,39 @@ final class ConfigStore {
             Task { @MainActor in self?.handleWatchEvent(path) }
         }
         for def in AgentRegistry.definitions { definitions[def.id] = def }
+        Notifier.shared.configure()
+        Notifier.shared.onSelect = { [weak self] path in self?.openFile(path) }
         refresh()
+        seedActivity()
+    }
+
+    /// Seed the activity feed from persisted snapshot indexes (recent history).
+    private func seedActivity() {
+        var events: [ActivityEvent] = []
+        for agent in agents {
+            for f in agent.files where !f.volatile {
+                for v in snapshots.loadHistory(for: f.path).prefix(15) {
+                    events.append(ActivityEvent(
+                        date: v.date, path: f.path, agentID: agent.id,
+                        agentName: agent.name, origin: v.origin,
+                        summary: v.summary, changeCount: v.changeCount
+                    ))
+                }
+            }
+        }
+        activity = events.sorted { $0.date > $1.date }.prefix(300).map { $0 }
+    }
+
+    private func logActivity(path: String, origin: FileVersion.Origin,
+                             changes: [SemanticChange]) {
+        let agentID = fileOwners[path]
+        let name = agents.first { $0.id == agentID }?.name ?? "?"
+        activity.insert(ActivityEvent(
+            date: Date(), path: path, agentID: agentID, agentName: name,
+            origin: origin, summary: DiffEngine.summary(changes),
+            changeCount: changes.count, changes: changes
+        ), at: 0)
+        if activity.count > 300 { activity.removeLast(activity.count - 300) }
     }
 
     // MARK: - scanning
@@ -135,7 +173,12 @@ final class ConfigStore {
             return nil
         }
         let format = format(for: path)
-        let parsed = Parsers.parse(text, format: format)
+        // Same throttle as handleFileChanged: skip parsing huge volatile files
+        // unless the user is actually looking at them.
+        let heavyVolatile = (trackedFile(for: path)?.volatile ?? false)
+            && text.utf8.count > 300_000 && path != selectedPath
+        let parsed = heavyVolatile ? (tree: Any?.none, error: String?.none)
+                                   : Parsers.parse(text, format: format)
         let doc = ConfigDocument(
             text: text, tree: parsed.tree, parseError: parsed.error,
             loadedAt: Date(), hash: SnapshotStore.sha256(text)
@@ -217,14 +260,16 @@ final class ConfigStore {
         saveErrors.removeValue(forKey: path)
 
         // snapshot current disk version before overwriting
+        var changeList: [SemanticChange] = []
         if let current = documents[path]?.text, current != text {
             let prevTree = documents[path]?.tree
-            let ch = DiffEngine.diff(oldText: current, newText: text,
-                                     oldTree: prevTree, newTree: parsed.tree)
+            changeList = DiffEngine.diff(oldText: current, newText: text,
+                                         oldTree: prevTree, newTree: parsed.tree)
             if !tf.volatile {
-                snapshots.record(path: path, content: current, origin: .app, changes: ch)
+                snapshots.record(path: path, content: current, origin: .app, changes: changeList)
             }
         }
+        logSave(path: path, changes: changeList)
 
         do {
             try writeAtomic(text, to: path)
@@ -302,17 +347,24 @@ final class ConfigStore {
 
         // diff vs what we had
         let format = format(for: path)
-        let newParsed = Parsers.parse(newText, format: format)
         let oldDoc = documents[path]
+        let tf = trackedFile(for: path)
+
+        // Throttle: for big volatile files, only compute a tree diff while the
+        // user is looking at the file; otherwise record a lightweight marker.
+        let heavyVolatile = (tf?.volatile ?? false) && newText.utf8.count > 300_000
+            && path != selectedPath
+
+        let newParsed = heavyVolatile ? (tree: Any?.none, error: String?.none)
+                                      : Parsers.parse(newText, format: format)
         let changes: [SemanticChange]
-        if let oldDoc {
+        if let oldDoc, !heavyVolatile {
             changes = DiffEngine.diff(oldText: oldDoc.text, newText: newText,
                                       oldTree: oldDoc.tree, newTree: newParsed.tree)
         } else {
             changes = []
         }
 
-        let tf = trackedFile(for: path)
         if !(tf?.volatile ?? false) {
             if let v = snapshots.record(path: path, content: newText,
                                         origin: .external, changes: changes) {
@@ -322,13 +374,17 @@ final class ConfigStore {
             }
         }
 
-        if !changes.isEmpty || oldDoc == nil {
-            externalChanges[path] = ExternalChange(changes: changes, previousContent: oldText)
-        } else {
-            externalChanges[path] = ExternalChange(changes: [], previousContent: oldText)
-        }
+        logActivity(path: path, origin: .external, changes: changes)
+
+        externalChanges[path] = ExternalChange(changes: changes, previousContent: oldText)
 
         reload(path, origin: nil)
+
+        if !(tf?.volatile ?? false), !changes.isEmpty {
+            let agentName = agents.first { $0.id == fileOwners[path] }?.name ?? "Agente"
+            Notifier.shared.postChange(path: path, agentName: agentName,
+                                       summary: DiffEngine.summary(changes))
+        }
 
         // dirty buffer → conflict (don't clobber user's typing)
         if dirtyPaths.contains(path) {
@@ -412,5 +468,50 @@ final class ConfigStore {
 
     func versionContent(path: String, version: FileVersion) -> String? {
         snapshots.content(for: path, version: version)
+    }
+
+    // MARK: - file actions (context menus, notifications)
+
+    /// Navigate to a file: selects its agent + file in the UI.
+    func openFile(_ path: String) {
+        if let agentID = fileOwners[path] ?? agentID(forPath: path) {
+            selectedAgentID = agentID
+            selectedPath = path
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
+
+    private func agentID(forPath path: String) -> String? {
+        for agent in agents where agent.files.contains(where: { $0.path == path }) {
+            return agent.id
+        }
+        return nil
+    }
+
+    func revealInFinder(_ path: String) {
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+    }
+
+    func openInDefaultApp(_ path: String) {
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+
+    func copyPath(_ path: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+    }
+
+    /// Restore the most recent snapshot that differs from the current content.
+    func restorePrevious(_ path: String) {
+        let currentHash = documents[path]?.hash
+        guard let target = history(for: path).first(where: { $0.hash != currentHash }) else { return }
+        restoreVersion(path: path, version: target)
+    }
+
+    func requestFind() { findRequest += 1 }
+
+    /// Log an app-originated save into the activity feed.
+    private func logSave(path: String, changes: [SemanticChange]) {
+        logActivity(path: path, origin: .app, changes: changes)
     }
 }

@@ -8,6 +8,7 @@ struct CodeEditor: NSViewRepresentable {
     var format: ConfigFormat
     var readOnly: Bool = false
     var refreshToken: Int = 0   // bump to force reload after external writes
+    var findToken: Int = 0      // bump to open the find bar (⌘F)
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -40,6 +41,8 @@ struct CodeEditor: NSViewRepresentable {
         tv.isAutomaticSpellingCorrectionEnabled = false
         tv.smartInsertDeleteEnabled = false
         tv.textContainerInset = NSSize(width: 6, height: 8)
+        tv.usesFindBar = true
+        tv.isIncrementalSearchingEnabled = true
         tv.delegate = context.coordinator
         tv.autoresizingMask = [.width]
         tv.isVerticallyResizable = true
@@ -76,6 +79,15 @@ struct CodeEditor: NSViewRepresentable {
                 Highlighter.apply(to: tv.textStorage!, format: format)
             }
         }
+        if context.coordinator.lastFindToken != findToken {
+            context.coordinator.lastFindToken = findToken
+            if findToken > 0 {
+                let sender = NSButton()
+                sender.tag = Int(NSFindPanelAction.showFindPanel.rawValue)
+                tv.performFindPanelAction(sender)
+                tv.window?.makeFirstResponder(tv)
+            }
+        }
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {
@@ -84,6 +96,7 @@ struct CodeEditor: NSViewRepresentable {
         weak var ruler: LineNumberRulerView?
         var isEditing = false
         var lastToken = 0
+        var lastFindToken = 0
         private var highlightWork: DispatchWorkItem?
 
         init(_ parent: CodeEditor) { self.parent = parent }

@@ -78,7 +78,7 @@ struct SnapshotStore {
             changeCount: changes.count, summary: DiffEngine.summary(changes)
         )
         entries.append(entry)
-        if entries.count > 200 {   // ring buffer: drop oldest + their files
+        while entries.count > AppSettings.historyLimit {   // ring buffer
             let drop = entries.removeFirst()
             try? FileManager.default.removeItem(at: dir.appendingPathComponent(drop.file))
         }

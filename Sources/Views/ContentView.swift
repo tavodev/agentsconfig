@@ -9,10 +9,20 @@ struct ContentView: View {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 210, ideal: 235, max: 280)
         } content: {
-            FileListView()
-                .navigationSplitViewColumnWidth(min: 250, ideal: 290, max: 380)
+            Group {
+                if store.selectedAgentID == ConfigStore.activityID {
+                    ActivityFeedView()
+                } else {
+                    FileListView()
+                }
+            }
+            .navigationSplitViewColumnWidth(min: 250, ideal: 290, max: 380)
         } detail: {
-            EditorView()
+            if store.selectedAgentID == ConfigStore.activityID {
+                ActivityDetailView()
+            } else {
+                EditorView()
+            }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -33,6 +43,33 @@ struct SidebarView: View {
     var body: some View {
         @Bindable var store = store
         List(selection: $store.selectedAgentID) {
+            Section {
+                HStack(spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .fill(Color.accentColor.gradient)
+                            .frame(width: 28, height: 28)
+                        Image(systemName: "bolt.horizontal.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Actividad")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("feed de cambios")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if !store.activity.isEmpty {
+                        Text("\(store.activity.count)")
+                            .font(.caption2.bold())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 2)
+                .tag(ConfigStore.activityID)
+            }
             Section("Agentes detectados") {
                 ForEach(store.agents) { agent in
                     AgentRow(agent: agent)
@@ -117,22 +154,17 @@ struct FileListView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    Section {
-                        ForEach(agent.files) { file in
-                            FileRow(file: file,
-                                    pending: store.externalChanges[file.path] != nil,
-                                    dirty: store.dirtyPaths.contains(file.path))
-                                .tag(file.path)
-                        }
-                    } header: {
-                        HStack {
-                            Text("Archivos de configuración")
-                            Spacer()
-                            if agent.issueCount > 0 {
-                                Label("\(agent.issueCount)", systemImage: "exclamationmark.triangle.fill")
-                                    .font(.caption2)
-                                    .foregroundStyle(.orange)
+                    ForEach(groupedRoles(agent), id: \.self) { role in
+                        Section {
+                            ForEach(files(agent, role: role)) { file in
+                                FileRow(file: file,
+                                        pending: store.externalChanges[file.path] != nil,
+                                        dirty: store.dirtyPaths.contains(file.path))
+                                    .tag(file.path)
+                                    .contextMenu { fileMenu(file) }
                             }
+                        } header: {
+                            Label(role.label, systemImage: role.icon)
                         }
                     }
                 }
@@ -144,6 +176,32 @@ struct FileListView: View {
             }
         }
         .navigationTitle(agent?.name ?? "Archivos")
+    }
+
+    // MARK: grouping & menus
+
+    private static let roleOrder: [TrackedRole] = [
+        .settings, .instructions, .mcp, .permissions, .hooks, .agents, .skills, .plugins, .state, .other
+    ]
+
+    private func groupedRoles(_ agent: Agent) -> [TrackedRole] {
+        Self.roleOrder.filter { r in agent.files.contains { $0.role == r } }
+    }
+
+    private func files(_ agent: Agent, role: TrackedRole) -> [TrackedFile] {
+        agent.files.filter { $0.role == role }
+    }
+
+    @ViewBuilder
+    private func fileMenu(_ file: TrackedFile) -> some View {
+        Button("Mostrar en Finder") { store.revealInFinder(file.path) }
+        Button("Abrir con app por defecto") { store.openInDefaultApp(file.path) }
+        Button("Copiar ruta") { store.copyPath(file.path) }
+        Divider()
+        Button("Restaurar versión anterior") { store.restorePrevious(file.path) }
+            .disabled(store.history(for: file.path).isEmpty)
+        Button("Descartar banner de cambios") { store.acknowledgeExternal(path: file.path) }
+            .disabled(store.externalChanges[file.path] == nil)
     }
 }
 

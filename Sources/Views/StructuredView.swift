@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - Key-path helpers for mutating JSON trees
 
@@ -117,7 +118,11 @@ struct StructuredView: View {
 
     @Environment(ConfigStore.self) private var store
 
-    private var editable: Bool { !readOnly && root != nil }
+    private var canWriteStructured: Bool {
+        format == .json || format == .jsonc || format == .toml
+    }
+
+    private var editable: Bool { !readOnly && canWriteStructured && root != nil }
 
     private var root: [String: Any]? {
         Parsers.parse(store.text(for: path), format: format).tree as? [String: Any]
@@ -126,9 +131,11 @@ struct StructuredView: View {
     private func mutate(_ block: (inout [String: Any]) -> Void) {
         var r = root ?? [:]
         block(&r)
-        if let s = Parsers.serializeJSON(r) {
-            store.updateEdit(path: path, text: s)
+        let s: String? = switch format {
+        case .toml: Parsers.serializeTOML(r)
+        default: Parsers.serializeJSON(r)
         }
+        if let s { store.updateEdit(path: path, text: s) }
     }
 
     var body: some View {
@@ -154,6 +161,13 @@ struct StructuredView: View {
                         Card {
                             Label("Vista estructurada de solo lectura — edita en la pestaña Fuente (formato \(format.badge)).",
                                   systemImage: "lock")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else if format == .toml {
+                        Card {
+                            Label("La edición estructurada reescribe el TOML — comentarios y formato se normalizan al guardar.",
+                                  systemImage: "info.circle")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -647,14 +661,20 @@ struct NodeRow: View {
         } else if v is NSNull {
             Text("null").font(.system(size: 10.5, design: .monospaced)).foregroundStyle(.tertiary)
         } else if let s = v as? String {
-            TextField("", text: Binding(
-                get: { s },
-                set: { n in mutate { r in setAt(&r, node.segs, n) } }
-            ))
-            .font(.system(size: 11, design: .monospaced))
-            .textFieldStyle(.roundedBorder)
-            .frame(maxWidth: 380)
-            .disabled(!editable)
+            if AppSettings.maskSecrets && Secrets.isSecretKey(node.label) {
+                SecretValueRow(value: s, editable: editable) { n in
+                    mutate { r in setAt(&r, node.segs, n) }
+                }
+            } else {
+                TextField("", text: Binding(
+                    get: { s },
+                    set: { n in mutate { r in setAt(&r, node.segs, n) } }
+                ))
+                .font(.system(size: 11, design: .monospaced))
+                .textFieldStyle(.roundedBorder)
+                .frame(maxWidth: 380)
+                .disabled(!editable)
+            }
         } else if let n = v as? NSNumber {
             TextField("", text: Binding(
                 get: { n.stringValue },
@@ -680,6 +700,41 @@ struct NodeRow: View {
         case let s as String: return s
         case let n as NSNumber: return n.stringValue
         default: return ""
+        }
+    }
+}
+
+/// Masked value with reveal + copy + edit.
+struct SecretValueRow: View {
+    let value: String
+    let editable: Bool
+    let onChange: (String) -> Void
+    @State private var revealed = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if revealed {
+                TextField("", text: Binding(get: { value }, set: onChange))
+                    .font(.system(size: 11, design: .monospaced))
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 320)
+                    .disabled(!editable)
+            } else {
+                Text("••••••••")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            Button { revealed.toggle() } label: {
+                Image(systemName: revealed ? "eye.slash" : "eye")
+            }
+            .buttonStyle(.plain).foregroundStyle(.secondary)
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(value, forType: .string)
+            } label: {
+                Image(systemName: "doc.on.doc")
+            }
+            .buttonStyle(.plain).foregroundStyle(.secondary)
         }
     }
 }
