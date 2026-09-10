@@ -1,14 +1,19 @@
 import SwiftUI
+import AppKit
 
 @main
 struct AgentsConfigApp: App {
     @State private var store = ConfigStore()
+    @AppStorage("menuBarExtra") private var menuBarExtra = true
+    @AppStorage("appearance") private var appearance = "system"
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(store)
                 .frame(minWidth: 1020, minHeight: 640)
+                .onAppear { applyAppearance() }
+                .onChange(of: appearance) { applyAppearance() }
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
@@ -31,12 +36,30 @@ struct AgentsConfigApp: App {
                             modifiers: .command
                         )
                 }
+                Divider()
+                Button(store.showInspector ? "Ocultar inspector" : "Mostrar inspector") {
+                    store.showInspector.toggle()
+                }
+                .keyboardShortcut("0", modifiers: [.option, .command])
             }
         }
+
+        MenuBarExtra(isInserted: $menuBarExtra) {
+            MenuBarView()
+                .environment(store)
+        } label: {
+            let pending = store.externalChanges.count
+            Image(systemName: pending > 0 ? "bolt.horizontal.fill" : "slider.horizontal.3")
+        }
+        .menuBarExtraStyle(.window)
 
         Settings {
             AppSettingsView()
         }
+    }
+
+    private func applyAppearance() {
+        NSApp.appearance = AppSettings.appearance
     }
 }
 
@@ -45,9 +68,20 @@ struct AppSettingsView: View {
     @AppStorage("maskSecrets") private var maskSecrets = true
     @AppStorage("watchDebounce") private var debounce = 0.35
     @AppStorage("historyLimit") private var historyLimit = 200
+    @AppStorage("menuBarExtra") private var menuBarExtra = true
+    @AppStorage("appearance") private var appearance = "system"
 
     var body: some View {
         Form {
+            Section("Apariencia") {
+                Picker("Tema", selection: $appearance) {
+                    Text("Sistema").tag("system")
+                    Text("Claro").tag("light")
+                    Text("Oscuro").tag("dark")
+                }
+                .pickerStyle(.segmented)
+                Toggle("Icono en la barra de menús", isOn: $menuBarExtra)
+            }
             Section("Monitoreo") {
                 Toggle("Notificación cuando un agente modifica una config", isOn: $notifications)
                 LabeledContent("Debounce del watcher") {

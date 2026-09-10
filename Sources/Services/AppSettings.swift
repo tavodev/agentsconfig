@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 /// App-wide preferences backed by UserDefaults (editable in the Settings scene).
 enum AppSettings {
@@ -18,5 +19,17 @@ enum AppSettings {
 
     static var maskSecrets: Bool {
         UserDefaults.standard.object(forKey: "maskSecrets") as? Bool ?? true
+    }
+
+    static var menuBarExtra: Bool {
+        UserDefaults.standard.object(forKey: "menuBarExtra") as? Bool ?? true
+    }
+
+    static var appearance: NSAppearance? {
+        switch UserDefaults.standard.string(forKey: "appearance") ?? "system" {
+        case "light": return NSAppearance(named: .aqua)
+        case "dark": return NSAppearance(named: .darkAqua)
+        default: return nil   // follow system
+        }
     }
 }

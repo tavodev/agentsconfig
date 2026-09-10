@@ -30,6 +30,31 @@ struct ContentView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
+                Button { store.showInspector.toggle() } label: {
+                    Image(systemName: "sidebar.trailing")
+                }
+                .help("Inspector (⌥⌘0)")
+                .keyboardShortcut("0", modifiers: [.option, .command])
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    store.selectedAgentID = ConfigStore.activityID
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "arrow.down.circle")
+                        if !store.externalChanges.isEmpty {
+                            Text("\(store.externalChanges.count)")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(3)
+                                .background(Circle().fill(.blue))
+                                .offset(x: 8, y: -8)
+                        }
+                    }
+                }
+                .help("Cambios externos pendientes")
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Button { store.refresh() } label: {
                     Image(systemName: "arrow.clockwise")
                 }

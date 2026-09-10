@@ -26,6 +26,7 @@ final class ConfigStore {
     var selectedMcpName: String?
     var requestedTab: EditorTab?
     var findRequest = 0
+    var showInspector = false
 
     static let activityID = "__activity__"
     static let mcpID = "__mcp__"

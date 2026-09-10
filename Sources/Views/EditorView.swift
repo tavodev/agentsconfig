@@ -14,6 +14,7 @@ struct EditorView: View {
     private var path: String? { store.selectedPath }
 
     var body: some View {
+        @Bindable var store = store
         if let path {
             VStack(spacing: 0) {
                 header(path: path)
@@ -26,6 +27,9 @@ struct EditorView: View {
             .navigationTitle(windowTitle)
             .onChange(of: store.requestedTab) { _, t in
                 if let t { tab = t; store.requestedTab = nil }
+            }
+            .inspector(isPresented: $store.showInspector) {
+                FileInspectorView(path: path)
             }
             .sheet(isPresented: $showDiff) {
                 if let change = store.externalChanges[path] {
