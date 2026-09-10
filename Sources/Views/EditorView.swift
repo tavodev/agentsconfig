@@ -28,6 +28,16 @@ struct EditorView: View {
             .onChange(of: store.requestedTab) { _, t in
                 if let t { tab = t; store.requestedTab = nil }
             }
+            .onChange(of: store.selectedPath) { _, newPath in
+                // formats with nothing to inspect → land directly on Source
+                if let p = newPath {
+                    let f = store.format(for: p)
+                    if f != .json && f != .jsonc && f != .toml && f != .markdown
+                        && tab == .structured {
+                        tab = .source
+                    }
+                }
+            }
             .inspector(isPresented: $store.showInspector) {
                 FileInspectorView(path: path)
             }
@@ -147,8 +157,14 @@ struct EditorView: View {
         let format = store.format(for: path)
         switch tab {
         case .structured:
-            StructuredView(path: path, doc: doc, format: format,
-                           readOnly: fileInfo(path)?.readOnly ?? false)
+            if format == .markdown {
+                MarkdownPreview(text: store.text(for: path))
+            } else if format != .json && format != .jsonc && format != .toml {
+                NonStructuredHint(format: format) { tab = .source }
+            } else {
+                StructuredView(path: path, doc: doc, format: format,
+                               readOnly: fileInfo(path)?.readOnly ?? false)
+            }
         case .source:
             if fileInfo(path)?.readOnly ?? false {
                 // read-only: show masked text — never editable
@@ -214,6 +230,68 @@ struct EditorView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(.bar)
+    }
+}
+
+// MARK: - Structured-tab fallbacks
+
+/// Rendered markdown for instruction files (CLAUDE.md, AGENTS.md…).
+struct MarkdownPreview: View {
+    let text: String
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Card {
+                        Label("Archivo vacío — edítalo en la pestaña Fuente.",
+                              systemImage: "doc")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text(parsingMarkdown())
+                        .font(.system(size: 13))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: 720, alignment: .leading)
+                    Label("Vista previa renderizada — edita en la pestaña Fuente.",
+                          systemImage: "eye")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func parsingMarkdown() -> AttributedString {
+        (try? AttributedString(markdown: text,
+                               options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(text)
+    }
+}
+
+/// Dead-end card for formats without a structured view.
+struct NonStructuredHint: View {
+    let format: ConfigFormat
+    let goToSource: () -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Image(systemName: "doc.plaintext")
+                .font(.system(size: 28))
+                .foregroundStyle(.tertiary)
+            Text("Sin vista estructurada para \(format.badge)")
+                .font(.system(size: 14, weight: .semibold))
+            Text("Este formato se edita como texto.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Button("Ir a Fuente", action: goToSource)
+                .controlSize(.regular)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

@@ -313,22 +313,62 @@ struct FileRow: View {
             Spacer()
             if pending {
                 Circle().fill(.blue).frame(width: 8, height: 8)
-                    .help("Cambió fuera de la app")
+                    .help("Modificado fuera de la app — revisa el diff")
             }
             if dirty {
                 Circle().fill(.orange).frame(width: 8, height: 8)
-                    .help("Cambios sin guardar")
+                    .help("Tienes cambios sin guardar")
             }
             if !file.exists {
                 Image(systemName: "exclamationmark.circle")
                     .foregroundStyle(.red)
-                    .help("No existe")
+                    .help("El archivo no existe en disco")
             } else if !file.issues.isEmpty {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.orange)
+                FileIssuesButton(issues: file.issues)
+            }
+            if file.readOnly {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .help("Solo lectura")
             }
         }
         .padding(.vertical, 3)
+    }
+}
+
+/// Warning icon → tap shows the issue list in a popover.
+struct FileIssuesButton: View {
+    let issues: [FileIssue]
+    @State private var show = false
+
+    var body: some View {
+        Button { show.toggle() } label: {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11))
+                .foregroundStyle(.orange)
+        }
+        .buttonStyle(.plain)
+        .help(issues.map(\.message).joined(separator: "\n"))
+        .popover(isPresented: $show, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Problemas detectados")
+                    .font(.system(size: 12, weight: .semibold))
+                ForEach(Array(issues.enumerated()), id: \.offset) { _, i in
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: i.severity == .error ? "xmark.octagon.fill" :
+                                        i.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(i.severity == .error ? .red :
+                                                i.severity == .warning ? .orange : .blue)
+                        Text(i.message)
+                            .font(.caption)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: 360)
+        }
     }
 }
