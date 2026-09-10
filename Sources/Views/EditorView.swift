@@ -80,10 +80,21 @@ struct EditorView: View {
                             .foregroundStyle(file.format.badgeColor)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
+                    if let fd = DocsCatalog.fileDoc(for: path) {
+                        FileDocButton(doc: fd)
+                    }
                 }
-                Text(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let note = file?.note {
+                        Text("· \(note)")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
             }
             Spacer()
             Button { store.revealInFinder(path) } label: {
@@ -230,6 +241,40 @@ struct EditorView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(.bar)
+    }
+}
+
+// MARK: - File doc popover
+
+/// ⓘ "¿Qué es este archivo?" — explains purpose + links official docs.
+struct FileDocButton: View {
+    let doc: DocsCatalog.FileDoc
+    @State private var show = false
+
+    var body: some View {
+        Button { show.toggle() } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .help("¿Qué es este archivo?")
+        .popover(isPresented: $show, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(doc.title)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(doc.body)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let url = doc.docsURL {
+                    Link("Documentación oficial ↗", destination: url)
+                        .font(.caption)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: 380)
+        }
     }
 }
 

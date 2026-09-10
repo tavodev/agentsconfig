@@ -173,7 +173,8 @@ struct StructuredView: View {
                         }
                     }
                     specialCards
-                    GenericInspector(root: root ?? [:], editable: editable, mutate: mutate)
+                    GenericInspector(filePath: path, root: root ?? [:],
+                                     editable: editable, mutate: mutate)
                 }
             }
             .padding(14)
@@ -236,6 +237,51 @@ struct CardHeader: View {
             Image(systemName: icon).foregroundStyle(.secondary)
             Text(title).font(.system(size: 12.5, weight: .semibold))
             Spacer()
+        }
+    }
+}
+
+/// ⓘ button → popover explaining what a config key does.
+struct KeyDocButton: View {
+    let doc: DocsCatalog.KeyDoc
+    @State private var show = false
+
+    var body: some View {
+        Button { show.toggle() } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
+        }
+        .buttonStyle(.plain)
+        .help(doc.summary)
+        .popover(isPresented: $show, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(doc.summary)
+                    .font(.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let values = doc.values, !values.isEmpty {
+                    Divider()
+                    ForEach(values.keys.sorted(), id: \.self) { v in
+                        HStack(alignment: .top, spacing: 8) {
+                            Text(v)
+                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                .frame(minWidth: 110, alignment: .leading)
+                            Text(values[v] ?? "")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                if let def = doc.defaultValue {
+                    Divider()
+                    Text("Por defecto: \(def)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: 340)
         }
     }
 }
@@ -587,6 +633,7 @@ struct StringMapCard: View {
 // MARK: - Generic inspector
 
 struct GenericInspector: View {
+    let filePath: String
     let root: [String: Any]
     let editable: Bool
     let mutate: ((inout [String: Any]) -> Void) -> Void
@@ -595,7 +642,7 @@ struct GenericInspector: View {
         Card {
             CardHeader(title: "Todas las claves", icon: "list.bullet.indent")
             OutlineGroup(nodes, children: \.children) { node in
-                NodeRow(node: node, editable: editable, mutate: mutate)
+                NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate)
             }
         }
     }
@@ -633,15 +680,25 @@ struct TreeNode: Identifiable {
 
 struct NodeRow: View {
     let node: TreeNode
+    let filePath: String
     let editable: Bool
     let mutate: ((inout [String: Any]) -> Void) -> Void
     @State private var draft: String = ""
+
+    private var doc: DocsCatalog.KeyDoc? {
+        DocsCatalog.keyDoc(filePath: filePath, keyPath: node.segs.compactMap {
+            if case .key(let k) = $0 { return k }; return nil
+        })
+    }
 
     var body: some View {
         HStack(spacing: 8) {
             Text(node.label)
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .foregroundStyle(.secondary)
+            if let doc {
+                KeyDocButton(doc: doc)
+            }
             Spacer()
             valueView
         }

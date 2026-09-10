@@ -86,6 +86,7 @@ struct SidebarView: View {
                 ForEach(store.agents) { agent in
                     AgentRow(agent: agent)
                         .tag(agent.id)
+                        .help(agent.notes ?? "")
                         .contextMenu {
                             Button("Abrir carpeta en Finder") {
                                 store.revealInFinder(
@@ -309,6 +310,12 @@ struct FileRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                if let note = file.note {
+                    Text(note)
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
             }
             Spacer()
             if pending {

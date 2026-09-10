@@ -27,6 +27,7 @@
 		9A0C7670F45959EEE5F43E1F /* DiffEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D8DB75C1CEA6C3429B8F78 /* DiffEngine.swift */; };
 		A81D9417F2EBE4EEB9B914A4 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 48F0A346E08C3FA0F1EF85CB /* AppIcon.icns */; };
 		ADD409F191ED0AE08195D304 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A8563B33D43896A8D1D9F0 /* HistoryView.swift */; };
+		B5F4A62E178CD4265254ECF8 /* DocsCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5973B04BCC33A3CEA71EC7E /* DocsCatalog.swift */; };
 		D10E442BC38F476B3ED61EA5 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77430B23A9292519E01F4517 /* EditorView.swift */; };
 		D3D69E9DF169F2F4436069A7 /* Linter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78481F35B1898DC3428E432 /* Linter.swift */; };
 		DAE1721CBB3D1250E87E1577 /* Parsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D984468D5B84FE1BDA84E8 /* Parsers.swift */; };
@@ -49,6 +50,7 @@
 		77430B23A9292519E01F4517 /* EditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorView.swift; sourceTree = "<group>"; };
 		7CFA37FC1FD1533F599A09BB /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		B5385E29764BCF9FDD56DA2E /* AgentRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRegistry.swift; sourceTree = "<group>"; };
+		B5973B04BCC33A3CEA71EC7E /* DocsCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocsCatalog.swift; sourceTree = "<group>"; };
 		BCE8C2F05984C670C1189E70 /* SnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotStore.swift; sourceTree = "<group>"; };
 		C1D8DB75C1CEA6C3429B8F78 /* DiffEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffEngine.swift; sourceTree = "<group>"; };
 		C28A01C9355709053F411B58 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
@@ -135,6 +137,7 @@
 				699D270C9D19F52B3A10B8D3 /* AppSettings.swift */,
 				E1CC281915AEC88B517F27D5 /* ConfigStore.swift */,
 				C1D8DB75C1CEA6C3429B8F78 /* DiffEngine.swift */,
+				B5973B04BCC33A3CEA71EC7E /* DocsCatalog.swift */,
 				42E02E364DBBEF684430BE98 /* FileWatcher.swift */,
 				E78481F35B1898DC3428E432 /* Linter.swift */,
 				2B2FF70D38C5E429BF6CB63D /* Notifier.swift */,
@@ -238,6 +241,7 @@
 				94D0E4B70472E8EABB3E73F0 /* ContentView.swift in Sources */,
 				9A0C7670F45959EEE5F43E1F /* DiffEngine.swift in Sources */,
 				2AF2D4A6630A4DD7C0D6DAFF /* DiffView.swift in Sources */,
+				B5F4A62E178CD4265254ECF8 /* DocsCatalog.swift in Sources */,
 				D10E442BC38F476B3ED61EA5 /* EditorView.swift in Sources */,
 				82D22380D4A8F3747E0B926B /* FileWatcher.swift in Sources */,
 				ADD409F191ED0AE08195D304 /* HistoryView.swift in Sources */,

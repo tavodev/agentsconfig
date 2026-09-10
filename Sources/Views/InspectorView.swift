@@ -19,6 +19,9 @@ struct FileInspectorView: View {
         if let path, let file {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    if let fd = DocsCatalog.fileDoc(for: path) {
+                        aboutSection(fd)
+                    }
                     metaSection(path: path, file: file)
                     if !file.issues.isEmpty { issuesSection(file) }
                     if !file.managedBlocks.isEmpty { managedSection(file) }
@@ -30,6 +33,26 @@ struct FileInspectorView: View {
         } else {
             ContentUnavailableView("Sin selección", systemImage: "sidebar.trailing")
         }
+    }
+
+    private func aboutSection(_ doc: DocsCatalog.FileDoc) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(doc.title, systemImage: "questionmark.circle")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+            Text(doc.body)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let url = doc.docsURL {
+                Link("Documentación oficial ↗", destination: url)
+                    .font(.caption2)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func metaSection(path: String, file: TrackedFile) -> some View {
