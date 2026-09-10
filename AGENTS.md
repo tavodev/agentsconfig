@@ -28,8 +28,15 @@ open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/A
   `~/Library/Application Support/AgentsConfig/History/` (index.json + contenido).
 - `Sources/Services/Linter.swift` — issues (hooks huérfanos, parse errors) y
   bloques gestionados por terceros (orca-managed, hooks.state, etc.).
-- `Sources/Views/` — NavigationSplitView de 3 columnas: Sidebar (agentes) →
-  FileList → Editor (Estructurado | Fuente | Historial) + banners de cambio.
+- `Sources/Views/` — NavigationSplitView de 3 columnas: Sidebar (agentes +
+  paneles fijos Actividad/MCP) → lista (archivos | feed | matriz MCP) →
+  Editor (Estructurado | Fuente | Historial) + banners de cambio.
+- `Sources/Services/Notifier.swift` — notificaciones macOS de cambios
+  externos con app en background; click → selecciona el archivo.
+- `Sources/Services/Secrets.swift` — detección/enmascaramiento de
+  apiKeys/tokens en vistas estructurada y fuente read-only.
+- `Sources/Services/AppSettings.swift` — preferencias (UserDefaults) usadas
+  por watcher/snapshots/notifier; editables en la escena Settings (⌘,).
 
 ## Convenciones
 

@@ -24,6 +24,9 @@ struct EditorView: View {
                 footer(path: path)
             }
             .navigationTitle(windowTitle)
+            .onChange(of: store.requestedTab) { _, t in
+                if let t { tab = t; store.requestedTab = nil }
+            }
             .sheet(isPresented: $showDiff) {
                 if let change = store.externalChanges[path] {
                     DiffSheet(path: path, change: change)
@@ -69,6 +72,12 @@ struct EditorView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
+            Button { store.revealInFinder(path) } label: {
+                Image(systemName: "folder")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help("Mostrar en Finder")
             metaLabels(path: path)
             Picker("", selection: $tab) {
                 ForEach(EditorTab.allCases, id: \.self) { t in

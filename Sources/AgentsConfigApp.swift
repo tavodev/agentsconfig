@@ -23,6 +23,15 @@ struct AgentsConfigApp: App {
                 Button("Buscar en el archivo") { store.requestFind() }
                     .keyboardShortcut("f", modifiers: .command)
             }
+            CommandGroup(after: .toolbar) {
+                ForEach(EditorTab.allCases, id: \.self) { t in
+                    Button(t.rawValue) { store.requestedTab = t }
+                        .keyboardShortcut(
+                            KeyEquivalent(Character("\(EditorTab.allCases.firstIndex(of: t)! + 1)")),
+                            modifiers: .command
+                        )
+                }
+            }
         }
 
         Settings {

@@ -21,10 +21,14 @@ final class ConfigStore {
     private(set) var lastEventAt: Date?
     private(set) var watchedCount = 0
     private(set) var activity: [ActivityEvent] = []
+    private(set) var mcpIndex: [McpServerEntry] = []
     var selectedEventID: UUID?
+    var selectedMcpName: String?
+    var requestedTab: EditorTab?
     var findRequest = 0
 
     static let activityID = "__activity__"
+    static let mcpID = "__mcp__"
 
     // MARK: internals
     private let snapshots = SnapshotStore()
@@ -111,6 +115,166 @@ final class ConfigStore {
                 _ = load(f.path)
             }
         }
+        // Parse volatile files once per scan so their MCP entries appear in
+        // the index (we skip per-event reparsing of these heavy files).
+        volatileMcpEntries = extractVolatileMcp()
+        rebuildMcpIndex()
+    }
+
+    // MARK: - MCP index (cross-agent)
+
+    private static let mcpContainerKeys = ["mcpServers", "mcp_servers", "mcp", "servers"]
+
+    private var volatileMcpEntries: [McpServerEntry] = []
+
+    func rebuildMcpIndex() {
+        var out = volatileMcpEntries
+        for agent in agents {
+            for f in agent.files where f.exists && !f.volatile {
+                guard let tree = documents[f.path]?.tree as? [String: Any] else { continue }
+                out += Self.mcpEntries(in: tree, agentID: agent.id,
+                                       agentName: agent.name, sourcePath: f.path)
+            }
+        }
+        mcpIndex = out.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    /// Extract MCP entries from a parsed tree.
+    private static func mcpEntries(in tree: [String: Any], agentID: String,
+                                   agentName: String, sourcePath: String) -> [McpServerEntry] {
+        var out: [McpServerEntry] = []
+        for key in mcpContainerKeys {
+            guard let servers = tree[key] as? [String: Any] else { continue }
+            for (name, raw) in servers {
+                guard let spec = raw as? [String: Any] else { continue }
+                out.append(normalizeMcp(name: name, spec: spec,
+                                        agentID: agentID, agentName: agentName,
+                                        sourcePath: sourcePath, container: key))
+            }
+        }
+        return out
+    }
+
+    /// Parse volatile (heavy, throttled) files once at scan time for MCP keys.
+    private func extractVolatileMcp() -> [McpServerEntry] {
+        var out: [McpServerEntry] = []
+        for agent in agents {
+            for f in agent.files where f.exists && f.volatile {
+                guard let text = documents[f.path]?.text
+                    ?? (FileManager.default.contents(atPath: f.path).flatMap {
+                        String(data: $0, encoding: .utf8)
+                    }),
+                    let tree = Parsers.parse(text, format: f.format).tree as? [String: Any]
+                else { continue }
+                out += Self.mcpEntries(in: tree, agentID: agent.id,
+                                       agentName: agent.name, sourcePath: f.path)
+            }
+        }
+        return out
+    }
+
+    private static func normalizeMcp(name: String, spec: [String: Any],
+                                     agentID: String, agentName: String,
+                                     sourcePath: String, container: String) -> McpServerEntry {
+        var command: String? = spec["command"] as? String
+        var args = (spec["args"] as? [Any])?.compactMap { $0 as? String } ?? []
+        if let arr = spec["command"] as? [Any] {   // opencode local: command is an array
+            command = arr.first as? String
+            args += arr.dropFirst().compactMap { $0 as? String }
+        }
+        let url = spec["url"] as? String ?? spec["serverUrl"] as? String ?? spec["httpUrl"] as? String
+        let env = (spec["env"] ?? spec["environment"]) as? [String: Any]
+        var enabled = spec["enabled"] as? Bool
+        if enabled == nil, let d = spec["disabled"] as? Bool { enabled = !d }
+        let transport = spec["transport"] as? String ?? spec["type"] as? String
+        let isRemote = url != nil || transport == "sse" || transport == "http"
+            || transport == "remote" || transport == "streamable_http"
+        return McpServerEntry(
+            name: name, agentID: agentID, agentName: agentName,
+            sourcePath: sourcePath, containerKey: container,
+            isRemote: isRemote, command: command, args: args, url: url,
+            envKeys: env?.keys.sorted() ?? [], enabled: enabled, raw: spec
+        )
+    }
+
+    var mcpNames: [String] {
+        Array(Set(mcpIndex.map(\.name))).sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+    }
+
+    func mcpEntries(for name: String) -> [McpServerEntry] {
+        mcpIndex.filter { $0.name == name }
+    }
+
+    /// File where an agent's MCP entries should be inserted.
+    func mcpTargetFile(for agentID: String) -> TrackedFile? {
+        guard let agent = agents.first(where: { $0.id == agentID }) else { return nil }
+        // prefer a role-.mcp file that already hosts the container key
+        let candidates = agent.files.filter { $0.exists && !$0.volatile && !$0.readOnly }
+        if let mcpFile = candidates.first(where: {
+            $0.role == .mcp && (documents[$0.path]?.tree as? [String: Any])?.keys
+                .contains(where: { Self.mcpContainerKeys.contains($0) }) == true
+        }) ?? candidates.first(where: { $0.role == .mcp }) {
+            return mcpFile
+        }
+        return candidates.first(where: {
+            ($0.role == .settings || $0.role == .other)
+            && (documents[$0.path]?.tree as? [String: Any])?.keys
+                .contains(where: { Self.mcpContainerKeys.contains($0) }) == true
+        })
+    }
+
+    /// Insert a server into another agent's config as an unsaved edit,
+    /// then select that file so the user can review and ⌘S.
+    func copyMcpServer(_ entry: McpServerEntry, to agentID: String) {
+        guard let target = mcpTargetFile(for: agentID) else { return }
+        let path = target.path
+        _ = document(for: path)
+        let format = format(for: path)
+        var root = Parsers.parse(text(for: path), format: format).tree as? [String: Any] ?? [:]
+        let container = Self.mcpContainerKeys.first(where: { root[$0] is [String: Any] })
+            ?? (agentID == "codex" ? "mcp_servers" : agentID == "opencode" ? "mcp" : "mcpServers")
+        var servers = root[container] as? [String: Any] ?? [:]
+        servers[entry.name] = mcpSpec(for: agentID, from: entry)
+        root[container] = servers
+        let out: String? = format == .toml ? Parsers.serializeTOML(root) : Parsers.serializeJSON(root)
+        guard let out else { return }
+        selectedAgentID = agentID
+        selectedPath = path
+        requestedTab = .structured
+        updateEdit(path: path, text: out)
+    }
+
+    /// Map a normalized entry into the target agent's MCP schema.
+    private func mcpSpec(for agentID: String, from e: McpServerEntry) -> [String: Any] {
+        let env = (e.raw["env"] ?? e.raw["environment"]) as? [String: Any]
+        switch agentID {
+        case "opencode":
+            if e.isRemote, let url = e.url {
+                return ["type": "remote", "url": url, "enabled": e.enabled ?? true]
+            }
+            var spec: [String: Any] = [
+                "type": "local",
+                "command": ([e.command ?? ""] + e.args),
+                "enabled": e.enabled ?? true,
+            ]
+            if let env { spec["environment"] = env }
+            return spec
+        case "codex":
+            if e.isRemote, let url = e.url { return ["url": url] }
+            var spec: [String: Any] = ["command": e.command ?? ""]
+            if !e.args.isEmpty { spec["args"] = e.args }
+            if let env { spec["env"] = env }
+            if let en = e.enabled { spec["enabled"] = en }
+            return spec
+        default:   // mcpServers schema (claude, gemini/antigravity, cursor…)
+            if e.isRemote, let url = e.url { return ["type": "http", "url": url] }
+            var spec: [String: Any] = ["command": e.command ?? ""]
+            if !e.args.isEmpty { spec["args"] = e.args }
+            if let env { spec["env"] = env }
+            return spec
+        }
     }
 
     /// Re-resolve one agent's file list (called when a watched dir changes).
@@ -144,6 +308,7 @@ final class ConfigStore {
         }
         watcher.watch(paths)
         watchedCount = paths.count
+        rebuildMcpIndex()
     }
 
     // MARK: - documents
@@ -379,6 +544,7 @@ final class ConfigStore {
         externalChanges[path] = ExternalChange(changes: changes, previousContent: oldText)
 
         reload(path, origin: nil)
+        rebuildMcpIndex()
 
         if !(tf?.volatile ?? false), !changes.isEmpty {
             let agentName = agents.first { $0.id == fileOwners[path] }?.name ?? "Agente"

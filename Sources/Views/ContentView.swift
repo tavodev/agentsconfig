@@ -12,6 +12,8 @@ struct ContentView: View {
             Group {
                 if store.selectedAgentID == ConfigStore.activityID {
                     ActivityFeedView()
+                } else if store.selectedAgentID == ConfigStore.mcpID {
+                    McpMatrixView()
                 } else {
                     FileListView()
                 }
@@ -20,6 +22,8 @@ struct ContentView: View {
         } detail: {
             if store.selectedAgentID == ConfigStore.activityID {
                 ActivityDetailView()
+            } else if store.selectedAgentID == ConfigStore.mcpID {
+                McpDetailView()
             } else {
                 EditorView()
             }
@@ -44,59 +48,96 @@ struct SidebarView: View {
         @Bindable var store = store
         List(selection: $store.selectedAgentID) {
             Section {
-                HStack(spacing: 10) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(Color.accentColor.gradient)
-                            .frame(width: 28, height: 28)
-                        Image(systemName: "bolt.horizontal.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Actividad")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("feed de cambios")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    if !store.activity.isEmpty {
-                        Text("\(store.activity.count)")
-                            .font(.caption2.bold())
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 2)
-                .tag(ConfigStore.activityID)
+                PanelRow(icon: "bolt.horizontal.fill", title: "Actividad",
+                         subtitle: "feed de cambios", count: store.activity.count,
+                         color: .accentColor)
+                    .tag(ConfigStore.activityID)
+                PanelRow(icon: "server.rack", title: "MCP",
+                         subtitle: "comparador entre agentes", count: store.mcpNames.count,
+                         color: .teal)
+                    .tag(ConfigStore.mcpID)
             }
             Section("Agentes detectados") {
                 ForEach(store.agents) { agent in
                     AgentRow(agent: agent)
                         .tag(agent.id)
+                        .contextMenu {
+                            Button("Abrir carpeta en Finder") {
+                                store.revealInFinder(
+                                    (agent.detectionPath as NSString).expandingTildeInPath)
+                            }
+                            Button("Re-escanear") { store.refresh() }
+                        }
                 }
             }
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 6) {
-                Image(systemName: "eye.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Text("\(store.watchedCount) archivos vigilados")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let t = store.lastEventAt {
-                    Text(t, style: .time)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+            VStack(spacing: 0) {
+                if !store.externalChanges.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.blue)
+                        Text("\(store.externalChanges.count) cambio(s) externo(s)")
+                            .font(.caption2)
+                            .foregroundStyle(.blue)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14).padding(.top, 6)
                 }
+                HStack(spacing: 6) {
+                    Image(systemName: "eye.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text("\(store.watchedCount) archivos vigilados")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if let t = store.lastEventAt {
+                        Text(t, style: .time)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
             .background(.bar)
         }
+    }
+}
+
+/// Pinned sidebar row for app-level panels (Actividad, MCP).
+struct PanelRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let count: Int
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(color.gradient)
+                    .frame(width: 28, height: 28)
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.system(size: 13, weight: .medium))
+                Text(subtitle).font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if count > 0 {
+                Text("\(count)")
+                    .font(.caption2.bold())
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 
@@ -137,6 +178,7 @@ struct AgentRow: View {
 
 struct FileListView: View {
     @Environment(ConfigStore.self) private var store
+    @State private var query = ""
 
     private var agent: Agent? {
         store.agents.first { $0.id == store.selectedAgentID }
@@ -156,7 +198,9 @@ struct FileListView: View {
                     }
                     ForEach(groupedRoles(agent), id: \.self) { role in
                         Section {
-                            ForEach(files(agent, role: role)) { file in
+                            ForEach(files(agent, role: role).filter {
+                                query.isEmpty || $0.path.localizedCaseInsensitiveContains(query)
+                            }) { file in
                                 FileRow(file: file,
                                         pending: store.externalChanges[file.path] != nil,
                                         dirty: store.dirtyPaths.contains(file.path))
@@ -169,6 +213,7 @@ struct FileListView: View {
                     }
                 }
                 .listStyle(.inset)
+                .searchable(text: $query, prompt: "Filtrar archivos")
             } else {
                 ContentUnavailableView("Sin agentes",
                                        systemImage: "tray",

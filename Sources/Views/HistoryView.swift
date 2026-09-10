@@ -5,6 +5,7 @@ struct HistoryView: View {
     let path: String
     @Environment(ConfigStore.self) private var store
     @State private var selected: FileVersion?
+    @State private var compareWith: FileVersion?   // nil = actual en disco
     @State private var confirmRestore = false
 
     var body: some View {
@@ -36,13 +37,31 @@ struct HistoryView: View {
     private var versionDetail: some View {
         if let v = selected,
            let content = store.versionContent(path: path, version: v) {
-            let current = store.document(for: path)?.text ?? ""
+            let versions = store.history(for: path)
+            let otherContent: String = {
+                guard let cw = compareWith, cw != v else {
+                    return store.document(for: path)?.text ?? ""
+                }
+                return store.versionContent(path: path, version: cw) ?? ""
+            }()
+            let otherLabel = compareWith == nil || compareWith == v
+                ? "Actual en disco"
+                : "Otra versión"
             VStack(spacing: 0) {
                 HStack {
                     Text(v.date, style: .date).font(.headline)
                     Text(v.date, style: .time).font(.subheadline).foregroundStyle(.secondary)
                     originBadge(v.origin)
                     Spacer()
+                    Picker("Comparar con", selection: $compareWith) {
+                        Text("Actual en disco").tag(FileVersion?.none)
+                        ForEach(versions.filter { $0 != v }) { o in
+                            Text("\(o.date, style: .date) \(o.date, style: .time) · \(o.summary)")
+                                .tag(FileVersion?.some(o))
+                                .lineLimit(1)
+                        }
+                    }
+                    .frame(width: 260)
                     Button("Restaurar esta versión") { confirmRestore = true }
                         .controlSize(.small)
                 }
@@ -52,8 +71,8 @@ struct HistoryView: View {
                     CompareView(
                         baseText: content,
                         baseLabel: "Esta versión",
-                        otherText: current,
-                        otherLabel: "Actual en disco",
+                        otherText: otherContent,
+                        otherLabel: otherLabel,
                         format: store.format(for: path)
                     )
                     .padding(14)

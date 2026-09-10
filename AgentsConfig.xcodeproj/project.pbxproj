@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		13B2A01D818EB060F66863B2 /* McpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399FFD978CD359D353962C44 /* McpView.swift */; };
 		13DFC9BC6B7A7FEB9A2D2843 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2FF70D38C5E429BF6CB63D /* Notifier.swift */; };
 		2350D098633B1A2273429E47 /* AgentRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5385E29764BCF9FDD56DA2E /* AgentRegistry.swift */; };
 		24150AA9D7738F46FC408EB1 /* SnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCE8C2F05984C670C1189E70 /* SnapshotStore.swift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		2B2FF70D38C5E429BF6CB63D /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		399FFD978CD359D353962C44 /* McpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McpView.swift; sourceTree = "<group>"; };
 		42E02E364DBBEF684430BE98 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
 		48F0A346E08C3FA0F1EF85CB /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		49A8563B33D43896A8D1D9F0 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 				5CE9ED5F3E9C9BDBEE718A81 /* DiffView.swift */,
 				77430B23A9292519E01F4517 /* EditorView.swift */,
 				49A8563B33D43896A8D1D9F0 /* HistoryView.swift */,
+				399FFD978CD359D353962C44 /* McpView.swift */,
 				F53A54A7BF4535BEA2309A75 /* StructuredView.swift */,
 			);
 			path = Views;
@@ -233,6 +236,7 @@
 				82D22380D4A8F3747E0B926B /* FileWatcher.swift in Sources */,
 				ADD409F191ED0AE08195D304 /* HistoryView.swift in Sources */,
 				D3D69E9DF169F2F4436069A7 /* Linter.swift in Sources */,
+				13B2A01D818EB060F66863B2 /* McpView.swift in Sources */,
 				65C4053F5C76E388561D3142 /* Models.swift in Sources */,
 				13DFC9BC6B7A7FEB9A2D2843 /* Notifier.swift in Sources */,
 				DAE1721CBB3D1250E87E1577 /* Parsers.swift in Sources */,

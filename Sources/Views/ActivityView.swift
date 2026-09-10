@@ -3,6 +3,16 @@ import SwiftUI
 /// Cross-agent timeline of every detected config change.
 struct ActivityFeedView: View {
     @Environment(ConfigStore.self) private var store
+    @State private var query = ""
+
+    private var events: [ActivityEvent] {
+        guard !query.isEmpty else { return store.activity }
+        return store.activity.filter {
+            $0.path.localizedCaseInsensitiveContains(query)
+                || $0.agentName.localizedCaseInsensitiveContains(query)
+                || $0.summary.localizedCaseInsensitiveContains(query)
+        }
+    }
 
     var body: some View {
         @Bindable var store = store
@@ -15,12 +25,17 @@ struct ActivityFeedView: View {
                 )
             } else {
                 List(selection: $store.selectedEventID) {
-                    ForEach(store.activity) { event in
+                    ForEach(events) { event in
                         ActivityRow(event: event)
                             .tag(event.id)
+                            .contextMenu {
+                                Button("Abrir archivo") { store.openFile(event.path) }
+                                Button("Mostrar en Finder") { store.revealInFinder(event.path) }
+                            }
                     }
                 }
                 .listStyle(.inset)
+                .searchable(text: $query, prompt: "Filtrar cambios")
             }
         }
         .navigationTitle("Actividad")

@@ -171,6 +171,28 @@ struct ActivityEvent: Identifiable, Hashable {
     var changes: [SemanticChange] = []   // populated for in-session events
 }
 
+/// A normalized MCP server definition extracted from any agent config.
+struct McpServerEntry: Identifiable {
+    var id: String { "\(agentID)|\(sourcePath)|\(name)" }
+    let name: String
+    let agentID: String
+    let agentName: String
+    let sourcePath: String
+    let containerKey: String       // mcpServers / mcp_servers / mcp / servers
+    let isRemote: Bool
+    let command: String?
+    let args: [String]
+    let url: String?
+    let envKeys: [String]
+    let enabled: Bool?
+    let raw: [String: Any]         // original spec (env values kept for copy)
+
+    var endpoint: String {
+        if let url { return url }
+        return ([command ?? ""] + args).joined(separator: " ")
+    }
+}
+
 // MARK: - Live document
 
 struct ConfigDocument {

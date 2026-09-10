@@ -419,7 +419,7 @@ struct StringListEditor: View {
             Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
             ForEach(Array(values.enumerated()), id: \.offset) { i, v in
                 HStack(spacing: 6) {
-                    Text("\(v)")
+                    Text(String(describing: v))
                         .font(.system(size: 10.5, design: .monospaced))
                         .lineLimit(1)
                     Spacer()
@@ -708,13 +708,15 @@ struct NodeRow: View {
 struct SecretValueRow: View {
     let value: String
     let editable: Bool
-    let onChange: (String) -> Void
+    let onChange: @MainActor (String) -> Void
     @State private var revealed = false
 
     var body: some View {
         HStack(spacing: 6) {
             if revealed {
-                TextField("", text: Binding(get: { value }, set: onChange))
+                TextField("", text: Binding(get: { value }, set: { n in
+                    MainActor.assumeIsolated { onChange(n) }
+                }))
                     .font(.system(size: 11, design: .monospaced))
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 320)
