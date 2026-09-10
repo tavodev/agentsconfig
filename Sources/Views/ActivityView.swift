@@ -19,9 +19,9 @@ struct ActivityFeedView: View {
         Group {
             if store.activity.isEmpty {
                 ContentUnavailableView(
-                    "Sin actividad todavía",
+                    L("No activity yet"),
                     systemImage: "bolt.horizontal",
-                    description: Text("Aquí aparecerá cada cambio que un agente —o esta app— haga en las configuraciones.")
+                    description: Text(L("Every change an agent — or this app — makes to configs will show up here."))
                 )
             } else {
                 List(selection: $store.selectedEventID) {
@@ -29,16 +29,16 @@ struct ActivityFeedView: View {
                         ActivityRow(event: event)
                             .tag(event.id)
                             .contextMenu {
-                                Button("Abrir archivo") { store.openFile(event.path) }
-                                Button("Mostrar en Finder") { store.revealInFinder(event.path) }
+                                Button(L("Open file")) { store.openFile(event.path) }
+                                Button(L("Show in Finder")) { store.revealInFinder(event.path) }
                             }
                     }
                 }
                 .listStyle(.inset)
-                .searchable(text: $query, prompt: "Filtrar cambios")
+                .searchable(text: $query, prompt: L("Filter changes"))
             }
         }
-        .navigationTitle("Actividad")
+        .navigationTitle(L("Activity"))
     }
 }
 
@@ -108,7 +108,7 @@ struct ActivityDetailView: View {
                     Text(event.date, format: .dateTime.hour().minute().second().day().month())
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("Abrir archivo") { store.openFile(event.path) }
+                    Button(L("Open file")) { store.openFile(event.path) }
                         .controlSize(.small)
                 }
                 .padding(14)
@@ -117,16 +117,16 @@ struct ActivityDetailView: View {
                     ContentUnavailableView(
                         event.summary,
                         systemImage: "doc.badge.clock",
-                        description: Text("Detalle de cambios no disponible para eventos previos a esta sesión. Abre el archivo y revisa su Historial.")
+                        description: Text(L("Change detail unavailable for events before this session. Open the file and check its History."))
                     )
                 } else {
                     List(event.changes) { c in ChangeRow(change: c) }
                         .listStyle(.inset)
                 }
             }
-            .navigationTitle("Detalle del cambio")
+            .navigationTitle(L("Change detail"))
         } else {
-            ContentUnavailableView("Selecciona un evento",
+            ContentUnavailableView(L("Select an event"),
                                    systemImage: "bolt.horizontal.circle")
         }
     }

@@ -12,9 +12,9 @@ struct HistoryView: View {
         let versions = store.history(for: path)
         if versions.isEmpty {
             ContentUnavailableView(
-                "Sin historial",
+                L("No history"),
                 systemImage: "clock",
-                description: Text("Los snapshots se crean cuando el archivo cambia o lo editas desde aquí.")
+                description: Text(L("Snapshots are created when the file changes or you edit it here."))
             )
         } else {
             HSplitView {
@@ -45,16 +45,16 @@ struct HistoryView: View {
                 return store.versionContent(path: path, version: cw) ?? ""
             }()
             let otherLabel = compareWith == nil || compareWith == v
-                ? "Actual en disco"
-                : "Otra versión"
+                ? L("Current on disk")
+                : L("Another version")
             VStack(spacing: 0) {
                 HStack {
                     Text(v.date, style: .date).font(.headline)
                     Text(v.date, style: .time).font(.subheadline).foregroundStyle(.secondary)
                     originBadge(v.origin)
                     Spacer()
-                    Picker("Comparar con", selection: $compareWith) {
-                        Text("Actual en disco").tag(FileVersion?.none)
+                    Picker(L("Compare with"), selection: $compareWith) {
+                        Text(L("Current on disk")).tag(FileVersion?.none)
                         ForEach(versions.filter { $0 != v }) { o in
                             Text("\(o.date, style: .date) \(o.date, style: .time) · \(o.summary)")
                                 .tag(FileVersion?.some(o))
@@ -62,7 +62,7 @@ struct HistoryView: View {
                         }
                     }
                     .frame(width: 260)
-                    Button("Restaurar esta versión") { confirmRestore = true }
+                    Button(L("Restore this version")) { confirmRestore = true }
                         .controlSize(.small)
                 }
                 .padding(12)
@@ -70,7 +70,7 @@ struct HistoryView: View {
                 ScrollView {
                     CompareView(
                         baseText: content,
-                        baseLabel: "Esta versión",
+                        baseLabel: L("This version"),
                         otherText: otherContent,
                         otherLabel: otherLabel,
                         format: store.format(for: path)
@@ -79,27 +79,27 @@ struct HistoryView: View {
                 }
             }
             .confirmationDialog(
-                "¿Restaurar esta versión?",
+                L("Restore this version?"),
                 isPresented: $confirmRestore,
                 titleVisibility: .visible
             ) {
-                Button("Restaurar") { store.restoreVersion(path: path, version: v) }
-                Button("Cancelar", role: .cancel) {}
+                Button(L("Restore")) { store.restoreVersion(path: path, version: v) }
+                Button(L("Cancel"), role: .cancel) {}
             } message: {
-                Text("El contenido actual quedará guardado como un snapshot más del historial.")
+                Text(L("Current content will be kept as another history snapshot."))
             }
         } else {
-            ContentUnavailableView("Selecciona una versión",
+            ContentUnavailableView(L("Select a version"),
                                    systemImage: "clock.arrow.2.circlepath")
         }
     }
 
     private func originBadge(_ o: FileVersion.Origin) -> some View {
         let (label, color): (String, Color) = switch o {
-        case .baseline: ("base", .gray)
-        case .external: ("externo", .blue)
-        case .app: ("esta app", .green)
-        case .revert: ("revert", .purple)
+        case .baseline: (L("base"), .gray)
+        case .external: (L("external"), .blue)
+        case .app: (L("this app"), .green)
+        case .revert: (L("revert"), .purple)
         }
         return Text(label)
             .font(.system(size: 9, weight: .bold))

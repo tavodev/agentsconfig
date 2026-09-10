@@ -12,7 +12,7 @@ struct MenuBarView: View {
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 if !store.externalChanges.isEmpty {
-                    Text("\(store.externalChanges.count) pendiente(s)")
+                    Text(L("%d pending", store.externalChanges.count))
                         .font(.caption2.bold())
                         .foregroundStyle(.white)
                         .padding(.horizontal, 7).padding(.vertical, 3)
@@ -25,7 +25,7 @@ struct MenuBarView: View {
             Divider()
 
             if store.activity.isEmpty {
-                Text("Sin cambios detectados")
+                Text(L("No changes detected"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(14)
@@ -51,12 +51,12 @@ struct MenuBarView: View {
             Divider()
 
             HStack {
-                Button("Abrir AgentsConfig") {
+                Button(L("Open AgentsConfig")) {
                     NSApp.activate(ignoringOtherApps: true)
                 }
                 .controlSize(.small)
                 Spacer()
-                Button("Salir") { NSApp.terminate(nil) }
+                Button(L("Quit")) { NSApp.terminate(nil) }
                     .controlSize(.small)
             }
             .padding(10)

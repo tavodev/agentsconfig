@@ -73,26 +73,26 @@ struct SidebarView: View {
         @Bindable var store = store
         List(selection: $store.selectedAgentID) {
             Section {
-                PanelRow(icon: "bolt.horizontal.fill", title: "Actividad",
-                         subtitle: "feed de cambios", count: store.activity.count,
+                PanelRow(icon: "bolt.horizontal.fill", title: L("Activity"),
+                         subtitle: L("change feed"), count: store.activity.count,
                          color: .accentColor)
                     .tag(ConfigStore.activityID)
                 PanelRow(icon: "server.rack", title: "MCP",
-                         subtitle: "comparador entre agentes", count: store.mcpNames.count,
+                         subtitle: L("cross-agent comparator"), count: store.mcpNames.count,
                          color: .teal)
                     .tag(ConfigStore.mcpID)
             }
-            Section("Agentes detectados") {
+            Section(L("Detected agents")) {
                 ForEach(store.agents) { agent in
                     AgentRow(agent: agent)
                         .tag(agent.id)
-                        .help(agent.notes ?? "")
+                        .help(agent.notes.map { L($0) } ?? "")
                         .contextMenu {
-                            Button("Abrir carpeta en Finder") {
+                            Button(L("Open folder in Finder")) {
                                 store.revealInFinder(
                                     (agent.detectionPath as NSString).expandingTildeInPath)
                             }
-                            Button("Re-escanear") { store.refresh() }
+                            Button(L("Re-scan")) { store.refresh() }
                         }
                 }
             }
@@ -105,7 +105,7 @@ struct SidebarView: View {
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.caption2)
                             .foregroundStyle(.blue)
-                        Text("\(store.externalChanges.count) cambio(s) externo(s)")
+                        Text(L("%d external change(s)", store.externalChanges.count))
                             .font(.caption2)
                             .foregroundStyle(.blue)
                         Spacer()
@@ -116,7 +116,7 @@ struct SidebarView: View {
                     Image(systemName: "eye.fill")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Text("\(store.watchedCount) archivos vigilados")
+                    Text(L("%d files watched", store.watchedCount))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -183,7 +183,7 @@ struct AgentRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(agent.name)
                     .font(.system(size: 13, weight: .medium))
-                Text("\(agent.files.count) archivos")
+                Text(L("%d files", agent.files.count))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -217,7 +217,7 @@ struct FileListView: View {
                 List(selection: $store.selectedPath) {
                     if let notes = agent.notes {
                         Section {
-                            Text(notes)
+                            Text(L(notes))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -234,19 +234,19 @@ struct FileListView: View {
                                     .contextMenu { fileMenu(file) }
                             }
                         } header: {
-                            Label(role.label, systemImage: role.icon)
+                            Label(L(role.label), systemImage: role.icon)
                         }
                     }
                 }
                 .listStyle(.inset)
-                .searchable(text: $query, prompt: "Filtrar archivos")
+                .searchable(text: $query, prompt: L("Filter files"))
             } else {
-                ContentUnavailableView("Sin agentes",
+                ContentUnavailableView(L("No agents"),
                                        systemImage: "tray",
-                                       description: Text("No se detectaron agentes de IA en ~"))
+                                       description: Text(L("No AI agents detected in ~")))
             }
         }
-        .navigationTitle(agent?.name ?? "Archivos")
+        .navigationTitle(agent?.name ?? L("Files"))
     }
 
     // MARK: grouping & menus
@@ -265,13 +265,13 @@ struct FileListView: View {
 
     @ViewBuilder
     private func fileMenu(_ file: TrackedFile) -> some View {
-        Button("Mostrar en Finder") { store.revealInFinder(file.path) }
-        Button("Abrir con app por defecto") { store.openInDefaultApp(file.path) }
-        Button("Copiar ruta") { store.copyPath(file.path) }
+        Button(L("Show in Finder")) { store.revealInFinder(file.path) }
+        Button(L("Open with default app")) { store.openInDefaultApp(file.path) }
+        Button(L("Copy path")) { store.copyPath(file.path) }
         Divider()
-        Button("Restaurar versión anterior") { store.restorePrevious(file.path) }
+        Button(L("Restore previous version")) { store.restorePrevious(file.path) }
             .disabled(store.history(for: file.path).isEmpty)
-        Button("Descartar banner de cambios") { store.acknowledgeExternal(path: file.path) }
+        Button(L("Dismiss change banner")) { store.acknowledgeExternal(path: file.path) }
             .disabled(store.externalChanges[file.path] == nil)
     }
 }
@@ -302,7 +302,7 @@ struct FileRow: View {
                         Image(systemName: "bolt.fill")
                             .font(.system(size: 8))
                             .foregroundStyle(.tertiary)
-                            .help("Archivo de estado — muy activo")
+                            .help(L("State file — changes frequently"))
                     }
                 }
                 Text(file.shortPath)
@@ -311,7 +311,7 @@ struct FileRow: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let note = file.note {
-                    Text(note)
+                    Text(L(note))
                         .font(.system(size: 9.5))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
@@ -320,16 +320,16 @@ struct FileRow: View {
             Spacer()
             if pending {
                 Circle().fill(.blue).frame(width: 8, height: 8)
-                    .help("Modificado fuera de la app — revisa el diff")
+                    .help(L("Modified outside the app — check the diff"))
             }
             if dirty {
                 Circle().fill(.orange).frame(width: 8, height: 8)
-                    .help("Tienes cambios sin guardar")
+                    .help(L("You have unsaved changes"))
             }
             if !file.exists {
                 Image(systemName: "exclamationmark.circle")
                     .foregroundStyle(.red)
-                    .help("El archivo no existe en disco")
+                    .help(L("File does not exist on disk"))
             } else if !file.issues.isEmpty {
                 FileIssuesButton(issues: file.issues)
             }
@@ -337,7 +337,7 @@ struct FileRow: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 9))
                     .foregroundStyle(.tertiary)
-                    .help("Solo lectura")
+                    .help(L("Read-only"))
             }
         }
         .padding(.vertical, 3)
@@ -359,7 +359,7 @@ struct FileIssuesButton: View {
         .help(issues.map(\.message).joined(separator: "\n"))
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Problemas detectados")
+                Text(L("Issues detected"))
                     .font(.system(size: 12, weight: .semibold))
                 ForEach(Array(issues.enumerated()), id: \.offset) { _, i in
                     HStack(alignment: .top, spacing: 6) {

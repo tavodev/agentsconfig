@@ -30,16 +30,16 @@ enum TrackedRole: String {
 
     var label: String {
         switch self {
-        case .settings: return "Ajustes"
-        case .instructions: return "Instrucciones"
+        case .settings: return "Settings"
+        case .instructions: return "Instructions"
         case .mcp: return "MCP"
         case .hooks: return "Hooks"
-        case .permissions: return "Permisos"
+        case .permissions: return "Permissions"
         case .skills: return "Skills"
-        case .agents: return "Subagentes"
+        case .agents: return "Sub-agents"
         case .plugins: return "Plugins"
-        case .state: return "Estado"
-        case .other: return "Otro"
+        case .state: return "State"
+        case .other: return "Other"
         }
     }
 
@@ -131,7 +131,7 @@ struct FileIssue: Hashable {
 }
 
 struct SemanticChange: Identifiable, Hashable {
-    enum Kind: String { case added = "Añadido", removed = "Eliminado", modified = "Modificado" }
+    enum Kind: String { case added = "Added", removed = "Removed", modified = "Modified" }
     var id = UUID()
     var keyPath: String
     var kind: Kind

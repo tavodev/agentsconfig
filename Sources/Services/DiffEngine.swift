@@ -50,7 +50,7 @@ enum DiffEngine {
             }
         default:
             if !scalarEqual(old, new) {
-                out.append(.init(keyPath: path.isEmpty ? "(raíz)" : path, kind: .modified,
+                out.append(.init(keyPath: path.isEmpty ? "(root)" : path, kind: .modified,
                                  oldValue: display(old), newValue: display(new)))
             }
         }
@@ -117,6 +117,7 @@ enum DiffEngine {
     }
 
     /// Short human summary like "+3 · −1 · ~2".
+    @MainActor
     static func summary(_ changes: [SemanticChange]) -> String {
         let a = changes.filter { $0.kind == .added }.count
         let r = changes.filter { $0.kind == .removed }.count
@@ -125,6 +126,6 @@ enum DiffEngine {
         if a > 0 { parts.append("+\(a)") }
         if m > 0 { parts.append("~\(m)") }
         if r > 0 { parts.append("−\(r)") }
-        return parts.isEmpty ? "sin cambios semánticos" : parts.joined(separator: "  ")
+        return parts.isEmpty ? L("no semantic changes") : parts.joined(separator: "  ")
     }
 }

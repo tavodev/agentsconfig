@@ -4,7 +4,7 @@ import Foundation
 /// - parse errors
 /// - hook commands pointing to files that no longer exist (e.g. stale Orca hooks)
 /// - marker sections written by third-party tools (orca-managed, gk hooks, state blocks)
-enum Linter {
+@MainActor enum Linter {
 
     static func lint(path: String, text: String, tree: Any?, parseError: String?,
                      format: ConfigFormat) -> (issues: [FileIssue], managed: [ManagedBlock]) {
@@ -26,7 +26,7 @@ enum Linter {
                     if !FileManager.default.fileExists(atPath: ref) {
                         issues.append(.init(
                             severity: .warning,
-                            message: "Hook referencia un archivo inexistente: \(ref)"
+                            message: L("Hook points to a missing file: %@", ref)
                         ))
                     }
                 }
@@ -40,7 +40,7 @@ enum Linter {
                 if !FileManager.default.fileExists(atPath: NSHomeDirectory() + "/.orca") {
                     issues.append(.init(
                         severity: .warning,
-                        message: "Hooks de Orca detectados pero ~/.orca ya no existe — son inertes."
+                        message: L("Orca hooks detected but ~/.orca no longer exists — they are inert.")
                     ))
                 }
             }
@@ -49,14 +49,14 @@ enum Linter {
         // --- empty instruction files
         if (format == .markdown || format == .text) &&
             text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            issues.append(.init(severity: .info, message: "Archivo vacío."))
+            issues.append(.init(severity: .info, message: L("Empty file.")))
         }
 
         // --- unknown top-level keys (typo / deprecated)
         if let dict = tree as? [String: Any], let known = knownKeys(for: path) {
             for k in dict.keys where !known.contains(k) {
                 issues.append(.init(severity: .info,
-                                    message: "Clave no reconocida: «\(k)» — ¿typo o key nueva del agente?"))
+                                    message: L("Unrecognized key: «%@» — typo or new agent key?", k)))
             }
         }
 
@@ -129,7 +129,7 @@ enum Linter {
             let owner = tag
                 .replacingOccurrences(of: "orca-managed-", with: "Orca · ")
                 .replacingOccurrences(of: "-managed-", with: " · ")
-            managed.append(.init(owner: owner, detail: "Bloque delimitado «\(tag)» — gestionado por herramienta externa"))
+            managed.append(.init(owner: owner, detail: L("Delimited block «%@» — managed by an external tool", tag)))
         }
     }
 
@@ -182,13 +182,13 @@ enum Linter {
     /// Well-known keys that agents/tools write for their own bookkeeping.
     private static func detectManagedKeys(_ dict: [String: Any], into managed: inout [ManagedBlock]) {
         if let hooks = dict["hooks"] as? [String: Any], hooks["state"] != nil {
-            managed.append(.init(owner: "Codex", detail: "hooks.state — hashes de confianza gestionados por Codex"))
+            managed.append(.init(owner: "Codex", detail: L("hooks.state — trust hashes managed by Codex")))
         }
         if dict["feedbackSurveyState"] != nil || dict["projects"] != nil {
-            managed.append(.init(owner: "Claude Code", detail: "Estado interno (projects, surveys) — se reescribe solo"))
+            managed.append(.init(owner: "Claude Code", detail: L("Internal state (projects, surveys) — rewrites itself")))
         }
         if dict["plugins"] != nil, dict["marketplaces"] != nil {
-            managed.append(.init(owner: "Codex", detail: "plugins/marketplaces — gestionados por la app de Codex"))
+            managed.append(.init(owner: "Codex", detail: L("plugins/marketplaces — managed by the Codex app")))
         }
     }
 }

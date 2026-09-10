@@ -15,23 +15,23 @@ enum AgentRegistry {
             detectionPaths: ["~/.claude", "~/.claude.json"],
             sources: [
                 .init(path: "~/.claude/settings.json", role: .settings,
-                      note: "Ajustes globales de usuario"),
+                      note: "Global user settings"),
                 .init(path: "~/.claude/CLAUDE.md", role: .instructions,
-                      note: "Instrucciones globales (memoria)"),
+                      note: "Global instructions (memory)"),
                 .init(path: "~/.claude/mcp.json", role: .mcp),
                 .init(path: "~/.claude/hooks", isDirectory: true, role: .hooks,
-                      note: "Scripts de hooks"),
+                      note: "Hook scripts"),
                 .init(path: "~/.claude/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills),
                 .init(path: "~/.claude/agents", isDirectory: true, role: .agents),
                 .init(path: "~/.claude/commands", isDirectory: true, role: .other,
-                      note: "Comandos personalizados"),
+                      note: "Custom commands"),
                 .init(path: "~/.claude/statusline.sh", role: .other, note: "Status line"),
                 .init(path: "~/.claude/plugins/config.json", role: .plugins),
                 .init(path: "~/.claude/plugins/installed_plugins.json", role: .plugins),
                 .init(path: "~/.claude.json", role: .state, volatile: true,
-                      note: "Estado global + MCP servers (muy activo, solo vista en vivo)"),
+                      note: "Global state + MCP servers (very active, live view only)"),
             ],
-            notes: "Precedencia: managed > local > proyecto > usuario. Los MCP globales viven en ~/.claude.json → mcpServers."
+            notes: "Precedence: managed > local > project > user. Global MCP servers live in ~/.claude.json → mcpServers."
         ),
 
         AgentDefinition(
@@ -42,19 +42,19 @@ enum AgentRegistry {
             detectionPaths: ["~/.codex"],
             sources: [
                 .init(path: "~/.codex/config.toml", role: .settings,
-                      note: "Config principal (TOML): modelo, sandbox, MCP, plugins, proyectos"),
+                      note: "Main config (TOML): model, sandbox, MCP, plugins, projects"),
                 .init(path: "~/.codex/AGENTS.md", role: .instructions,
-                      note: "Instrucciones globales"),
+                      note: "Global instructions"),
                 .init(path: "~/.codex/hooks.json", role: .hooks),
                 .init(path: "~/.codex/rules", isDirectory: true, glob: "*.rules", role: .permissions,
-                      note: "Reglas de prefijos (allow/deny)"),
+                      note: "Prefix rules (allow/deny)"),
                 .init(path: "~/.codex/agents", isDirectory: true, role: .agents),
                 .init(path: "~/.codex/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills),
                 .init(path: "~/.codex/prompts", isDirectory: true, role: .other),
                 .init(path: "~/.codex/auth.json", role: .state, volatile: true, readOnly: true,
-                      note: "Credenciales — solo lectura"),
+                      note: "Credentials — read-only"),
             ],
-            notes: "Perfiles: ~/.codex/<nombre>.config.toml. Overrides por proyecto en .codex/config.toml."
+            notes: "Profiles: ~/.codex/<name>.config.toml. Per-project overrides in .codex/config.toml."
         ),
 
         AgentDefinition(
@@ -65,21 +65,21 @@ enum AgentRegistry {
             detectionPaths: ["~/.gemini"],
             sources: [
                 .init(path: "~/.gemini/settings.json", role: .settings,
-                      note: "Gemini CLI / compartido"),
+                      note: "Gemini CLI / shared"),
                 .init(path: "~/.gemini/GEMINI.md", role: .instructions),
                 .init(path: "~/.gemini/config/mcp_config.json", role: .mcp,
-                      note: "MCP compartido (post-migración 2.0)"),
+                      note: "Shared MCP (post-migration 2.0)"),
                 .init(path: "~/.gemini/config/config.json", role: .settings,
                       note: "Plugins + userSettings"),
                 .init(path: "~/.gemini/antigravity/mcp_config.json", role: .mcp,
-                      note: "Legacy (pre-migración): puede estar ignorado"),
+                      note: "Legacy (pre-migration): may be ignored"),
                 .init(path: "~/Library/Application Support/Antigravity/User/settings.json",
-                      role: .settings, note: "Ajustes del IDE (estilo VS Code)"),
+                      role: .settings, note: "IDE settings (VS Code style)"),
                 .init(path: "~/.gemini/config/skills", isDirectory: true, glob: "*/SKILL.md",
                       role: .skills),
                 .init(path: "~/.gemini/trustedFolders.json", role: .permissions),
             ],
-            notes: "Antigravity app, IDE y CLI comparten ~/.gemini/config tras la migración (marca: .migrated)."
+            notes: "Antigravity app, IDE and CLI share ~/.gemini/config after migration (marker: .migrated)."
         ),
 
         AgentDefinition(
@@ -90,11 +90,11 @@ enum AgentRegistry {
             detectionPaths: ["~/.config/opencode"],
             sources: [
                 .init(path: "~/.config/opencode/opencode.json", role: .settings,
-                      note: "Providers, modelos y MCP"),
+                      note: "Providers, models and MCP"),
                 .init(path: "~/.config/opencode/AGENTS.md", role: .instructions),
                 .init(path: "~/.config/opencode/plugins", isDirectory: true, role: .plugins),
             ],
-            notes: "Declara $schema — validable contra https://opencode.ai/config.json."
+            notes: "Declares $schema — validatable against https://opencode.ai/config.json."
         ),
     ]
 

@@ -47,23 +47,27 @@ extension Notifier {
         guard AppSettings.notificationsEnabled,
               !NSApplication.shared.isActive,
               let center else { return }
+        let titleSuffix = L("config modified")
         center.getNotificationSettings { settings in
             switch settings.authorizationStatus {
             case .notDetermined:
                 center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
-                    if granted { Self.deliver(center, path: path, agentName: agentName, summary: summary) }
+                    if granted { Self.deliver(center, path: path, agentName: agentName,
+                                              summary: summary, titleSuffix: titleSuffix) }
                 }
             case .authorized, .provisional, .ephemeral:
-                Self.deliver(center, path: path, agentName: agentName, summary: summary)
+                Self.deliver(center, path: path, agentName: agentName, summary: summary,
+                             titleSuffix: titleSuffix)
             default: break
             }
         }
     }
 
     nonisolated private static func deliver(_ center: UNUserNotificationCenter,
-                                            path: String, agentName: String, summary: String) {
+                                            path: String, agentName: String, summary: String,
+                                            titleSuffix: String) {
         let content = UNMutableNotificationContent()
-        content.title = "\(agentName): config modificada"
+        content.title = "\(agentName): \(titleSuffix)"
         content.body = "\(URL(fileURLWithPath: path).lastPathComponent) — \(summary)"
         content.userInfo = ["path": path]
         content.sound = .default

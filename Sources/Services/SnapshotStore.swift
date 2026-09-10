@@ -57,6 +57,7 @@ struct SnapshotStore {
     }
 
     @discardableResult
+    @MainActor
     func record(path: String, content: String, origin: FileVersion.Origin,
                 changes: [SemanticChange]) -> FileVersion? {
         let dir = dir(for: path)

@@ -3,7 +3,7 @@ import TOMLKit
 
 /// Parses file text into a Foundation tree ([String: Any] / [Any] / scalars)
 /// that DiffEngine and the structured views can walk.
-enum Parsers {
+@MainActor enum Parsers {
 
     static func parse(_ text: String, format: ConfigFormat) -> (tree: Any?, error: String?) {
         switch format {
@@ -32,11 +32,11 @@ enum Parsers {
         do {
             let table = try TOMLTable(string: text)
             let json = table.convert(to: .json)
-            guard let data = json.data(using: .utf8) else { return (nil, "TOML→JSON vacío") }
+            guard let data = json.data(using: .utf8) else { return (nil, L("TOML→JSON empty")) }
             let obj = try JSONSerialization.jsonObject(with: data)
             return (obj, nil)
         } catch {
-            return (nil, "TOML inválido: \(error.localizedDescription)")
+            return (nil, L("Invalid TOML: %@", error.localizedDescription))
         }
     }
 
@@ -50,9 +50,9 @@ enum Parsers {
            let idx = Int(String(dbg[digits])) {
             let prefix = String(decoding: text.utf8.prefix(idx), as: UTF8.self)
             let line = prefix.split(separator: "\n", omittingEmptySubsequences: false).count
-            return "JSON inválido — error cerca de la línea \(line): \(msg)"
+            return L("Invalid JSON — error near line %d: %@", line, msg)
         }
-        return "JSON inválido: \(msg)"
+        return L("Invalid JSON: %@", msg)
     }
 
     /// Remove // and /* */ comments without touching string literals.

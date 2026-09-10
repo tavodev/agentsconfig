@@ -16,9 +16,9 @@ struct McpMatrixView: View {
         Group {
             if store.mcpIndex.isEmpty {
                 ContentUnavailableView(
-                    "Sin MCP servers",
+                    L("No MCP servers"),
                     systemImage: "server.rack",
-                    description: Text("Ningún agente declara servidores MCP en su configuración.")
+                    description: Text(L("No agent declares MCP servers in its config."))
                 )
             } else {
                 List(selection: $store.selectedMcpName) {
@@ -29,7 +29,7 @@ struct McpMatrixView: View {
                         }
                     } header: {
                         HStack {
-                            Text("Servidores MCP")
+                            Text(L("MCP servers"))
                             Spacer()
                             Text("\(names.count)")
                                 .font(.caption2.bold())
@@ -38,10 +38,10 @@ struct McpMatrixView: View {
                     }
                 }
                 .listStyle(.inset)
-                .searchable(text: $query, prompt: "Filtrar servidores")
+                .searchable(text: $query, prompt: L("Filter servers"))
             }
         }
-        .navigationTitle("MCP servers")
+        .navigationTitle(L("MCP servers"))
     }
 }
 
@@ -57,7 +57,7 @@ struct McpMatrixRow: View {
                 Text(name)
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
                 if let first = entries.first {
-                    Text(first.isRemote ? "remoto" : "local")
+                    Text(first.isRemote ? L("remote") : L("local"))
                         .font(.system(size: 8, weight: .bold))
                         .padding(.horizontal, 4).padding(.vertical, 1)
                         .background((first.isRemote ? Color.purple : Color.teal).opacity(0.15))
@@ -107,7 +107,7 @@ struct McpDetailView: View {
                         Text(name)
                             .font(.system(size: 16, weight: .semibold, design: .monospaced))
                         Spacer()
-                        Text("\(entries.count) de \(store.agents.count) agentes")
+                        Text(L("%d of %d agents", entries.count, store.agents.count))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -126,9 +126,9 @@ struct McpDetailView: View {
             }
             .navigationTitle(name)
         } else {
-            ContentUnavailableView("Selecciona un servidor",
+            ContentUnavailableView(L("Select a server"),
                                    systemImage: "server.rack",
-                                   description: Text("Elige un MCP server para comparar su configuración entre agentes."))
+                                   description: Text(L("Pick an MCP server to compare its configuration across agents.")))
         }
     }
 }
@@ -145,7 +145,7 @@ struct McpAgentCard: View {
                     Image(systemName: agent.symbol).foregroundStyle(agent.color)
                     Text(agent.name).font(.system(size: 13, weight: .semibold))
                     if let en = entry.enabled {
-                        Text(en ? "activo" : "desactivado")
+                        Text(en ? L("enabled") : L("disabled"))
                             .font(.system(size: 8, weight: .bold))
                             .padding(.horizontal, 5).padding(.vertical, 2)
                             .background((en ? Color.green : Color.gray).opacity(0.15))
@@ -154,7 +154,7 @@ struct McpAgentCard: View {
                     }
                     Spacer()
                     Button { store.openFile(entry.sourcePath) } label: {
-                        Label("Abrir", systemImage: "doc.text")
+                        Label(L("Open"), systemImage: "doc.text")
                     }
                     .controlSize(.small)
                 }
@@ -201,12 +201,12 @@ struct McpMissingCard: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("no configurado")
+                Text(L("not configured"))
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 if let source, store.mcpTargetFile(for: agent.id) != nil {
-                    Menu("Copiar aquí") {
-                        Button("Copiar «\(source.name)» a \(agent.name)") {
+                    Menu(L("Copy here")) {
+                        Button(L("Copy %@ to %@", source.name, agent.name)) {
                             store.copyMcpServer(source, to: agent.id)
                         }
                     }

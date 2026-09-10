@@ -10,7 +10,7 @@ struct DiffSheet: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Cambios detectados")
+                    Text(L("Changes detected"))
                         .font(.headline)
                     Text(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
                         .font(.caption)
@@ -20,15 +20,15 @@ struct DiffSheet: View {
                 Text(DiffEngine.summary(change.changes))
                     .font(.callout.monospaced())
                     .foregroundStyle(.secondary)
-                Button("Cerrar") { dismiss() }
+                Button(L("Close")) { dismiss() }
                     .keyboardShortcut(.cancelAction)
             }
             .padding(16)
             Divider()
             if change.changes.isEmpty {
-                ContentUnavailableView("Sin diferencias semánticas",
+                ContentUnavailableView(L("No semantic differences"),
                                        systemImage: "equal.circle",
-                                       description: Text("El contenido cambió solo en formato o comentarios."))
+                                       description: Text(L("Content changed only in formatting or comments.")))
             } else {
                 List(change.changes) { c in
                     ChangeRow(change: c)
@@ -124,7 +124,7 @@ struct CompareView: View {
             }
             .font(.caption)
             if changes.isEmpty {
-                Label("Sin diferencias", systemImage: "checkmark.circle")
+                Label(L("No differences"), systemImage: "checkmark.circle")
                     .font(.caption)
                     .foregroundStyle(.green)
             } else {

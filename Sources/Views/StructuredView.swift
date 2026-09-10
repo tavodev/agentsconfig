@@ -146,12 +146,12 @@ struct StructuredView: View {
                         Label(err, systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.red)
-                        Text("Corrige el error en la pestaña Fuente para activar la vista estructurada.")
+                        Text(L("Fix the error in the Source tab to enable the structured view."))
                             .font(.caption2).foregroundStyle(.secondary)
                     }
                 } else if root == nil {
                     Card {
-                        Label("Este archivo no es un objeto JSON/TOML estructurado.",
+                        Label(L("This file is not a structured JSON/TOML object."),
                               systemImage: "info.circle")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -159,14 +159,14 @@ struct StructuredView: View {
                 } else {
                     if readOnly {
                         Card {
-                            Label("Vista estructurada de solo lectura — edita en la pestaña Fuente (formato \(format.badge)).",
+                            Label(L("Read-only structured view — edit in the Source tab (%@ format).", format.badge),
                                   systemImage: "lock")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     } else if format == .toml {
                         Card {
-                            Label("La edición estructurada reescribe el TOML — comentarios y formato se normalizan al guardar.",
+                            Label(L("Structured editing rewrites the TOML — comments and formatting are normalized on save."),
                                   systemImage: "info.circle")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
@@ -199,12 +199,12 @@ struct StructuredView: View {
                 HooksCard(hooks: hooks)
             }
             if let plugins = r["enabledPlugins"] as? [String: Any] {
-                BoolMapCard(title: "Plugins habilitados", icon: "puzzlepiece",
+                BoolMapCard(title: L("Enabled plugins"), icon: "puzzlepiece",
                             keyPath: [.key("enabledPlugins")], map: plugins,
                             editable: editable, mutate: mutate)
             }
             if let env = r["env"] as? [String: Any] {
-                StringMapCard(title: "Variables de entorno", icon: "terminal",
+                StringMapCard(title: L("Environment variables"), icon: "terminal",
                               keyPath: [.key("env")], map: env,
                               editable: editable, mutate: mutate)
             }
@@ -253,13 +253,13 @@ struct KeyDocButton: View {
                 .foregroundStyle(.tertiary)
         }
         .buttonStyle(.plain)
-        .help(doc.summary)
+        .help(doc.localizedSummary)
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(doc.summary)
+                Text(doc.localizedSummary)
                     .font(.caption)
                     .fixedSize(horizontal: false, vertical: true)
-                if let values = doc.values, !values.isEmpty {
+                if let values = doc.localizedValues, !values.isEmpty {
                     Divider()
                     ForEach(values.keys.sorted(), id: \.self) { v in
                         HStack(alignment: .top, spacing: 8) {
@@ -275,7 +275,7 @@ struct KeyDocButton: View {
                 }
                 if let def = doc.defaultValue {
                     Divider()
-                    Text("Por defecto: \(def)")
+                    Text(L("Default: %@", def))
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -304,7 +304,7 @@ struct MCPCard: View {
     var body: some View {
         Card {
             HStack {
-                CardHeader(title: "Servidores MCP", icon: "network")
+                CardHeader(title: L("MCP servers"), icon: "network")
                 if editable {
                     Button { showAdd = true } label: {
                         Image(systemName: "plus.circle.fill")
@@ -334,13 +334,13 @@ struct MCPCard: View {
     private var addForm: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Nuevo servidor MCP").font(.headline)
-            TextField("Nombre", text: $newName)
-            TextField("Comando (p. ej. npx)", text: $newCommand)
-            TextField("Args (separados por espacio)", text: $newArgs)
-            TextField("o URL remota (http…)", text: $newURL)
+            TextField(L("Name"), text: $newName)
+            TextField(L("Command (e.g. npx)"), text: $newCommand)
+            TextField(L("Args (space-separated)"), text: $newArgs)
+            TextField(L("or remote URL (http…)"), text: $newURL)
             HStack {
                 Spacer()
-                Button("Añadir") {
+                Button(L("Add")) {
                     let name = newName.trimmingCharacters(in: .whitespaces)
                     guard !name.isEmpty else { return }
                     mutate { r in
@@ -435,7 +435,7 @@ struct PermissionsCard: View {
 
     var body: some View {
         Card {
-            CardHeader(title: "Permisos", icon: "lock.shield")
+            CardHeader(title: L("Permissions"), icon: "lock.shield")
             if let mode = perms["defaultMode"] as? String {
                 HStack {
                     Text("defaultMode").font(.caption).foregroundStyle(.secondary)
@@ -479,7 +479,7 @@ struct StringListEditor: View {
             }
             if editable {
                 HStack(spacing: 6) {
-                    TextField("Añadir regla…", text: $newValue)
+                    TextField(L("Add rule…"), text: $newValue)
                         .textFieldStyle(.roundedBorder)
                         .font(.system(size: 11))
                         .onSubmit(add)
@@ -512,7 +512,7 @@ struct HooksCard: View {
 
     var body: some View {
         Card {
-            CardHeader(title: "Hooks", icon: "hook")
+            CardHeader(title: L("Hooks"), icon: "hook")
             ForEach(events, id: \.self) { event in
                 VStack(alignment: .leading, spacing: 3) {
                     Text(event).font(.system(size: 11, weight: .semibold))
@@ -562,7 +562,7 @@ struct HookCommandRow: View {
                 .lineLimit(3)
                 .textSelection(.enabled)
         }
-        .help(missingPaths.isEmpty ? "Comando disponible" : "Ruta inexistente: \(missingPaths.joined(separator: ", "))")
+        .help(missingPaths.isEmpty ? L("Command available") : L("Missing path: %@", missingPaths.joined(separator: ", ")))
     }
 }
 
@@ -617,7 +617,7 @@ struct StringMapCard: View {
                     Text(k)
                         .font(.system(size: 10.5, weight: .medium, design: .monospaced))
                         .frame(minWidth: 140, alignment: .leading)
-                    TextField("valor", text: Binding(
+                    TextField(L("value"), text: Binding(
                         get: { map[k] as? String ?? "\(map[k] ?? "")" },
                         set: { v in mutate { r in setAt(&r, keyPath + [.key(k)], v) } }
                     ))
@@ -640,7 +640,7 @@ struct GenericInspector: View {
 
     var body: some View {
         Card {
-            CardHeader(title: "Todas las claves", icon: "list.bullet.indent")
+            CardHeader(title: L("All keys"), icon: "list.bullet.indent")
             OutlineGroup(nodes, children: \.children) { node in
                 NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate)
             }

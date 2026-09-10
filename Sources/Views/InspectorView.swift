@@ -31,21 +31,21 @@ struct FileInspectorView: View {
             }
             .inspectorColumnWidth(min: 210, ideal: 250, max: 320)
         } else {
-            ContentUnavailableView("Sin selección", systemImage: "sidebar.trailing")
+            ContentUnavailableView(L("No selection"), systemImage: "sidebar.trailing")
         }
     }
 
     private func aboutSection(_ doc: DocsCatalog.FileDoc) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(doc.title, systemImage: "questionmark.circle")
+            Label(doc.localizedTitle, systemImage: "questionmark.circle")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-            Text(doc.body)
+            Text(doc.localizedBody)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if let url = doc.docsURL {
-                Link("Documentación oficial ↗", destination: url)
+                Link(L("Official docs") + " ↗", destination: url)
                     .font(.caption2)
             }
         }
@@ -57,24 +57,24 @@ struct FileInspectorView: View {
 
     private func metaSection(path: String, file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Metadatos").font(.system(size: 11, weight: .semibold))
+            Text(L("Metadata")).font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-            metaRow("Formato", file.format.badge)
-            metaRow("Rol", file.role.label)
-            metaRow("Tamaño", ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
+            metaRow(L("Format"), file.format.badge)
+            metaRow(L("Role"), L(file.role.label))
+            metaRow(L("Size"), ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
             if let m = file.mtime {
-                metaRow("Modificado", m.formatted(date: .abbreviated, time: .shortened))
+                metaRow(L("Modified"), m.formatted(date: .abbreviated, time: .shortened))
             }
-            if let perms = posixPerms(path) { metaRow("Permisos", perms) }
-            if file.volatile { metaRow("Tipo", "volátil (estado)") }
-            if file.readOnly { metaRow("Acceso", "solo lectura") }
-            if let note = file.note { Text(note).font(.caption2).foregroundStyle(.tertiary) }
+            if let perms = posixPerms(path) { metaRow(L("Permissions"), perms) }
+            if file.volatile { metaRow(L("Type"), L("volatile (state)")) }
+            if file.readOnly { metaRow(L("Access"), L("read-only")) }
+            if let note = file.note { Text(L(note)).font(.caption2).foregroundStyle(.tertiary) }
         }
     }
 
     private func issuesSection(_ file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Problemas").font(.system(size: 11, weight: .semibold))
+            Text(L("Issues")).font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
             ForEach(Array(file.issues.enumerated()), id: \.offset) { _, i in
                 HStack(alignment: .top, spacing: 6) {
@@ -91,7 +91,7 @@ struct FileInspectorView: View {
 
     private func managedSection(_ file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Gestionado por terceros").font(.system(size: 11, weight: .semibold))
+            Text(L("Managed by third parties")).font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
             ForEach(Array(file.managedBlocks.enumerated()), id: \.offset) { _, b in
                 VStack(alignment: .leading, spacing: 2) {
@@ -104,18 +104,18 @@ struct FileInspectorView: View {
 
     private func actionsSection(path: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Acciones").font(.system(size: 11, weight: .semibold))
+            Text(L("Actions")).font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
-            InspectorAction(icon: "folder", label: "Mostrar en Finder") {
+            InspectorAction(icon: "folder", label: L("Show in Finder")) {
                 store.revealInFinder(path)
             }
-            InspectorAction(icon: "app.badge", label: "Abrir con app por defecto") {
+            InspectorAction(icon: "app.badge", label: L("Open with default app")) {
                 store.openInDefaultApp(path)
             }
-            InspectorAction(icon: "doc.on.doc", label: "Copiar ruta") {
+            InspectorAction(icon: "doc.on.doc", label: L("Copy path")) {
                 store.copyPath(path)
             }
-            InspectorAction(icon: "arrow.uturn.backward", label: "Restaurar versión anterior") {
+            InspectorAction(icon: "arrow.uturn.backward", label: L("Restore previous version")) {
                 store.restorePrevious(path)
             }
             .disabled(store.history(for: path).isEmpty)

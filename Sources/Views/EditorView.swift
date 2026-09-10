@@ -1,9 +1,9 @@
 import SwiftUI
 
 enum EditorTab: String, CaseIterable {
-    case structured = "Estructurado"
-    case source = "Fuente"
-    case history = "Historial"
+    case structured = "Structured"
+    case source = "Source"
+    case history = "History"
 }
 
 struct EditorView: View {
@@ -48,9 +48,9 @@ struct EditorView: View {
             }
         } else {
             ContentUnavailableView(
-                "Selecciona un archivo",
+                L("Select a file"),
                 systemImage: "doc.text.magnifyingglass",
-                description: Text("Elige un agente y un archivo de configuración para inspeccionarlo.")
+                description: Text(L("Pick an agent and a config file to inspect it."))
             )
         }
     }
@@ -89,7 +89,7 @@ struct EditorView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     if let note = file?.note {
-                        Text("· \(note)")
+                        Text("· \(L(note))")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
@@ -102,11 +102,11 @@ struct EditorView: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .help("Mostrar en Finder")
+            .help(L("Show in Finder"))
             metaLabels(path: path)
             Picker("", selection: $tab) {
                 ForEach(EditorTab.allCases, id: \.self) { t in
-                    Text(t.rawValue).tag(t)
+                    Text(L(t.rawValue)).tag(t)
                 }
             }
             .pickerStyle(.segmented)
@@ -208,14 +208,14 @@ struct EditorView: View {
     private func footer(path: String) -> some View {
         HStack(spacing: 12) {
             if store.dirtyPaths.contains(path) {
-                Label("Sin guardar", systemImage: "circle.fill")
+                Label(L("Unsaved"), systemImage: "circle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
-                Button("Guardar") { store.save(path: path) }
+                Button(L("Save")) { store.save(path: path) }
                     .keyboardShortcut("s", modifiers: .command)
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
-                Button("Descartar") { store.discardEdit(path: path) }
+                Button(L("Discard")) { store.discardEdit(path: path) }
                     .controlSize(.small)
             } else if let err = store.saveErrors[path] {
                 Label(err, systemImage: "exclamationmark.octagon.fill")
@@ -228,7 +228,7 @@ struct EditorView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 } else {
-                    Label("Sincronizado con disco", systemImage: "checkmark.circle.fill")
+                    Label(L("In sync with disk"), systemImage: "checkmark.circle.fill")
                         .font(.caption)
                         .foregroundStyle(.green)
                 }
@@ -258,17 +258,17 @@ struct FileDocButton: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
-        .help("¿Qué es este archivo?")
+        .help(L("What is this file?"))
         .popover(isPresented: $show, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(doc.title)
+                Text(doc.localizedTitle)
                     .font(.system(size: 13, weight: .semibold))
-                Text(doc.body)
+                Text(doc.localizedBody)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let url = doc.docsURL {
-                    Link("Documentación oficial ↗", destination: url)
+                    Link(L("Official docs") + " ↗", destination: url)
                         .font(.caption)
                 }
             }
@@ -289,7 +289,7 @@ struct MarkdownPreview: View {
             VStack(alignment: .leading, spacing: 10) {
                 if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Card {
-                        Label("Archivo vacío — edítalo en la pestaña Fuente.",
+                        Label(L("Empty file — edit it in the Source tab."),
                               systemImage: "doc")
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -298,7 +298,7 @@ struct MarkdownPreview: View {
                         .font(.system(size: 13))
                         .textSelection(.enabled)
                         .frame(maxWidth: 720, alignment: .leading)
-                    Label("Vista previa renderizada — edita en la pestaña Fuente.",
+                    Label(L("Rendered preview — edit in the Source tab."),
                           systemImage: "eye")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
@@ -327,12 +327,12 @@ struct NonStructuredHint: View {
             Image(systemName: "doc.plaintext")
                 .font(.system(size: 28))
                 .foregroundStyle(.tertiary)
-            Text("Sin vista estructurada para \(format.badge)")
+            Text(L("No structured view for %@", format.badge))
                 .font(.system(size: 14, weight: .semibold))
-            Text("Este formato se edita como texto.")
+            Text(L("This format is edited as text."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Button("Ir a Fuente", action: goToSource)
+            Button(L("Go to Source"), action: goToSource)
                 .controlSize(.regular)
             Spacer()
         }
@@ -354,18 +354,18 @@ struct ExternalBanner: View {
             Image(systemName: "arrow.down.circle.fill")
                 .foregroundStyle(.blue)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Modificado fuera de la app")
+                Text(L("Modified outside the app"))
                     .font(.system(size: 12, weight: .semibold))
-                Text("\(DiffEngine.summary(change.changes)) · \(change.date, style: .relative) ago")
+                Text("\(L(DiffEngine.summary(change.changes))) · \(change.date, style: .relative)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if !change.changes.isEmpty {
-                Button("Ver diff", action: onDiff).controlSize(.small)
+                Button(L("View diff"), action: onDiff).controlSize(.small)
             }
             if !volatile, change.previousContent != nil {
-                Button("Revertir", action: onRevert).controlSize(.small)
+                Button(L("Revert"), action: onRevert).controlSize(.small)
             }
             Button(action: onDismiss) {
                 Image(systemName: "xmark").font(.caption2)
@@ -388,15 +388,15 @@ struct ConflictBanner: View {
             Image(systemName: "exclamationmark.arrow.triangle.2.circlepath")
                 .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Conflicto de edición")
+                Text(L("Edit conflict"))
                     .font(.system(size: 12, weight: .semibold))
-                Text("El archivo cambió en disco mientras tenías ediciones sin guardar.")
+                Text(L("The file changed on disk while you had unsaved edits."))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Button("Mantener mi versión", action: onKeepMine).controlSize(.small)
-            Button("Usar la de disco", action: onTakeDisk).controlSize(.small)
+            Button(L("Keep mine"), action: onKeepMine).controlSize(.small)
+            Button(L("Use disk version"), action: onTakeDisk).controlSize(.small)
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
         .background(Color.orange.opacity(0.1))
@@ -411,7 +411,7 @@ struct ManagedBanner: View {
             Image(systemName: "lock.shield")
                 .foregroundStyle(.purple)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Contenido gestionado por terceros")
+                Text(L("Managed by a third party"))
                     .font(.system(size: 12, weight: .semibold))
                 ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
                     Text("\(b.owner) — \(b.detail)")
@@ -439,7 +439,7 @@ struct IssuesButton: View {
         .buttonStyle(.plain)
         .popover(isPresented: $show) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Problemas detectados").font(.headline)
+                Text(L("Issues detected")).font(.headline)
                 ForEach(Array(issues.enumerated()), id: \.offset) { _, issue in
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: issue.severity == .error ? "xmark.octagon.fill" :
