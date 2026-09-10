@@ -1,0 +1,47 @@
+name: AgentsConfig
+options:
+  bundleIdPrefix: com.tavodev
+  createIntermediateGroups: true
+packages:
+  TOMLKit:
+    url: https://github.com/LebJe/TOMLKit
+    from: 0.6.0
+targets:
+  AgentsConfig:
+    type: application
+    platform: macOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Sources
+    info:
+      path: Support/Info.plist
+      properties:
+        CFBundleName: AgentsConfig
+        CFBundleDisplayName: AgentsConfig
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "15.0"
+        NSPrincipalClass: NSApplication
+        NSHighResolutionCapable: true
+        NSSupportsAutomaticTermination: true
+        NSSupportsSuddenTermination: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tavodev.agentsconfig
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        GENERATE_INFOPLIST_FILE: NO
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_STRICT_CONCURRENCY: minimal
+    dependencies:
+      - package: TOMLKit
+        product: TOMLKit
+schemes:
+  AgentsConfig:
+    build:
+      targets:
+        AgentsConfig: all
+    run:
+      config: Debug
