@@ -12,7 +12,7 @@ struct DiffSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("Changes detected"))
                         .font(.headline)
-                    Text(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                    Text(path.replacingOccurrences(of: AppPaths.home, with: "~"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

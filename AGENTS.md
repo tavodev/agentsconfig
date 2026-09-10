@@ -12,6 +12,14 @@ xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
 open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/AgentsConfig.app
 ```
 
+Para correr la app contra un home alternativo (demos, screenshots, tests)
+sin tocar tus configs reales:
+
+```bash
+AGENTSCONFIG_HOME=/tmp/demo-home \
+  .../Build/Products/Debug/AgentsConfig.app/Contents/MacOS/AgentsConfig
+```
+
 ## Arquitectura
 
 - `Sources/Services/AgentRegistry.swift` — catálogo declarativo de agentes
@@ -40,6 +48,8 @@ open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/A
 
 ## Convenciones
 
+- Toda resolución de `~` y de Application Support pasa por
+  `AppPaths` (Models.swift); `AGENTSCONFIG_HOME` los redirige.
 - `volatile: true` en un `ConfigSource` = se vigila en vivo pero sin historial
   ni badges (para `~/.claude.json` y otros archivos de estado ruidosos).
 - Escritura estructurada solo para JSON/JSONC; TOML se edita en pestaña Fuente.

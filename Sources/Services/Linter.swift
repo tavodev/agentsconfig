@@ -37,7 +37,7 @@ import Foundation
         // --- orphan orca references in plain text (TOML hook strings etc.)
         if format == .toml || format == .json || format == .jsonc {
             if text.contains("/.orca/") {
-                if !FileManager.default.fileExists(atPath: NSHomeDirectory() + "/.orca") {
+                if !FileManager.default.fileExists(atPath: AppPaths.home + "/.orca") {
                     issues.append(.init(
                         severity: .warning,
                         message: L("Orca hooks detected but ~/.orca no longer exists — they are inert.")
@@ -66,7 +66,7 @@ import Foundation
     // MARK: - known top-level keys per file
 
     private static func knownKeys(for path: String) -> Set<String>? {
-        let home = NSHomeDirectory()
+        let home = AppPaths.home
         switch path {
         case "\(home)/.claude/settings.json":
             return [
@@ -170,7 +170,7 @@ import Foundation
             var p = ns.substring(with: m.range)
             p = p.trimmingCharacters(in: CharacterSet(charactersIn: "\"'`"))
             // expand ~ inside token
-            if p.hasPrefix("/~/") { p = NSHomeDirectory() + String(p.dropFirst(1)) }
+            if p.hasPrefix("/~/") { p = AppPaths.home + String(p.dropFirst(1)) }
             if p.hasPrefix("/System") || p.hasPrefix("/usr/") || p.hasPrefix("/bin") || p.hasPrefix("/opt/homebrew") {
                 if FileManager.default.fileExists(atPath: p) { continue }
             }

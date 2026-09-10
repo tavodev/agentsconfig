@@ -16,8 +16,8 @@ struct SnapshotStore {
     }
 
     private var root: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("AgentsConfig/History", isDirectory: true)
+        return AppPaths.applicationSupport
+            .appendingPathComponent("AgentsConfig/History", isDirectory: true)
     }
 
     static func sha256(_ s: String) -> String {

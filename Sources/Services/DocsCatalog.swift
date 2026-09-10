@@ -40,7 +40,7 @@ enum DocsCatalog {
     // MARK: - File docs
 
     static func fileDoc(for path: String) -> FileDoc? {
-        let home = NSHomeDirectory()
+        let home = AppPaths.home
         let name = URL(fileURLWithPath: path).lastPathComponent
         switch path {
         case "\(home)/.claude/settings.json":
@@ -191,7 +191,7 @@ enum DocsCatalog {
     }
 
     private static var keyTables: [String: [String: KeyDoc]] {
-        let home = NSHomeDirectory()
+        let home = AppPaths.home
         return [
             "\(home)/.claude/settings.json": claudeKeys,
             "\(home)/.codex/config.toml": codexKeys,

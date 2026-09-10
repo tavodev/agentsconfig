@@ -85,7 +85,7 @@ struct EditorView: View {
                     }
                 }
                 HStack(spacing: 6) {
-                    Text(path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                    Text(path.replacingOccurrences(of: AppPaths.home, with: "~"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     if let note = file?.note {

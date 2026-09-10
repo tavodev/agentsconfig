@@ -103,7 +103,7 @@ enum AgentRegistry {
         let fm = FileManager.default
         return definitions.compactMap { def in
             guard let hit = def.detectionPaths.first(where: {
-                fm.fileExists(atPath: ($0 as NSString).expandingTildeInPath)
+                fm.fileExists(atPath: AppPaths.expand($0))
             }) else { return nil }
             return Agent(
                 id: def.id, name: def.name, symbol: def.symbol, color: def.color,

@@ -90,7 +90,7 @@ struct SidebarView: View {
                         .contextMenu {
                             Button(L("Open folder in Finder")) {
                                 store.revealInFinder(
-                                    (agent.detectionPath as NSString).expandingTildeInPath)
+                                    AppPaths.expand(agent.detectionPath))
                             }
                             Button(L("Re-scan")) { store.refresh() }
                         }

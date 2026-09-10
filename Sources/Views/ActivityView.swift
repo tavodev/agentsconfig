@@ -100,7 +100,7 @@ struct ActivityDetailView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(URL(fileURLWithPath: event.path).lastPathComponent)
                             .font(.system(size: 14, weight: .semibold))
-                        Text(event.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                        Text(event.path.replacingOccurrences(of: AppPaths.home, with: "~"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

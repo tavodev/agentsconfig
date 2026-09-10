@@ -71,7 +71,7 @@ struct ConfigSource: Hashable {
     var readOnly = false
     var note: String? = nil
 
-    var expandedPath: String { (path as NSString).expandingTildeInPath }
+    var expandedPath: String { AppPaths.expand(path) }
 }
 
 // MARK: - Agent catalog entry
@@ -103,7 +103,7 @@ struct TrackedFile: Identifiable, Hashable {
     var managedBlocks: [ManagedBlock] = []
 
     var displayName: String { URL(fileURLWithPath: path).lastPathComponent }
-    var shortPath: String { path.replacingOccurrences(of: NSHomeDirectory(), with: "~") }
+    var shortPath: String { path.replacingOccurrences(of: AppPaths.home, with: "~") }
 }
 
 struct Agent: Identifiable {
@@ -201,4 +201,28 @@ struct ConfigDocument {
     var parseError: String?
     var loadedAt: Date
     var hash: String
+}
+
+// MARK: - Home directory resolution
+
+/// `AGENTSCONFIG_HOME` (env) redirects every `~` expansion and the
+/// Application Support root — used for demo screenshots and tests.
+enum AppPaths {
+    static let home: String =
+        ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] ?? NSHomeDirectory()
+
+    /// Expands a leading "~" against `home`.
+    static func expand(_ path: String) -> String {
+        if path == "~" { return home }
+        if path.hasPrefix("~/") { return home + path.dropFirst(1) }
+        return path
+    }
+
+    static var applicationSupport: URL {
+        if let custom = ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] {
+            return URL(fileURLWithPath: custom, isDirectory: true)
+                .appendingPathComponent("Library/Application Support", isDirectory: true)
+        }
+        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    }
 }

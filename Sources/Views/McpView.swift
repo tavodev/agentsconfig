@@ -178,7 +178,7 @@ struct McpAgentCard: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text(entry.sourcePath.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                Text(entry.sourcePath.replacingOccurrences(of: AppPaths.home, with: "~"))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
