@@ -35,6 +35,36 @@ final class Loc {
     // MARK: - Spanish translations (key = English source string)
 
     private static let es: [String: String] = [
+        "Project configuration · read-only": "Configuración del proyecto · solo lectura",
+        "Server": "Servidor",
+        "1 source": "1 fuente",
+        "No settings yet": "Todavía no hay ajustes",
+        "This configuration is empty. Add an MCP server or use Source to add settings.": "Esta configuración está vacía. Añade un servidor MCP o usa Fuente para agregar ajustes.",
+        "This configuration contains no settings.": "Esta configuración no contiene ajustes.",
+        "Select an agent to browse its configuration files.": "Selecciona un agente para explorar sus archivos de configuración.",
+        "No projects registered yet.": "Todavía no hay proyectos registrados.",
+        "1 agent with configuration": "1 agente con configuración",
+        "Remove rule %d from %@": "Eliminar regla %d de %@",
+        "Add rule to %@": "Añadir regla a %@",
+        // Native macOS redesign
+        "Done": "Listo",
+        "File information": "Información del archivo",
+        "File actions": "Acciones del archivo",
+        "Editor mode": "Vista del editor",
+        "Conflict with disk": "Conflicto con el disco",
+        "Review and save…": "Revisar y guardar…",
+        "Compare configured servers across agents. Select a server to inspect its sources.": "Compara los servidores configurados entre agentes. Selecciona un servidor para inspeccionar sus fuentes.",
+        "%d servers": "%d servidores",
+        "%d sources": "%d fuentes",
+        "Server details": "Detalles del servidor",
+        "configured": "configurado",
+        "Remove argument %d": "Eliminar argumento %d",
+        "Version": "Versión",
+        "Enable server %@": "Activar servidor %@",
+        "Remove server %@": "Eliminar servidor %@",
+        "Secret value": "Valor secreto",
+        "%d issues": "%d problemas",
+
         // Requested improvements
         "A save is still in progress. Wait before quitting.": "Hay un guardado en curso. Espera antes de salir.",
         "Clear file history": "Vaciar historial del archivo",

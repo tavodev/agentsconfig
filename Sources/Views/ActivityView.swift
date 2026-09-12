@@ -61,25 +61,22 @@ struct ActivityRow: View {
                 .foregroundStyle(color)
                 .font(.system(size: 14))
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(URL(fileURLWithPath: event.path).lastPathComponent)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                     Text(event.agentName)
-                        .font(.system(size: 9, weight: .semibold))
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(Color.accentColor.opacity(0.12))
-                        .foregroundStyle(Color.accentColor)
-                        .clipShape(Capsule())
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
                 Text(event.summary)
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
             Text(event.date, style: .relative)
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 2)
     }

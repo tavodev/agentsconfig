@@ -20,7 +20,8 @@ struct AgentsConfigApp: App {
         WindowGroup {
             ContentView()
                 .environment(store)
-                .frame(minWidth: 1020, minHeight: 640)
+                .frame(minWidth: 900, minHeight: 640)
+                .environment(\.previewReducedTransparency, AppSettings.isIsolatedRun && ProcessInfo.processInfo.environment["AGENTSCONFIG_DEMO_REDUCE_TRANSPARENCY"] == "1")
                 .onAppear {
                     applyAppearance()
                     appDelegate.store = store
@@ -32,7 +33,7 @@ struct AgentsConfigApp: App {
         .defaultSize(width: 1280, height: 800)
         .commands {
             CommandGroup(replacing: .saveItem) {
-                Button(L("Save")) { store.saveSelected() }
+                Button(L("Review and save…")) { store.saveSelected() }
                     .keyboardShortcut("s", modifiers: .command)
                     .disabled(!store.canSaveSelected)
             }
@@ -67,13 +68,18 @@ struct AgentsConfigApp: App {
 
         Settings {
             AppSettingsView()
-                .frame(width: 480)
+                .frame(width: 620, height: 620)
                 .environment(store)
         }
     }
 
     private func applyAppearance() {
-        NSApp.appearance = AppSettings.appearance
+        if AppSettings.isIsolatedRun && ProcessInfo.processInfo.environment["AGENTSCONFIG_DEMO_HIGH_CONTRAST"] == "1" {
+            NSApp.appearance = NSAppearance(named: appearance == "dark"
+                ? .accessibilityHighContrastDarkAqua : .accessibilityHighContrastAqua)
+        } else {
+            NSApp.appearance = AppSettings.appearance
+        }
     }
 }
 

@@ -8,7 +8,8 @@ Antigravity/Gemini and OpenCode — from one place.
 > features with care: always review diffs and keep your own backups of
 > critical configs.
 
-Screenshots will be added from verified fictitious demo configurations.
+See [screenshots](docs/redesign/README.md) from verified fictitious demo
+configurations.
 
 AgentsConfig runs locally and does not require a model, AI subscription or API key of its own. It inspects configuration; it does not run configured MCP servers or hooks. This is an independent project, not endorsed by supported agent vendors.
 
@@ -44,6 +45,11 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   whether the file is global or a per-project copy.
 - **Rendered Markdown preview** for instruction files (CLAUDE.md, AGENTS.md…):
   real headings, lists, code blocks and quotes, not raw source.
+- **Native per-destination navigation**: three columns for files and
+  Activity, two full-width columns for Settings and the MCP comparator.
+  The inspector adapts to available width — a side panel or a compact
+  sheet — and History switches between a compact version picker and a
+  side-by-side list as the window resizes.
 - Activity feed, macOS notifications on external changes, menu bar
   extra, inspector panel, light/dark mode, English/Spanish UI switchable
   live. Settings are reachable both as a native macOS window (⌘,) and as
@@ -177,7 +183,7 @@ baseline without touching real history.
 
 ### Opt-in UI regression tests
 
-The separate `AgentsConfigUI` scheme contains seven XCUITest scenarios using
+The separate `AgentsConfigUI` scheme contains fifteen XCUITest scenarios using
 fictitious homes, isolated preference suites and disabled notifications. Its
 `AgentsConfigUITestHost` has a distinct bundle identifier so it cannot terminate
 your normal app; the host refuses to start without the isolated environment.

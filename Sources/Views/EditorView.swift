@@ -9,7 +9,7 @@ enum EditorTab: String, CaseIterable {
 struct EditorView: View {
     @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     @Environment(ConfigStore.self) private var store
-    @State private var tab: EditorTab = .structured
+    @AppStorage("editorMode", store: AppSettings.defaults) private var tab: EditorTab = .structured
     @State private var showDiff = false
     @State private var showAddMcp = false
 
@@ -28,6 +28,16 @@ struct EditorView: View {
                 footer(path: path)
             }
             .navigationTitle(windowTitle)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Toggle(isOn: $store.showInspector) {
+                        Label(L("File information"), systemImage: "sidebar.trailing")
+                    }
+                    .toggleStyle(.button)
+                    .help(L("File information") + " (⌥⌘0)")
+                    .accessibilityIdentifier("file-inspector")
+                }
+            }
             .onChange(of: store.requestedTab) { _, t in
                 if let t { tab = t; store.requestedTab = nil }
             }
@@ -42,7 +52,7 @@ struct EditorView: View {
                     }
                 }
             }
-            .inspector(isPresented: $store.showInspector) {
+            .adaptiveInspector(isPresented: $store.showInspector, title: L("File information")) {
                 FileInspectorView(path: path)
             }
             .sheet(isPresented: $showDiff) {
@@ -67,86 +77,82 @@ struct EditorView: View {
     // MARK: header
 
     private func header(path: String) -> some View {
-        HStack(spacing: 10) {
-            let file = fileInfo(path)
-            Image(systemName: file?.role.icon ?? "doc")
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: fileInfo(path)?.role.icon ?? "doc")
+                    .font(.title3).foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
                     Text(URL(fileURLWithPath: path).lastPathComponent)
-                        .font(.system(size: 14, weight: .semibold))
-                    if let file {
-                        Text(file.format.badge)
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(file.format.badgeColor.opacity(0.15))
-                            .foregroundStyle(file.format.badgeColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-                    if let fd = DocsCatalog.fileDoc(for: path) {
-                        FileDocButton(doc: fd)
-                    }
+                        .font(.title3.weight(.semibold))
+                        .lineLimit(1).truncationMode(.middle)
+                        .accessibilityIdentifier("editor-filename")
+                    Text(fileContext(path))
+                        .font(.callout).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("editor-context")
                 }
-                HStack(spacing: 6) {
-                    Text(path.replacingOccurrences(of: AppPaths.home, with: "~"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    if let note = file?.note {
-                        Text("· \(L(note))")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                    }
+                Spacer(minLength: 8)
+                Menu {
+                    Button(L("Show in Finder")) { store.revealInFinder(path) }
+                    Button(L("Copy path")) { store.copyPath(path) }
+                    Button(L("Open with default app")) { store.openInDefaultApp(path) }
+                } label: {
+                    Label(L("File actions"), systemImage: "ellipsis.circle")
                 }
+                .menuStyle(.borderlessButton).fixedSize()
+                .labelStyle(.iconOnly)
+                .help(L("File actions"))
             }
-            Spacer()
-            Button { store.revealInFinder(path) } label: {
-                Image(systemName: "folder")
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
-            .help(L("Show in Finder"))
-            if store.isMcpDestination(path) {
-                Button(L("Add MCP server")) { showAddMcp = true }
-                    .accessibilityIdentifier("add-mcp")
-                    .controlSize(.small)
-                    .popover(isPresented: $showAddMcp) {
-                        McpAddForm(path: path) { showAddMcp = false }
-                    }
-            }
-            metaLabels(path: path)
-            Picker("", selection: $tab) {
-                ForEach(EditorTab.allCases, id: \.self) { t in
-                    Text(L(t.rawValue)).tag(t)
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    modePicker
+                    Spacer(minLength: 12)
+                    mcpAction(path)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    modePicker
+                    mcpAction(path)
                 }
             }
-            .pickerStyle(.segmented)
-            .frame(width: 300)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(16)
+    }
+
+    private var modePicker: some View {
+        Picker(L("Editor mode"), selection: $tab) {
+            ForEach(EditorTab.allCases, id: \.self) { t in
+                Text(L(t.rawValue)).tag(t)
+            }
+        }
+        .pickerStyle(.segmented).labelsHidden()
+        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityIdentifier("editor-mode")
+    }
+
+    @ViewBuilder private func mcpAction(_ path: String) -> some View {
+        if store.isMcpDestination(path) {
+            Button(L("Add MCP server"), systemImage: "plus") { showAddMcp = true }
+                .accessibilityIdentifier("add-mcp")
+                .popover(isPresented: $showAddMcp, arrowEdge: .trailing) {
+                    McpAddForm(path: path) { showAddMcp = false }
+                }
+        }
     }
 
     private func fileInfo(_ path: String) -> TrackedFile? {
-        for agent in store.agents {
-            if let f = agent.files.first(where: { $0.path == path }) { return f }
-        }
-        return nil
+        store.agents.lazy.flatMap(\.files).first { $0.path == path }
     }
 
-    @ViewBuilder
-    private func metaLabels(path: String) -> some View {
-        if let f = fileInfo(path) {
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(ByteCountFormatter.string(fromByteCount: f.size, countStyle: .file))
-                    .font(.caption2).foregroundStyle(.secondary)
-                if let m = f.mtime {
-                    Text(m, style: .relative)
-                        .font(.caption2).foregroundStyle(.tertiary)
-                }
-            }
+    private func fileContext(_ path: String) -> String {
+        // Resolve ownership from the file, never from the sidebar's current filter.
+        guard let agent = store.agents.first(where: { $0.files.contains { $0.path == path } }) else {
+            return path.replacingOccurrences(of: AppPaths.home, with: "~")
         }
+        let name = agent.name.components(separatedBy: " (").first ?? agent.name
+        guard let project = agent.projectRoot else { return name + " · " + L("Global") }
+        return [name, L("Project") + " " + URL(fileURLWithPath: project).lastPathComponent,
+                agent.submodulePath ?? L("Project root")].joined(separator: " · ")
     }
 
     // MARK: banners
@@ -216,7 +222,7 @@ struct EditorView: View {
                 )
             } else {
                 Label(L("Source shows real values, including secrets. Edits are saved exactly as entered."), systemImage: "eye.trianglebadge.exclamationmark")
-                    .font(.caption).foregroundStyle(.orange).padding(8)
+                    .font(.callout).foregroundStyle(.orange).padding(8)
                 CodeEditor(
                     documentID: path,
                     text: Binding(
@@ -238,65 +244,75 @@ struct EditorView: View {
     // MARK: footer
 
     private func footer(path: String) -> some View {
-        HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
+            if let err = store.saveErrors[path] {
+                Label(err, systemImage: "exclamationmark.octagon.fill")
+                    .font(.callout).foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    if store.dirtyPaths.contains(path) {
+                        Button(L("Retry")) { store.requestSave(path: path) }
+                    }
+                    Button(L("Dismiss")) { store.clearSaveError(path: path) }
+                }
+            }
+            ViewThatFits(in: .horizontal) {
+                HStack {
+                    fileStatus(path)
+                    Spacer(minLength: 12)
+                    saveActions(path)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    fileStatus(path)
+                    saveActions(path)
+                }
+            }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .background { WorkspaceBarBackground() }
+    }
+
+    @ViewBuilder private func fileStatus(_ path: String) -> some View {
+        Group {
+            if store.conflicts.contains(path) {
+                Label(L("Conflict with disk"), systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+            } else if store.dirtyPaths.contains(path) {
+                Label(L("Unsaved"), systemImage: "circle.fill")
+            } else if let error = store.document(for: path)?.parseError {
+                Label(error, systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.red)
+            } else if fileInfo(path)?.exists == false {
+                Label(L("Not found on disk"), systemImage: "questionmark.circle")
+            } else if store.saveErrors[path] == nil {
+                Label(L("In sync with disk"), systemImage: "checkmark.circle")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .font(.callout)
+        .accessibilityIdentifier("editor-status")
+    }
+
+    @ViewBuilder private func saveActions(_ path: String) -> some View {
+        HStack(spacing: 10) {
             if store.savingPaths.contains(path) { ProgressView().controlSize(.small) }
             if store.preparingSavePath == path {
                 ProgressView(L("Preparing review…")).controlSize(.small)
                 Button(L("Cancel")) { store.cancelSaveReview() }
-            }
-            // errors are shown independently of the dirty flag and can be
-            // retried (when there is still something to save) or dismissed
-            if let err = store.saveErrors[path] {
-                Label(err, systemImage: "exclamationmark.octagon.fill")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .lineLimit(2)
-                if store.dirtyPaths.contains(path) {
-                    Button(L("Retry")) { store.requestSave(path: path) }
-                        .controlSize(.small)
-                }
-                Button(L("Dismiss")) { store.clearSaveError(path: path) }
-                    .controlSize(.small)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-            }
-            if store.dirtyPaths.contains(path) {
-                Label(L("Unsaved"), systemImage: "circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-                Button(L("Save")) { store.requestSave(path: path) }
-                    .keyboardShortcut("s", modifiers: .command)
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(store.savingPaths.contains(path))
+            } else if store.dirtyPaths.contains(path) {
                 Button(L("Discard")) { store.discardEdit(path: path) }
-                    .controlSize(.small).disabled(store.savingPaths.contains(path))
-            } else if store.saveErrors[path] == nil {
-                let doc = store.document(for: path)
-                if let err = doc?.parseError {
-                    Label(err, systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                } else if fileInfo(path)?.exists == false {
-                    // never claim "in sync" for a file we couldn't read
-                    Label(L("Not found on disk"), systemImage: "questionmark.circle")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Label(L("In sync with disk"), systemImage: "checkmark.circle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.green)
-                }
+                    .disabled(store.savingPaths.contains(path))
+                Button(L("Review and save…")) { store.requestSave(path: path) }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("review-save")
+                    .disabled(store.savingPaths.contains(path))
             }
-            Spacer()
             if let file = fileInfo(path), !file.issues.isEmpty {
                 IssuesButton(issues: file.issues)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.bar)
     }
+
 }
 
 // MARK: - File doc popover
@@ -309,7 +325,7 @@ struct FileDocButton: View {
     var body: some View {
         Button { show.toggle() } label: {
             Image(systemName: "info.circle")
-                .font(.system(size: 12))
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
@@ -319,12 +335,12 @@ struct FileDocButton: View {
                 Text(doc.localizedTitle)
                     .font(.system(size: 13, weight: .semibold))
                 Text(doc.localizedBody)
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let url = doc.docsURL {
                     Link(L("Official docs") + " ↗", destination: url)
-                        .font(.caption)
+                        .font(.callout)
                 }
             }
             .padding(14)
@@ -351,7 +367,7 @@ struct MarkdownPreview: View {
                         Label(fileExists ? L("Empty file — edit it in the Source tab.")
                                          : L("This file doesn't exist on disk yet."),
                               systemImage: fileExists ? "doc" : "doc.badge.ellipsis")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.callout).foregroundStyle(.secondary)
                     }
                 } else {
                     ForEach(MarkdownBlock.parse(text)) { block in
@@ -359,8 +375,8 @@ struct MarkdownPreview: View {
                     }
                     Label(L("Rendered preview — edit in the Source tab."),
                           systemImage: "eye")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                         .padding(.top, 10)
                 }
             }
@@ -511,7 +527,7 @@ private struct MarkdownBlockView: View {
     private var codeBlock: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             Text(block.content)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: 13, design: .monospaced))
                 .textSelection(.enabled)
         }
         .padding(10)
@@ -536,11 +552,11 @@ struct NonStructuredHint: View {
             Spacer()
             Image(systemName: "doc.plaintext")
                 .font(.system(size: 28))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
             Text(L("No structured view for %@", format.badge))
                 .font(.system(size: 14, weight: .semibold))
             Text(L("This format is edited as text."))
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.secondary)
             Button(L("Go to Source"), action: goToSource)
                 .controlSize(.regular)
@@ -565,9 +581,9 @@ struct ExternalBanner: View {
                 .foregroundStyle(.blue)
             VStack(alignment: .leading, spacing: 1) {
                 Text(L("Modified outside the app"))
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 Text("\(L(DiffEngine.summary(change.changes))) · \(change.date, style: .relative)")
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -578,7 +594,7 @@ struct ExternalBanner: View {
                 Button(L("Revert"), action: onRevert).controlSize(.small)
             }
             Button(action: onDismiss) {
-                Image(systemName: "xmark").font(.caption2)
+                Image(systemName: "xmark").font(.callout)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
@@ -600,11 +616,11 @@ struct ConflictBanner: View {
                 .foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 1) {
                 Text(L("Edit conflict"))
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 Text(deleted
                      ? L("The file was deleted on disk while you had unsaved edits.")
                      : L("The file changed on disk while you had unsaved edits."))
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
             Spacer()
@@ -625,10 +641,10 @@ struct ManagedBanner: View {
                 .foregroundStyle(.purple)
             VStack(alignment: .leading, spacing: 1) {
                 Text(L("Managed by a third party"))
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
                     Text("\(b.owner) — \(b.detail)")
-                        .font(.caption2)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -646,7 +662,7 @@ struct IssuesButton: View {
     var body: some View {
         Button { show.toggle() } label: {
             Label("\(issues.count)", systemImage: "exclamationmark.triangle.fill")
-                .font(.caption)
+                .font(.callout)
                 .foregroundStyle(.orange)
         }
         .buttonStyle(.plain)
@@ -659,7 +675,7 @@ struct IssuesButton: View {
                                         issue.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
                             .foregroundStyle(issue.severity == .error ? .red :
                                                 issue.severity == .warning ? .orange : .blue)
-                        Text(issue.message).font(.caption)
+                        Text(issue.message).font(.callout)
                     }
                 }
             }

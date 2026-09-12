@@ -36,7 +36,7 @@ AGENTSCONFIG_HOME=/tmp/demo-home \
 ```
 
 Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
-`scripts/run-demo.py --app /ruta/AgentsConfig.app`: añade una suite exclusiva
+`scripts/run-demo.py --app /ruta/AgentsConfigUITestHost.app --wait`: añade una suite exclusiva
 `AGENTSCONFIG_DEFAULTS_SUITE` y desactiva Notifier. No ejecutar fixtures MCP.
 `scripts/verify-history-processes.py` verifica storage real entre 4 procesos.
 
@@ -89,28 +89,28 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   `keyTableSuffixes`), no por ruta absoluta exacta: así una copia local de
   proyecto (`.codex/config.toml`, `.claude/settings.json`, etc.) obtiene la
   misma documentación que la global sin duplicar entradas.
-- `Sources/Views/` — NavigationSplitView de 3 columnas: Sidebar → lista
-  (archivos | feed | matriz MCP | ajustes) → Editor (Estructurado | Fuente |
-  Historial) + banners de cambio. El Sidebar fija Actividad/MCP/Ajustes
-  arriba, luego un `Picker` segmentado Global/Proyectos (`@AppStorage`):
-  en Global lista los 4 agentes detectados tal cual; en Proyectos, un
-  `Menu` selector de proyecto (con alta/baja) + chips de alcance (raíz +
-  submódulos) + los agentes detectados en ese alcance — nunca los dos
-  árboles a la vez, y sin anidar `DisclosureGroup`s por proyecto/submódulo.
-  `StructuredView.GenericInspector` excluye de "Todas las claves" cualquier
-  clave de nivel superior ya mostrada por una tarjeta especial (MCP,
-  permisos, hooks, plugins, env) — no se duplica; `NodeRow` muestra la
-  descripción de `DocsCatalog` como texto visible bajo la clave, no solo
-  detrás del ⓘ. `McpMatrixView` alinea un ícono por agente en el header con
-  una celda de ancho fijo por fila (check/círculo), en vez de píldoras de
-  texto sin wrap. `MarkdownPreview` (en `EditorView.swift`) parsea bloques
-  reales vía `PresentationIntent` (`.full`, no solo inline) y estiliza cada
-  uno a mano (encabezados, listas, citas, código, regla) — antes solo
-  interpretaba negrita/cursiva y dejaba `#`/`-`/`>` literales.
+- `Sources/Views/` — navegación nativa por destino: tres columnas para
+  archivos/Actividad y dos para Ajustes/MCP. En ventanas menores de 1180 pt
+  la navegación de archivos inicia con sidebar oculta y permite recuperarla.
+  `WorkspaceStyle.swift` presenta inspectores como panel con espacio suficiente
+  o como sheet compacto; nunca reduce el editor para forzar cuatro columnas.
+  Las revisiones raíz esperan al `onDismiss` del inspector compacto antes de
+  presentarse; no se cancelan ni se sustituyen sus datos pendientes.
+  El Sidebar conserva Global/Proyectos y menús nativos de proyecto y
+  alcance, persistidos en `AppSettings.defaults`. La identidad del editor se
+  obtiene del propietario del archivo, no del filtro del sidebar. Modos en
+  fila separada; metadatos completos en inspector; guardado mediante revisión.
+  `StructuredView.GenericInspector` excluye las claves cubiertas por tarjetas;
+  `NodeRow` muestra ayuda legible y controles con nombres accesibles.
+  `McpMatrixView` compara familias de agentes en una tabla amplia y abre
+  fuentes concretas en detalle opcional. Historial usa selector de versión
+  compacto o lista lateral según el ancho disponible.
+  `MarkdownPreview` parsea bloques `PresentationIntent` completos y distingue
+  archivos ausentes de archivos vacíos.
 - `Sources/Views/SettingsView.swift` — `AppSettingsView`, en archivo propio
   (no en `AgentsConfigApp.swift`) porque el target de tests excluye ese
   archivo por el `@main`; se reusa tal cual desde la escena `Settings`
-  nativa (Cmd+,, con `.frame(width: 480)` puesto ahí) y como destino de
+  nativa (Cmd+,, con ventana de 620 × 620 pt) y como destino de
   sidebar (`ConfigStore.settingsID`, sin frame fijo — se adapta al panel).
 - `Sources/Services/Notifier.swift` — notificaciones macOS de cambios
   externos con app en background; click → selecciona el archivo.

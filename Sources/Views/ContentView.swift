@@ -3,76 +3,79 @@ import SwiftUI
 struct ContentView: View {
     @Environment(ConfigStore.self) private var store
 
+    @State private var inspectorSheetVisible = false
+    @State private var columns: NavigationSplitViewVisibility = .all
+
+    private var wideDestination: Bool {
+        store.selectedAgentID == ConfigStore.settingsID || store.selectedAgentID == ConfigStore.mcpID
+    }
+
     var body: some View {
-        @Bindable var store = store
-        NavigationSplitView {
-            SidebarView()
-                .navigationSplitViewColumnWidth(min: 210, ideal: 235, max: 280)
-        } content: {
+        GeometryReader { geometry in
             Group {
-                if store.selectedAgentID == ConfigStore.activityID {
-                    ActivityFeedView()
-                } else if store.selectedAgentID == ConfigStore.mcpID {
-                    McpMatrixView()
-                } else if store.selectedAgentID == ConfigStore.settingsID {
-                    AppSettingsView()
+                if wideDestination {
+                    NavigationSplitView {
+                        SidebarView()
+                            .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 280)
+                    } detail: {
+                        if store.selectedAgentID == ConfigStore.settingsID {
+                            AppSettingsView()
+                                .frame(maxWidth: 760)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .navigationTitle(L("Settings"))
+                        } else {
+                            McpMatrixView()
+                        }
+                    }
                 } else {
-                    FileListView()
-                }
-            }
-            .navigationSplitViewColumnWidth(min: 250, ideal: 290, max: 380)
-        } detail: {
-            if store.selectedAgentID == ConfigStore.activityID {
-                ActivityDetailView()
-            } else if store.selectedAgentID == ConfigStore.mcpID {
-                McpDetailView()
-            } else if store.selectedAgentID == ConfigStore.settingsID {
-                ContentUnavailableView(L("Settings"), systemImage: "gearshape")
-            } else {
-                EditorView()
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button { store.showInspector.toggle() } label: {
-                    Image(systemName: "sidebar.trailing")
-                }
-                .help("Inspector (⌥⌘0)")
-                .keyboardShortcut("0", modifiers: [.option, .command])
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    store.selectedAgentID = ConfigStore.activityID
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: "arrow.down.circle")
-                        if !store.externalChanges.isEmpty {
-                            Text("\(store.externalChanges.count)")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(3)
-                                .background(Circle().fill(.blue))
-                                .offset(x: 8, y: -8)
+                    NavigationSplitView(columnVisibility: $columns) {
+                        SidebarView()
+                            .navigationSplitViewColumnWidth(min: 210, ideal: 230, max: 280)
+                    } content: {
+                        Group {
+                            if store.selectedAgentID == ConfigStore.activityID {
+                                ActivityFeedView()
+                            } else {
+                                FileListView()
+                            }
+                        }
+                        .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 340)
+                    } detail: {
+                        if store.selectedAgentID == ConfigStore.activityID {
+                            ActivityDetailView()
+                        } else {
+                            EditorView()
                         }
                     }
                 }
-                .help("Cambios externos pendientes")
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button { store.refresh() } label: {
-                    Image(systemName: "arrow.clockwise")
-                }
-                .help("Re-escanear agentes")
+            .environment(\.workspaceWidth, geometry.size.width)
+            .navigationSplitViewStyle(.balanced)
+            .onChange(of: geometry.size.width < 1180, initial: true) { _, compact in
+                columns = compact ? .doubleColumn : .all
             }
         }
-        .sheet(item: Binding(get: { store.pendingSaveReview }, set: { if $0 == nil { store.cancelSaveReview() } })) { review in
+        .environment(\.locale, Locale(identifier: Loc.shared.lang.rawValue))
+        .environment(\.inspectorSheetVisibility, $inspectorSheetVisible)
+        .toolbar {
+            if store.selectedAgentID != ConfigStore.settingsID {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { store.refresh() } label: {
+                        Label(L("Re-scan"), systemImage: "arrow.clockwise")
+                    }
+                    .help(L("Re-scan"))
+                    .accessibilityIdentifier("rescan")
+                }
+            }
+        }
+        .sheet(item: Binding(get: { inspectorSheetVisible ? nil : store.pendingSaveReview }, set: { if $0 == nil { store.cancelSaveReview() } })) { review in
             SaveReviewSheet(review: review)
         }
-        .sheet(item: Binding(get: { store.pendingMcpReview }, set: { if $0 == nil { store.cancelMcpReview() } })) { review in
+        .sheet(item: Binding(get: { inspectorSheetVisible ? nil : store.pendingMcpReview }, set: { if $0 == nil { store.cancelMcpReview() } })) { review in
             McpReviewSheet(review: review)
         }
         .alert(L("MCP operation failed"), isPresented: Binding(
-            get: { store.actionError != nil },
+            get: { !inspectorSheetVisible && store.actionError != nil },
             set: { if !$0 { store.clearActionError() } }
         )) {
             Button(L("OK")) { store.clearActionError() }
@@ -86,7 +89,7 @@ struct ContentView: View {
         } message: { request in
             Text(L("Remove %d recorded version(s) for this file? This cannot be undone. The config file and legacy backups are kept; future changes may create new versions.", request.ids.count))
         }
-        .sheet(item: Binding(get: { store.pendingRestore }, set: { if $0 == nil { store.cancelRestore() } })) { request in
+        .sheet(item: Binding(get: { inspectorSheetVisible ? nil : store.pendingRestore }, set: { if $0 == nil { store.cancelRestore() } })) { request in
             RestoreReviewSheet(request: request)
         }
     }
@@ -96,11 +99,17 @@ struct ContentView: View {
 
 struct SidebarView: View {
     @Environment(ConfigStore.self) private var store
-    @AppStorage("sidebarScope") private var scope: String = "global"
-    @State private var activeProject: String?
-    @State private var activeSubmodule: String?
-    @State private var showProjectSelector = false
-    @State private var showScopeSelector = false
+    @AppStorage("sidebarScope", store: AppSettings.defaults) private var scope: String = "global"
+    @AppStorage("sidebarProject", store: AppSettings.defaults) private var savedProject = ""
+    private var activeProject: String? {
+        get { savedProject.isEmpty ? nil : savedProject }
+        nonmutating set { savedProject = newValue ?? "" }
+    }
+    @AppStorage("sidebarSubmodule", store: AppSettings.defaults) private var savedSubmodule = ""
+    private var activeSubmodule: String? {
+        get { savedSubmodule.isEmpty ? nil : savedSubmodule }
+        nonmutating set { savedSubmodule = newValue ?? "" }
+    }
 
     private var projectAgents: [Agent] {
         guard let activeProject else { return [] }
@@ -122,7 +131,7 @@ struct SidebarView: View {
 
     private var activeScopeDetail: String {
         activeSubmodule == nil
-            ? L("%d agents with configuration", scopedAgents.count)
+            ? (scopedAgents.count == 1 ? L("1 agent with configuration") : L("%d agents with configuration", scopedAgents.count))
             : L("Git submodule")
     }
 
@@ -140,9 +149,38 @@ struct SidebarView: View {
         }
     }
 
+    private func syncSelectedAgent() {
+        guard let agent = store.agents.first(where: { $0.id == store.selectedAgentID }) else { return }
+        if let path = store.selectedPath, !agent.files.contains(where: { $0.path == path }) {
+            store.selectedPath = nil
+        }
+        scope = agent.projectRoot == nil ? "global" : "projects"
+        if let root = agent.projectRoot {
+            activeProject = root
+            activeSubmodule = agent.submodulePath
+        }
+    }
+
+    private func pickProject() {
+        let existing = Set(store.projectRoots)
+        store.pickAndAddProject()
+        if let added = store.projectRoots.last(where: { !existing.contains($0) }) {
+            scope = "projects"
+            selectProject(added)
+        }
+    }
+
     private func selectProject(_ root: String) {
         activeProject = root
         activeSubmodule = nil
+        selectVisibleAgent()
+    }
+
+    private func selectVisibleAgent() {
+        let visible = scope == "global" ? store.agents.filter { $0.projectRoot == nil } : scopedAgents
+        guard !visible.contains(where: { $0.id == store.selectedAgentID }) else { return }
+        store.selectedAgentID = visible.first?.id
+        store.selectedPath = nil
     }
 
     var body: some View {
@@ -150,17 +188,20 @@ struct SidebarView: View {
         List(selection: $store.selectedAgentID) {
             Section {
                 PanelRow(icon: "bolt.horizontal.fill", title: L("Activity"),
-                         subtitle: L("change feed"), count: store.activity.count,
+                         subtitle: L("change feed"), count: store.externalChanges.count,
                          color: .accentColor)
                     .tag(ConfigStore.activityID)
+                    .accessibilityIdentifier("destination-activity")
                 PanelRow(icon: "server.rack", title: "MCP",
                          subtitle: L("cross-agent comparator"), count: store.mcpNames.count,
                          color: .teal)
                     .tag(ConfigStore.mcpID)
+                    .accessibilityIdentifier("destination-mcp")
                 PanelRow(icon: "gearshape", title: L("Settings"),
                          subtitle: L("appearance, privacy"), count: 0,
                          color: .gray)
                     .tag(ConfigStore.settingsID)
+                    .accessibilityIdentifier("destination-settings")
             }
 
             Section {
@@ -184,7 +225,9 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .onAppear { syncActiveProject() }
+        .onAppear { syncActiveProject(); syncSelectedAgent() }
+        .onChange(of: store.selectedAgentID) { _, _ in syncSelectedAgent() }
+        .onChange(of: scope) { _, _ in selectVisibleAgent() }
         .onChange(of: store.projectRoots) { _, _ in syncActiveProject() }
         .onChange(of: submodulePaths) { _, _ in syncActiveProject() }
         .safeAreaInset(edge: .bottom) {
@@ -192,10 +235,10 @@ struct SidebarView: View {
                 if !store.externalChanges.isEmpty {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.down.circle.fill")
-                            .font(.caption2)
+                            .font(.callout)
                             .foregroundStyle(.blue)
                         Text(L("%d external change(s)", store.externalChanges.count))
-                            .font(.caption2)
+                            .font(.callout)
                             .foregroundStyle(.blue)
                         Spacer()
                     }
@@ -203,7 +246,7 @@ struct SidebarView: View {
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "eye.fill")
-                        .font(.caption2)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                     Text(L("%d files watched", store.watchedCount))
                         .font(.caption)
@@ -211,14 +254,14 @@ struct SidebarView: View {
                     Spacer()
                     if let t = store.lastEventAt {
                         Text(t, style: .time)
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
             }
-            .background(.bar)
+            .background { WorkspaceBarBackground() }
         }
     }
 
@@ -227,7 +270,7 @@ struct SidebarView: View {
         Section {
             if store.projectRoots.isEmpty {
                 Text(L("No projects registered yet."))
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             } else {
                 projectPicker
@@ -237,20 +280,15 @@ struct SidebarView: View {
                 ForEach(scopedAgents) { agent in AgentGroupRow(agent: agent) }
                 if scopedAgents.isEmpty {
                     Text(L("No known agent config found in this folder yet."))
-                        .font(.caption2)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
             }
+            Button(L("Add project…"), systemImage: "plus") { pickProject() }
+                .buttonStyle(.borderless)
+                .accessibilityIdentifier("add-project")
         } header: {
-            HStack {
-                Text(L("Projects"))
-                Spacer()
-                Button { store.pickAndAddProject() } label: {
-                    Image(systemName: "plus.circle")
-                }
-                .buttonStyle(.plain)
-                .help(L("Add project…"))
-            }
+            Text(L("Projects"))
         }
     }
 
@@ -263,36 +301,21 @@ struct SidebarView: View {
                 Spacer()
                 projectActions
             }
-            Button { showProjectSelector = true } label: {
-                ContextSelectorLabel(
-                    icon: "folder.fill",
-                    title: activeProjectName,
-                    detail: activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? ""
-                )
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showProjectSelector, arrowEdge: .trailing) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L("Select project"))
-                        .font(.headline)
-                    ForEach(store.projectRoots, id: \.self) { root in
-                        Button {
-                            selectProject(root)
-                            showProjectSelector = false
-                        } label: {
-                            SelectorOptionRow(
-                                icon: "folder.fill",
-                                title: URL(fileURLWithPath: root).lastPathComponent,
-                                detail: root.replacingOccurrences(of: AppPaths.home, with: "~"),
-                                selected: root == activeProject
-                            )
-                        }
-                        .buttonStyle(.plain)
+            Menu {
+                ForEach(store.projectRoots, id: \.self) { root in
+                    Button { selectProject(root) } label: {
+                        Label(URL(fileURLWithPath: root).lastPathComponent,
+                              systemImage: root == activeProject ? "checkmark" : "folder")
                     }
+                    .help(root.replacingOccurrences(of: AppPaths.home, with: "~"))
                 }
-                .padding(12)
-                .frame(width: 290, alignment: .leading)
+            } label: {
+                ContextSelectorLabel(icon: "folder.fill", title: activeProjectName,
+                    detail: activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? "")
             }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden)
+            .accessibilityLabel(L("Select project"))
+            .accessibilityIdentifier("project-selector")
         }
     }
 
@@ -305,6 +328,8 @@ struct SidebarView: View {
                 Divider()
                 Button(L("Remove project"), role: .destructive) {
                     store.removeProject(path: activeProject)
+                    syncActiveProject()
+                    selectVisibleAgent()
                 }
             }
         } label: {
@@ -319,48 +344,27 @@ struct SidebarView: View {
             Text(L("Scope"))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            Button { showScopeSelector = true } label: {
-                ContextSelectorLabel(
-                    icon: activeScopeSymbol,
-                    title: activeScopeTitle,
-                    detail: activeScopeDetail
-                )
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showScopeSelector, arrowEdge: .trailing) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(L("Select scope"))
-                        .font(.headline)
+            Menu {
+                Button {
+                    activeSubmodule = nil
+                    selectVisibleAgent()
+                } label: {
+                    Label(L("Project root"), systemImage: activeSubmodule == nil ? "checkmark" : "folder")
+                }
+                ForEach(submodulePaths, id: \.self) { sub in
                     Button {
-                        activeSubmodule = nil
-                        showScopeSelector = false
+                        activeSubmodule = sub
+                        selectVisibleAgent()
                     } label: {
-                        SelectorOptionRow(
-                            icon: "folder.fill",
-                            title: L("Project root"),
-                            detail: activeProjectName,
-                            selected: activeSubmodule == nil
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    ForEach(submodulePaths, id: \.self) { sub in
-                        Button {
-                            activeSubmodule = sub
-                            showScopeSelector = false
-                        } label: {
-                            SelectorOptionRow(
-                                icon: "shippingbox.fill",
-                                title: sub,
-                                detail: L("Git submodule"),
-                                selected: activeSubmodule == sub
-                            )
-                        }
-                        .buttonStyle(.plain)
+                        Label(sub, systemImage: activeSubmodule == sub ? "checkmark" : "shippingbox")
                     }
                 }
-                .padding(12)
-                .frame(width: 290, alignment: .leading)
+            } label: {
+                ContextSelectorLabel(icon: activeScopeSymbol, title: activeScopeTitle, detail: activeScopeDetail)
             }
+            .menuStyle(.borderlessButton).menuIndicator(.hidden)
+            .accessibilityLabel(L("Select scope"))
+            .accessibilityIdentifier("scope-selector")
         }
     }
 }
@@ -387,7 +391,7 @@ private struct ContextSelectorLabel: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Text(detail)
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -395,44 +399,10 @@ private struct ContextSelectorLabel: View {
             Spacer(minLength: 6)
             Image(systemName: "chevron.up.chevron.down")
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(.secondary)
         }
         .contentShape(Rectangle())
         .padding(.vertical, 3)
-    }
-}
-
-private struct SelectorOptionRow: View {
-    let icon: String
-    let title: String
-    let detail: String
-    let selected: Bool
-
-    var body: some View {
-        HStack(spacing: 9) {
-            Image(systemName: icon)
-                .foregroundStyle(selected ? .white : Color.accentColor)
-                .frame(width: 18)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.system(size: 13, weight: .medium))
-                    .lineLimit(1)
-                Text(detail)
-                    .font(.caption2)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            Spacer()
-            if selected {
-                Image(systemName: "checkmark")
-                    .font(.caption.weight(.bold))
-            }
-        }
-        .foregroundStyle(selected ? .white : .primary)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(selected ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .contentShape(Rectangle())
     }
 }
 
@@ -446,18 +416,12 @@ struct PanelRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(color.gradient)
-                    .frame(width: 28, height: 28)
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(.system(size: 13, weight: .medium))
-                Text(subtitle).font(.caption2).foregroundStyle(.secondary)
-            }
+            Image(systemName: icon)
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(title).font(.body)
             Spacer()
             if count > 0 {
                 Text("\(count)")
@@ -480,16 +444,15 @@ struct AgentRow: View {
                 Text(displayName ?? agent.name)
                     .font(.system(size: 13, weight: .medium))
                 Text(L("%d files", agent.files.count))
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if agent.issueCount > 0 {
-                Text("\(agent.issueCount)")
-                    .font(.caption2.bold())
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Capsule().fill(Color.orange))
+                Label("\(agent.issueCount)", systemImage: "exclamationmark.triangle")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(L("%d issues", agent.issueCount))
             }
         }
         .padding(.vertical, 2)
@@ -567,7 +530,7 @@ struct FileListView: View {
             } else {
                 ContentUnavailableView(L("No agents"),
                                        systemImage: "tray",
-                                       description: Text(L("No AI agents detected in ~")))
+                                       description: Text(L("Select an agent to browse its configuration files.")))
             }
         }
         .navigationTitle(agent?.name ?? L("Files"))
@@ -614,40 +577,38 @@ struct FileRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(file.displayName)
-                        .font(.system(size: 12.5, weight: .medium))
+                        .font(.body.weight(.medium))
                         .lineLimit(1)
-                    Text(file.format.badge)
-                        .font(.system(size: 8.5, weight: .bold, design: .monospaced))
-                        .padding(.horizontal, 4).padding(.vertical, 1)
-                        .background(file.format.badgeColor.opacity(0.15))
-                        .foregroundStyle(file.format.badgeColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 3))
                     if file.volatile {
                         Image(systemName: "bolt.fill")
                             .font(.system(size: 8))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                             .help(L("State file — changes frequently"))
                     }
                 }
                 Text(file.shortPath)
-                    .font(.caption2)
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let note = file.note {
                     Text(L(note))
-                        .font(.system(size: 9.5))
-                        .foregroundStyle(.tertiary)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
             Spacer()
             if pending {
-                Circle().fill(.blue).frame(width: 8, height: 8)
+                Image(systemName: "arrow.down.circle")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(L("Modified outside the app — check the diff"))
                     .help(L("Modified outside the app — check the diff"))
             }
             if dirty {
-                Circle().fill(.orange).frame(width: 8, height: 8)
+                Image(systemName: "pencil.circle")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel(L("You have unsaved changes"))
                     .help(L("You have unsaved changes"))
             }
             if !file.exists {
@@ -660,7 +621,7 @@ struct FileRow: View {
             if file.readOnly {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .help(L("Read-only"))
             }
         }
@@ -681,6 +642,7 @@ struct FileIssuesButton: View {
         }
         .buttonStyle(.plain)
         .help(issues.map(\.message).joined(separator: "\n"))
+        .accessibilityLabel(L("Issues detected"))
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L("Issues detected"))
@@ -689,7 +651,7 @@ struct FileIssuesButton: View {
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: i.severity == .error ? "xmark.octagon.fill" :
                                         i.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                            .font(.caption2)
+                            .font(.callout)
                             .foregroundStyle(i.severity == .error ? .red :
                                                 i.severity == .warning ? .orange : .blue)
                         Text(i.message)

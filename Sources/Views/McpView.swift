@@ -18,6 +18,7 @@ struct McpMatrixView: View {
     @Environment(ConfigStore.self) private var store
     @State private var query = ""
     @State private var addPath: String?
+    @State private var showDetail = false
 
     private var names: [String] {
         let all = store.mcpNames
@@ -29,50 +30,78 @@ struct McpMatrixView: View {
 
     var body: some View {
         @Bindable var store = store
-        Group {
-            if store.mcpIndex.isEmpty {
-                ContentUnavailableView(
-                    L("No MCP servers"),
-                    systemImage: "server.rack",
-                    description: Text(L("No agent declares MCP servers in its config."))
-                )
-            } else {
-                List(selection: $store.selectedMcpName) {
-                    Section {
-                        ForEach(names, id: \.self) { name in
-                            McpMatrixRow(name: name, agents: agents)
-                                .tag(name)
-                        }
-                    } header: {
-                        // Column legend: one fixed-width slot per agent, so
-                        // every row's indicators line up underneath it like
-                        // a real table instead of a wrapping pill list.
-                        HStack(spacing: 0) {
-                            Text(L("Server"))
-                                .frame(width: 106, alignment: .leading)
-                            ForEach(agents) { agent in
-                                AgentProductIcon(agent: agent, size: 15)
-                                    .frame(width: 26)
-                                    .help(agent.name)
+        GeometryReader { geometry in
+            let columnWidth = max(64, min(110, (geometry.size.width - 240) / CGFloat(max(1, agents.count))))
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("MCP servers")).font(.title2.weight(.semibold))
+                    Text(L("Compare configured servers across agents. Select a server to inspect its sources."))
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading).padding(20)
+                if store.mcpIndex.isEmpty {
+                    ContentUnavailableView(L("No MCP servers"), systemImage: "server.rack",
+                        description: Text(L("No agent declares MCP servers in its config.")))
+                } else if names.isEmpty {
+                    ContentUnavailableView.search(text: query)
+                } else {
+                    HStack(spacing: 0) {
+                        Text(L("Server")).font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        ForEach(agents) { agent in
+                            VStack(spacing: 4) {
+                                AgentProductIcon(agent: agent, size: 22)
+                                Text(mcpAgentFamilyID(agent.id) == "antigravity" ? "Gemini" : agent.name.components(separatedBy: " (").first ?? agent.name)
+                                    .font(.callout).lineLimit(1).truncationMode(.tail)
                             }
+                            .frame(width: columnWidth)
+                            .accessibilityElement(children: .combine)
                         }
                     }
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                    Divider()
+                    List(selection: $store.selectedMcpName) {
+                        ForEach(names, id: \.self) { name in
+                            McpMatrixRow(name: name, agents: agents, columnWidth: columnWidth)
+                                .tag(name)
+                                .accessibilityIdentifier("mcp-row:" + name)
+                                .contextMenu {
+                                    Button(L("Server details")) {
+                                        store.selectedMcpName = name
+                                        showDetail = true
+                                    }
+                                }
+                        }
+                    }
+                    .listStyle(.inset)
                 }
-                .listStyle(.inset)
-                .searchable(text: $query, prompt: L("Filter servers"))
+                HStack {
+                    Text(L("%d servers", names.count)).foregroundStyle(.secondary)
+                    Spacer()
+                    Button(L("Server details"), systemImage: "sidebar.trailing") { showDetail = true }
+                        .disabled(store.mcpEntries(for: store.selectedMcpName ?? "").isEmpty)
+                        .accessibilityIdentifier("mcp-details")
+                }.padding(16)
             }
         }
         .navigationTitle(L("MCP servers"))
+        .searchable(text: $query, prompt: L("Filter servers"))
         .toolbar {
-            ToolbarItem {
-                Menu(L("Add MCP server")) {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
                     ForEach(store.agents) { agent in
                         ForEach(store.mcpTargetFiles(for: agent.id)) { file in
                             Button("\(agent.name) — \(URL(fileURLWithPath: file.path).lastPathComponent)") { addPath = file.path }
                         }
                     }
+                } label: {
+                    Label(L("Add MCP server"), systemImage: "plus")
                 }
+                .disabled(!store.agents.contains { !store.mcpTargetFiles(for: $0.id).isEmpty })
             }
+        }
+        .adaptiveInspector(isPresented: $showDetail, title: L("Server details"), panelThreshold: 1300) {
+            McpDetailView()
         }
         .popover(isPresented: Binding(get: { addPath != nil }, set: { if !$0 { addPath = nil } })) {
             if let path = addPath { McpAddForm(path: path) { addPath = nil } }
@@ -80,40 +109,35 @@ struct McpMatrixView: View {
     }
 }
 
-/// One table row: server name + transport on the left, then one fixed-width
-/// indicator per agent column (aligned with the section header's icons)
-/// instead of a wrapping list of per-agent name pills.
+/// A family indicates presence, not that all of its sources have equal settings.
 struct McpMatrixRow: View {
     let name: String
     let agents: [Agent]
+    let columnWidth: CGFloat
     @Environment(ConfigStore.self) private var store
 
     var body: some View {
         let entries = store.mcpEntries(for: name)
         let ownerIDs = Set(entries.map { mcpAgentFamilyID($0.agentID) })
         HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(name)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                if let first = entries.first {
-                    Text(first.isRemote ? L("remote") : L("local"))
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(.secondary)
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name).font(.body.monospaced().weight(.medium))
+                    .lineLimit(1).truncationMode(.middle)
+                Text(entries.count == 1 ? L("1 source") : L("%d sources", entries.count))
+                    .font(.callout).foregroundStyle(.secondary)
             }
-            .frame(width: 106, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(agents) { agent in
                 let has = ownerIDs.contains(mcpAgentFamilyID(agent.id))
-                Image(systemName: has ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 11))
-                    .foregroundStyle(has ? agent.color : Color.secondary.opacity(0.25))
-                    .frame(width: 26)
-                    .help(agent.name)
+                Image(systemName: has ? "checkmark.circle" : "minus")
+                    .font(.body)
+                    .foregroundStyle(has ? Color.primary : Color.secondary)
+                    .frame(width: columnWidth)
+                    .accessibilityLabel(agent.name + ": " + L(has ? "configured" : "not configured"))
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -156,7 +180,7 @@ struct McpDetailView: View {
                             Text(err).font(.caption)
                             Spacer()
                             Button { store.clearActionError() } label: {
-                                Image(systemName: "xmark").font(.caption2)
+                                Image(systemName: "xmark").font(.callout)
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(.secondary)
@@ -180,7 +204,7 @@ struct McpDetailView: View {
                 }
                 .padding(.bottom, 20)
             }
-            .navigationTitle(name)
+
         } else {
             ContentUnavailableView(L("Select a server"),
                                    systemImage: "server.rack",
@@ -203,11 +227,8 @@ struct McpAgentCard: View {
                     Text(agent.name).font(.system(size: 13, weight: .semibold))
                     if let en = entry.enabled {
                         Text(en ? L("enabled") : L("disabled"))
-                            .font(.system(size: 8, weight: .bold))
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background((en ? Color.green : Color.gray).opacity(0.15))
-                            .foregroundStyle(en ? .green : .secondary)
-                            .clipShape(Capsule())
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button { store.openFile(entry.sourcePath) } label: {
@@ -221,7 +242,7 @@ struct McpAgentCard: View {
                         .font(.caption).foregroundStyle(.secondary)
                         .frame(width: 16)
                     Text(Secrets.mcpEndpoint(entry.raw, masking: maskSecrets))
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.body.monospaced())
                         .textSelection(.enabled)
                         .lineLimit(3)
                 }
@@ -231,13 +252,17 @@ struct McpAgentCard: View {
                             .font(.caption).foregroundStyle(.secondary)
                             .frame(width: 16)
                         Text(entry.envKeys.joined(separator: ", "))
-                            .font(.system(size: 11, design: .monospaced))
+                            .font(.body.monospaced())
                             .foregroundStyle(.secondary)
                     }
                 }
+                if store.agents.contains(where: { $0.id == entry.agentID && $0.projectRoot != nil }) {
+                    Label(L("Project configuration · read-only"), systemImage: "lock")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
                 Text(entry.sourcePath.replacingOccurrences(of: AppPaths.home, with: "~"))
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 18)
@@ -260,7 +285,7 @@ struct McpMissingCard: View {
                 Spacer()
                 Text(L("not configured"))
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                 if let source, !store.mcpTargetFiles(for: agent.id).isEmpty {
                     Menu(L("Copy here")) {
                         ForEach(store.mcpTargetFiles(for: agent.id)) { file in
@@ -274,7 +299,7 @@ struct McpMissingCard: View {
             }
         }
         .padding(.horizontal, 18)
-        .opacity(0.75)
+
     }
 }
 
@@ -309,7 +334,8 @@ struct McpAddForm: View {
                             HStack {
                                 TextField(L("Argument"), text: $args[index]).accessibilityIdentifier("mcp-argument-\(index)")
                                 Button { args.remove(at: index) } label: { Image(systemName: "minus.circle") }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(.borderless)
+                                    .accessibilityLabel(L("Remove argument %d", index + 1))
                             }
                         }
                     }

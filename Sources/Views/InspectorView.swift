@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 /// Right-edge inspector (Xcode-style): metadata, issues and quick actions
-/// for the selected file. macOS 26 renders it as edge-to-edge glass.
+/// for the selected file, using the system inspector presentation.
 struct FileInspectorView: View {
     let path: String?
     @Environment(ConfigStore.self) private var store
@@ -29,7 +29,6 @@ struct FileInspectorView: View {
                 }
                 .padding(14)
             }
-            .inspectorColumnWidth(min: 210, ideal: 250, max: 320)
         } else {
             ContentUnavailableView(L("No selection"), systemImage: "sidebar.trailing")
         }
@@ -38,27 +37,29 @@ struct FileInspectorView: View {
     private func aboutSection(_ doc: DocsCatalog.FileDoc) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(doc.localizedTitle, systemImage: "questionmark.circle")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(.secondary)
             Text(doc.localizedBody)
-                .font(.caption2)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if let url = doc.docsURL {
                 Link(L("Official docs") + " ↗", destination: url)
-                    .font(.caption2)
+                    .font(.callout)
             }
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
     }
 
     private func metaSection(path: String, file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("Metadata")).font(.system(size: 11, weight: .semibold))
+            Text(L("Metadata")).font(.headline)
                 .foregroundStyle(.secondary)
+            Text(path.replacingOccurrences(of: AppPaths.home, with: "~"))
+                .font(.callout.monospaced()).textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
             metaRow(L("Format"), file.format.badge)
             metaRow(L("Role"), L(file.role.label))
             metaRow(L("Size"), ByteCountFormatter.string(fromByteCount: file.size, countStyle: .file))
@@ -68,22 +69,22 @@ struct FileInspectorView: View {
             if let perms = posixPerms(path) { metaRow(L("Permissions"), perms) }
             if file.volatile { metaRow(L("Type"), L("volatile (state)")) }
             if file.readOnly { metaRow(L("Access"), L("read-only")) }
-            if let note = file.note { Text(L(note)).font(.caption2).foregroundStyle(.tertiary) }
+            if let note = file.note { Text(L(note)).font(.callout).foregroundStyle(.secondary) }
         }
     }
 
     private func issuesSection(_ file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("Issues")).font(.system(size: 11, weight: .semibold))
+            Text(L("Issues")).font(.headline)
                 .foregroundStyle(.secondary)
             ForEach(Array(file.issues.enumerated()), id: \.offset) { _, i in
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: i.severity == .error ? "xmark.octagon.fill" :
                                     i.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
-                        .font(.caption2)
+                        .font(.callout)
                         .foregroundStyle(i.severity == .error ? .red :
                                             i.severity == .warning ? .orange : .blue)
-                    Text(i.message).font(.caption2)
+                    Text(i.message).font(.callout)
                 }
             }
         }
@@ -91,12 +92,12 @@ struct FileInspectorView: View {
 
     private func managedSection(_ file: TrackedFile) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("Managed by third parties")).font(.system(size: 11, weight: .semibold))
+            Text(L("Managed by third parties")).font(.headline)
                 .foregroundStyle(.secondary)
             ForEach(Array(file.managedBlocks.enumerated()), id: \.offset) { _, b in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(b.owner).font(.caption.bold())
-                    Text(b.detail).font(.caption2).foregroundStyle(.secondary)
+                    Text(b.detail).font(.callout).foregroundStyle(.secondary)
                 }
             }
         }
@@ -104,7 +105,7 @@ struct FileInspectorView: View {
 
     private func actionsSection(path: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("Actions")).font(.system(size: 11, weight: .semibold))
+            Text(L("Actions")).font(.headline)
                 .foregroundStyle(.secondary)
             InspectorAction(icon: "folder", label: L("Show in Finder")) {
                 store.revealInFinder(path)
@@ -124,7 +125,7 @@ struct FileInspectorView: View {
 
     private func metaRow(_ k: String, _ v: String) -> some View {
         HStack {
-            Text(k).font(.caption).foregroundStyle(.secondary)
+            Text(k).font(.callout).foregroundStyle(.secondary)
             Spacer()
             Text(v).font(.caption.monospaced()).textSelection(.enabled)
         }
@@ -145,10 +146,10 @@ struct InspectorAction: View {
     var body: some View {
         Button(action: action) {
             Label(label, systemImage: icon)
-                .font(.caption)
+                .font(.callout)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.borderless)
         .foregroundStyle(Color.primary)
         .padding(.vertical, 2)
     }

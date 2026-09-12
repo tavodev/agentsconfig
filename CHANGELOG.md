@@ -17,5 +17,9 @@ Initial experimental release candidate. No release has been published by this pr
 - Background processing and paginated editing for files between 2 MB and 16 MB.
 - English and Spanish interfaces, activity feed and optional local notifications.
 - Isolated hostless tests, multiprocess storage verification and a separate UI regression host.
+- Native per-destination navigation: three columns for files/Activity, full-width Settings and MCP comparator, an inspector that adapts between a side panel and a compact sheet, and a History view that switches between a compact version picker and a side-by-side list.
+- Project and scope now have separate, labelled selectors (a project menu plus root/submodule scope chips) instead of one unlabelled sidebar row.
+- Product-specific icons for Claude, Codex, Gemini and OpenCode replace generic symbols in the sidebar, MCP matrix and MCP cards.
+- Fifteen XCUITest scenarios covering reviewed save/restore, conflict state, named controls, window-size-driven layout and compact inspector sequencing.
 
 See [release notes](docs/releases/0.1.0.md) for limitations and [release preparation](docs/RELEASING.md) for publication gates.

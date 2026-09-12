@@ -13,7 +13,7 @@ struct DiffSheet: View {
                     Text(L("Changes detected"))
                         .font(.headline)
                     Text(path.replacingOccurrences(of: AppPaths.home, with: "~"))
-                        .font(.caption)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -61,31 +61,31 @@ struct ChangeRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text(badgeText)
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white)
-                .frame(width: 20, height: 20)
-                .background(badgeColor)
+                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                .foregroundStyle(.primary)
+                .frame(width: 24, height: 24)
+                .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 5))
             VStack(alignment: .leading, spacing: 3) {
                 Text(change.keyPath)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                HStack(spacing: 6) {
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                VStack(alignment: .leading, spacing: 6) {
                     if let old = change.oldValue {
                         Text(old)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(.red)
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(.secondary)
                             .strikethrough(change.kind == .modified)
                             .lineLimit(2)
                     }
                     if change.kind == .modified {
                         Image(systemName: "arrow.right")
                             .font(.system(size: 9))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                     }
                     if let new = change.newValue {
                         Text(new)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(change.kind == .added ? .green : .primary)
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(.primary)
                             .lineLimit(2)
                     }
                 }
@@ -122,10 +122,10 @@ struct CompareView: View {
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
             }
-            .font(.caption)
+            .font(.callout)
             if changes.isEmpty {
                 Label(L("No differences"), systemImage: "checkmark.circle")
-                    .font(.caption)
+                    .font(.callout)
                     .foregroundStyle(.green)
             } else {
                 ForEach(changes) { c in ChangeRow(change: c) }
@@ -139,21 +139,21 @@ struct SaveReviewSheet: View {
     @Environment(ConfigStore.self) private var store
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L("Review save")).font(.headline)
-            Text(review.path.replacingOccurrences(of: AppPaths.home, with: "~")).font(.caption)
+            Text(L("Review save")).font(.headline).accessibilityIdentifier("save-review")
+            Text(review.path.replacingOccurrences(of: AppPaths.home, with: "~")).font(.callout)
             if review.overwritesConflict {
                 Label(L("This save replaces the conflicting disk version."), systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
             if !review.historyEnabled {
                 Text(L("History is disabled for this destination; saving will not create a backup."))
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.callout).foregroundStyle(.orange)
             }
             Text(L("Secret values remain hidden in the review. Saving writes the original values."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.callout).foregroundStyle(.secondary)
             if review.original.utf8.count > Parsers.maximumFileBytes || review.proposed.utf8.count > Parsers.maximumFileBytes {
                 Text(L("Large-file review: %d bytes on disk → %d proposed bytes. Detailed diff is omitted; inspect Source before confirming.", review.original.utf8.count, review.proposed.utf8.count))
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.callout).foregroundStyle(.orange)
             }
             Divider()
             ScrollView {
@@ -168,7 +168,6 @@ struct SaveReviewSheet: View {
                     .accessibilityIdentifier("confirm-save")
             }
         }.padding(20).frame(minWidth: 650, minHeight: 420)
-        .accessibilityIdentifier("save-review")
     }
 }
 
@@ -177,8 +176,8 @@ struct RestoreReviewSheet: View {
     @Environment(ConfigStore.self) private var store
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L("Review restore")).font(.headline)
-            Text(store.restoreExplanation(for: request)).font(.caption).foregroundStyle(.secondary)
+            Text(L("Review restore")).font(.headline).accessibilityIdentifier("restore-review")
+            Text(store.restoreExplanation(for: request)).font(.callout).foregroundStyle(.secondary)
             if store.preparingRestore { ProgressView(L("Preparing review…")) }
             else if let proposed = store.restoreProposedText {
                 ScrollView {
@@ -194,6 +193,5 @@ struct RestoreReviewSheet: View {
                     .accessibilityIdentifier("confirm-restore")
             }
         }.padding(20).frame(minWidth: 650, minHeight: 420)
-        .accessibilityIdentifier("restore-review")
     }
 }

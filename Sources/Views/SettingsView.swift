@@ -40,11 +40,13 @@ struct AppSettingsView: View {
                 LabeledContent(L("Watcher debounce")) {
                     HStack {
                         Slider(value: $debounce, in: 0.1...2.0, step: 0.05)
+                            .accessibilityLabel(L("Watcher debounce"))
+                            .accessibilityValue(String(format: "%.2f s", debounce))
                         Text(String(format: "%.2f s", debounce))
                             .font(.caption.monospaced())
                             .frame(width: 52, alignment: .trailing)
                     }
-                    .frame(width: 260)
+                    .frame(minWidth: 140, maxWidth: 260)
                 }
                 Stepper(L("History per file: %d versions", historyLimit),
                         value: $historyLimit, in: 10...1000, step: 10)
@@ -55,12 +57,12 @@ struct AppSettingsView: View {
                 Toggle(L("Record local history"), isOn: $historyEnabled)
                 if !historyEnabled {
                     Text(L("New snapshots and save backups are disabled. Existing history is retained; restore with unsaved edits is blocked."))
-                        .font(.caption).foregroundStyle(.orange)
+                        .font(.callout).foregroundStyle(.orange)
                 }
                 if !store.permissionWarnings.isEmpty {
                     ForEach(store.permissionWarnings, id: \.self) { w in
                         Label(w, systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.orange)
                     }
                 }
@@ -76,6 +78,6 @@ struct AppSettingsView: View {
         }
         .onChange(of: debounce) { _, value in store.setWatchDebounce(value) }
         .formStyle(.grouped)
-        .padding(4)
+        .padding(8)
     }
 }

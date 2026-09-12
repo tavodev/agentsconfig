@@ -156,27 +156,32 @@ struct StructuredView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                if isEmptyOrMissing {
+                if !isEmptyOrMissing && root?.isEmpty == true {
+                    ContentUnavailableView(L("No settings yet"), systemImage: "slider.horizontal.3",
+                        description: Text(store.isMcpDestination(path)
+                            ? L("This configuration is empty. Add an MCP server or use Source to add settings.")
+                            : L("This configuration contains no settings.")))
+                } else if isEmptyOrMissing {
                     Card {
                         Label(fileExists ? L("Empty file — nothing to show yet.")
                                          : L("This file doesn't exist on disk yet."),
                               systemImage: fileExists ? "doc" : "doc.badge.ellipsis")
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                 } else if let err = doc?.parseError {
                     Card {
                         Label(err, systemImage: "exclamationmark.triangle.fill")
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.red)
                         Text(L("Fix the error in the Source tab to enable the structured view."))
-                            .font(.caption2).foregroundStyle(.secondary)
+                            .font(.callout).foregroundStyle(.secondary)
                     }
                 } else if root == nil {
                     Card {
                         Label(L("This file is not a structured JSON/TOML object."),
                               systemImage: "info.circle")
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                 } else {
@@ -184,14 +189,14 @@ struct StructuredView: View {
                         Card {
                             Label(L("Read-only structured view — edit in the Source tab (%@ format).", format.badge),
                                   systemImage: "lock")
-                                .font(.caption)
+                                .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
                     } else if format == .toml {
                         Card {
                             Label(L("Structured editing rewrites the TOML — comments and formatting are normalized on save."),
                                   systemImage: "info.circle")
-                                .font(.caption)
+                                .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -253,16 +258,20 @@ struct StructuredView: View {
 // MARK: - Card container
 
 struct Card<Content: View>: View {
+    @Environment(\.colorSchemeContrast) private var contrast
     @ViewBuilder var content: Content
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) { content }
-            .padding(12)
+        VStack(alignment: .leading, spacing: 12) { content }
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .controlBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(.quaternary, lineWidth: 0.5)
+                    .strokeBorder(contrast == .increased ? Color.primary : Color.secondary.opacity(0.2),
+                                  lineWidth: contrast == .increased ? 1 : 0.5)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             )
     }
 }
@@ -273,7 +282,7 @@ struct CardHeader: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: icon).foregroundStyle(.secondary)
-            Text(title).font(.system(size: 12.5, weight: .semibold))
+            Text(title).font(.headline)
             Spacer()
         }
     }
@@ -287,25 +296,26 @@ struct KeyDocButton: View {
     var body: some View {
         Button { show.toggle() } label: {
             Image(systemName: "info.circle")
-                .font(.system(size: 10))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
         .help(doc.localizedSummary)
+        .accessibilityLabel(doc.localizedSummary)
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(doc.localizedSummary)
-                    .font(.caption)
+                    .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                 if let values = doc.localizedValues, !values.isEmpty {
                     Divider()
                     ForEach(values.keys.sorted(), id: \.self) { v in
                         HStack(alignment: .top, spacing: 8) {
                             Text(v)
-                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
                                 .frame(minWidth: 110, alignment: .leading)
                             Text(values[v] ?? "")
-                                .font(.caption2)
+                                .font(.callout)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -314,8 +324,8 @@ struct KeyDocButton: View {
                 if let def = doc.defaultValue {
                     Divider()
                     Text(L("Default: %@", def))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(12)
@@ -345,6 +355,7 @@ struct MCPCard: View {
                         Image(systemName: "plus.circle.fill")
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(L("Add MCP server"))
                     .popover(isPresented: $showAdd) { McpAddForm(path: filePath) { showAdd = false } }
                 }
             }
@@ -384,30 +395,31 @@ struct MCPServerRow: View {
     }
     var body: some View {
         HStack(spacing: 10) {
-            Circle()
-                .fill(enabled ? Color.green : Color.gray)
-                .frame(width: 7, height: 7)
+            Image(systemName: enabled ? "checkmark.circle" : "minus.circle")
+                .foregroundStyle(.secondary)
+                .accessibilityLabel(L(enabled ? "enabled" : "disabled"))
             VStack(alignment: .leading, spacing: 1) {
-                Text(name).font(.system(size: 12, weight: .medium))
+                Text(name).font(.system(size: 13, weight: .medium))
                 Text(Secrets.mcpEndpoint(dict, masking: maskSecrets))
-                    .font(.system(size: 10.5, design: .monospaced))
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
             if dict["enabled"] != nil || dict["disabled"] != nil {
-                Toggle("", isOn: Binding(
+                Toggle(L("Enable server %@", name), isOn: Binding(
                     get: { enabled },
                     set: { onToggleEnabled($0) }
                 ))
                 .toggleStyle(.switch)
-                .controlSize(.mini)
+                .controlSize(.small)
                 .labelsHidden()
                 .disabled(!editable)
             }
             if editable {
                 Button(action: onDelete) {
-                    Image(systemName: "trash")
+                    Label(L("Remove server %@", name), systemImage: "trash")
+                        .labelStyle(.iconOnly)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
@@ -431,8 +443,8 @@ struct PermissionsCard: View {
             CardHeader(title: L("Permissions"), icon: "lock.shield")
             if let mode = perms["defaultMode"] as? String {
                 HStack {
-                    Text("defaultMode").font(.caption).foregroundStyle(.secondary)
-                    Text(mode).font(.system(size: 11, design: .monospaced))
+                    Text("defaultMode").font(.callout).foregroundStyle(.secondary)
+                    Text(mode).font(.system(size: 13, design: .monospaced))
                 }
             }
             StringListEditor(title: "allow", keyPath: keyPath + [.key("allow")],
@@ -456,18 +468,22 @@ struct StringListEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
+            Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
             ForEach(Array(values.enumerated()), id: \.offset) { i, v in
                 HStack(spacing: 6) {
                     Text(Secrets.displayText(String(describing: v), path: pathLabel(keyPath), masking: maskSecrets))
-                        .font(.system(size: 10.5, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                         .lineLimit(1)
                     Spacer()
                     if editable {
                         Button {
                             mutate { r in removeAt(&r, keyPath + [.idx(i)]) }
-                        } label: { Image(systemName: "minus.circle") }
-                        .buttonStyle(.plain).foregroundStyle(.secondary)
+                        } label: {
+                            Image(systemName: "minus.circle").frame(width: 24, height: 24)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless).foregroundStyle(.secondary)
+                        .accessibilityLabel(L("Remove rule %d from %@", i + 1, title))
                     }
                 }
             }
@@ -475,10 +491,14 @@ struct StringListEditor: View {
                 HStack(spacing: 6) {
                     TextField(L("Add rule…"), text: $newValue)
                         .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 11))
+                        .font(.system(size: 13))
                         .onSubmit(add)
-                    Button(action: add) { Image(systemName: "plus.circle.fill") }
-                        .buttonStyle(.plain)
+                    Button(action: add) {
+                        Image(systemName: "plus.circle.fill").frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(L("Add rule to %@", title))
                         .disabled(newValue.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -509,7 +529,7 @@ struct HooksCard: View {
             CardHeader(title: L("Hooks"), icon: "hook")
             ForEach(events, id: \.self) { event in
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(event).font(.system(size: 11, weight: .semibold))
+                    Text(event).font(.system(size: 13, weight: .semibold))
                     ForEach(Array(commands(for: event).enumerated()), id: \.offset) { _, cmd in
                         HookCommandRow(command: cmd)
                     }
@@ -552,7 +572,7 @@ struct HookCommandRow: View {
                 .frame(width: 7, height: 7)
                 .padding(.top, 4)
             Text(Secrets.displayText(command, path: "command", masking: maskSecrets))
-                .font(.system(size: 10, design: .monospaced))
+                .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(missingPaths.isEmpty ? Color.primary : Color.red)
                 .lineLimit(3)
                 .textSelection(.enabled)
@@ -584,9 +604,9 @@ struct BoolMapCard: View {
                         get: { (map[k] as? NSNumber)?.boolValue ?? false },
                         set: { v in mutate { r in setAt(&r, keyPath + [.key(k)], v) } }
                     ))
-                    .font(.system(size: 11))
+                    .font(.system(size: 13))
                     .toggleStyle(.switch)
-                    .controlSize(.mini)
+                    .controlSize(.small)
                     .disabled(!editable)
                 }
             }
@@ -609,9 +629,9 @@ struct StringMapCard: View {
         Card {
             CardHeader(title: title, icon: icon)
             ForEach(map.keys.sorted(), id: \.self) { k in
-                HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(k)
-                        .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .frame(minWidth: 140, alignment: .leading)
                     let value = map[k] as? String ?? "\(map[k] ?? "")"
                     if maskSecrets && Secrets.isSensitive(value, path: pathLabel(keyPath + [.key(k)])) {
@@ -619,11 +639,11 @@ struct StringMapCard: View {
                             mutate { r in setAt(&r, keyPath + [.key(k)], v) }
                         }
                     } else {
-                        TextField(L("value"), text: Binding(
+                        TextField(k, text: Binding(
                             get: { value },
                             set: { v in mutate { r in setAt(&r, keyPath + [.key(k)], v) } }
                         ))
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                         .textFieldStyle(.roundedBorder)
                         .disabled(!editable)
                     }
@@ -707,20 +727,22 @@ struct NodeRow: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 8) {
                 Text(Secrets.displayText(node.label, masking: maskSecrets))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
                     .foregroundStyle(.secondary)
                 if let doc {
                     KeyDocButton(doc: doc)
                 }
-                Spacer()
-                valueView
+                Spacer(minLength: 0)
             }
             if let doc {
                 Text(doc.localizedSummary)
-                    .font(.system(size: 9.5))
-                    .foregroundStyle(.tertiary)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
+            valueView
+                .padding(.top, 4)
         }
+        .padding(.vertical, 5)
         .onAppear { draft = scalarText(node.value) }
     }
 
@@ -728,33 +750,33 @@ struct NodeRow: View {
     private var valueView: some View {
         let v = node.value
         if maskSecrets && Secrets.isSensitive(v, path: pathLabel(node.segs)), !(v is String) {
-            Text(Secrets.maskedValue).font(.system(size: 11, design: .monospaced))
+            Text(Secrets.maskedValue).font(.system(size: 13, design: .monospaced))
         } else if isBool(v) {
-            Toggle("", isOn: Binding(
+            Toggle(Secrets.displayText(pathLabel(node.segs), masking: maskSecrets), isOn: Binding(
                 get: { (v as? NSNumber)?.boolValue ?? false },
                 set: { n in mutate { r in setAt(&r, node.segs, n) } }
             ))
-            .toggleStyle(.switch).controlSize(.mini).labelsHidden()
+            .toggleStyle(.switch).controlSize(.small).labelsHidden()
             .disabled(!editable)
         } else if v is NSNull {
-            Text("null").font(.system(size: 10.5, design: .monospaced)).foregroundStyle(.tertiary)
+            Text("null").font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary)
         } else if let s = v as? String {
             if maskSecrets && Secrets.isSensitive(s, path: pathLabel(node.segs)) {
                 SecretValueRow(value: s, editable: editable) { n in
                     mutate { r in setAt(&r, node.segs, n) }
                 }
             } else {
-                TextField("", text: Binding(
+                TextField(Secrets.displayText(pathLabel(node.segs), masking: maskSecrets), text: Binding(
                     get: { s },
                     set: { n in mutate { r in setAt(&r, node.segs, n) } }
                 ))
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 13, design: .monospaced))
                 .textFieldStyle(.roundedBorder)
                 .frame(maxWidth: 380)
                 .disabled(!editable)
             }
         } else if let n = v as? NSNumber {
-            TextField("", text: Binding(
+            TextField(Secrets.displayText(pathLabel(node.segs), masking: maskSecrets), text: Binding(
                 get: { n.stringValue },
                 set: { txt in
                     if let v = NodeRow.parseNumber(txt) {
@@ -762,13 +784,13 @@ struct NodeRow: View {
                     }
                 }
             ))
-            .font(.system(size: 11, design: .monospaced))
+            .font(.system(size: 13, design: .monospaced))
             .textFieldStyle(.roundedBorder)
             .frame(maxWidth: 140)
             .disabled(!editable)
         } else {
             Text(DiffEngine.display(v))
-                .font(.system(size: 10.5, design: .monospaced))
+                .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
     }
@@ -800,32 +822,36 @@ struct SecretValueRow: View {
     var body: some View {
         HStack(spacing: 6) {
             if revealed {
-                TextField("", text: Binding(get: { value }, set: { n in
+                TextField(L("Secret value"), text: Binding(get: { value }, set: { n in
                     MainActor.assumeIsolated { onChange(n) }
                 }))
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 13, design: .monospaced))
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 320)
                     .disabled(!editable)
             } else {
                 Text("••••••••")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
             Button { revealed.toggle() } label: {
                 Image(systemName: revealed ? "eye.slash" : "eye")
+                    .frame(width: 28, height: 28).contentShape(Rectangle())
             }
-            .buttonStyle(.plain).foregroundStyle(.secondary)
+            .buttonStyle(.borderless).foregroundStyle(.secondary)
             .help(revealed ? L("Hide value") : L("Reveal value"))
+            .accessibilityLabel(revealed ? L("Hide value") : L("Reveal value"))
             .accessibilityIdentifier("reveal-secret")
             Button {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(value, forType: .string)
             } label: {
                 Image(systemName: "doc.on.doc")
+                    .frame(width: 28, height: 28).contentShape(Rectangle())
             }
-            .buttonStyle(.plain).foregroundStyle(.secondary)
+            .buttonStyle(.borderless).foregroundStyle(.secondary)
             .help(L("Copy value"))
+            .accessibilityLabel(L("Copy value"))
         }
     }
 }
