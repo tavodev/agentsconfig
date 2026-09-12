@@ -3,16 +3,28 @@ import AppKit
 
 @main
 struct AgentsConfigApp: App {
-    @State private var store = ConfigStore()
-    @AppStorage("menuBarExtra") private var menuBarExtra = true
-    @AppStorage("appearance") private var appearance = "system"
+    @State private var store = makeStore()
+
+    private static func makeStore() -> ConfigStore {
+        // The dedicated UI host must never fall back to personal config paths,
+        // even if launched manually without XCTest's fixture environment.
+        precondition(Bundle.main.bundleIdentifier != "com.tavodev.agentsconfig.ui-fixture" || AppSettings.isIsolatedRun,
+                     "The UI test host requires an isolated home and defaults suite.")
+        return ConfigStore(notifier: AppSettings.isIsolatedRun ? nil : .shared)
+    }
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @AppStorage("menuBarExtra", store: AppSettings.defaults) private var menuBarExtra = true
+    @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(store)
                 .frame(minWidth: 1020, minHeight: 640)
-                .onAppear { applyAppearance() }
+                .onAppear {
+                    applyAppearance()
+                    appDelegate.store = store
+                }
                 .onChange(of: appearance) { applyAppearance() }
         }
         .windowStyle(.titleBar)
@@ -55,6 +67,8 @@ struct AgentsConfigApp: App {
 
         Settings {
             AppSettingsView()
+                .frame(width: 480)
+                .environment(store)
         }
     }
 
@@ -63,59 +77,38 @@ struct AgentsConfigApp: App {
     }
 }
 
-struct AppSettingsView: View {
-    @AppStorage("notificationsEnabled") private var notifications = true
-    @AppStorage("maskSecrets") private var maskSecrets = true
-    @AppStorage("watchDebounce") private var debounce = 0.35
-    @AppStorage("historyLimit") private var historyLimit = 200
-    @AppStorage("menuBarExtra") private var menuBarExtra = true
-    @AppStorage("appearance") private var appearance = "system"
+/// Quit policy: unsaved buffers live only in memory — quitting without
+/// asking would silently drop them, so confirm explicitly instead.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    var store: ConfigStore?
 
-    var body: some View {
-        Form {
-            Section(L("Appearance")) {
-                Picker(L("Language"), selection: Binding(
-                    get: { Loc.shared.lang },
-                    set: { Loc.shared.lang = $0 }
-                )) {
-                    ForEach(AppLanguage.allCases) { l in
-                        Text(l.label).tag(l)
-                    }
-                }
-                Picker(L("Theme"), selection: $appearance) {
-                    Text(L("System")).tag("system")
-                    Text(L("Light")).tag("light")
-                    Text(L("Dark")).tag("dark")
-                }
-                .pickerStyle(.segmented)
-                Toggle(L("Menu bar icon"), isOn: $menuBarExtra)
-            }
-            Section(L("Monitoring")) {
-                Toggle(L("Notify when an agent modifies a config"), isOn: $notifications)
-                LabeledContent(L("Watcher debounce")) {
-                    HStack {
-                        Slider(value: $debounce, in: 0.1...2.0, step: 0.05)
-                        Text(String(format: "%.2f s", debounce))
-                            .font(.caption.monospaced())
-                            .frame(width: 52, alignment: .trailing)
-                    }
-                    .frame(width: 260)
-                }
-                Stepper(L("History per file: %d versions", historyLimit),
-                        value: $historyLimit, in: 10...1000, step: 10)
-            }
-            Section(L("Privacy")) {
-                Toggle(L("Mask secrets (API keys, tokens…)"), isOn: $maskSecrets)
-            }
-            Section {
-                Button(L("Open history folder")) {
-                    let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-                    NSWorkspace.shared.open(base.appendingPathComponent("AgentsConfig/History"))
-                }
-            }
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Keep the running Dock icon correct even if Launch Services cached a
+        // placeholder for a previous development build at this bundle path.
+        if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+           let icon = NSImage(contentsOf: url) {
+            NSApp.applicationIconImage = icon
         }
-        .formStyle(.grouped)
-        .frame(width: 480)
-        .padding(4)
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let store else { return .terminateNow }
+        if !store.savingPaths.isEmpty {
+            let alert = NSAlert()
+            alert.messageText = L("A save is still in progress. Wait before quitting.")
+            alert.runModal()
+            return .terminateCancel
+        }
+        guard !store.dirtyPaths.isEmpty else { return .terminateNow }
+        let alert = NSAlert()
+        alert.messageText = L("Unsaved changes")
+        alert.informativeText = L(
+            "%d file(s) have unsaved edits. Quitting discards them — they are not saved to disk or history.",
+            store.dirtyPaths.count)
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("Quit anyway"))
+        alert.addButton(withTitle: L("Cancel"))
+        return alert.runModal() == .alertFirstButtonReturn
+            ? .terminateNow : .terminateCancel
     }
 }

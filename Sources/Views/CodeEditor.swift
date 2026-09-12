@@ -4,11 +4,14 @@ import AppKit
 /// Native code editor: NSTextView + line-number ruler + lightweight
 /// regex highlighting for JSON/JSONC/TOML/Markdown/shell.
 struct CodeEditor: NSViewRepresentable {
+    var documentID: String      // which document the binding edits
     @Binding var text: String
     var format: ConfigFormat
     var readOnly: Bool = false
     var refreshToken: Int = 0   // bump to force reload after external writes
     var findToken: Int = 0      // bump to open the find bar (⌘F)
+    var maximumEditableLength: Int? = nil
+    var onLimitExceeded: (@MainActor () -> Void)? = nil
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -21,6 +24,7 @@ struct CodeEditor: NSViewRepresentable {
 
         let textStorage = NSTextStorage()
         let layout = NSLayoutManager()
+        layout.allowsNonContiguousLayout = true
         let container = NSTextContainer()
         container.widthTracksTextView = true
         layout.addTextContainer(container)
@@ -41,6 +45,7 @@ struct CodeEditor: NSViewRepresentable {
         tv.isAutomaticSpellingCorrectionEnabled = false
         tv.smartInsertDeleteEnabled = false
         tv.textContainerInset = NSSize(width: 6, height: 8)
+        tv.setAccessibilityIdentifier("source-editor")
         tv.usesFindBar = true
         tv.isIncrementalSearchingEnabled = true
         tv.delegate = context.coordinator
@@ -63,6 +68,9 @@ struct CodeEditor: NSViewRepresentable {
     }
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
+        // SwiftUI may reuse this view for a different document — refresh the
+        // coordinator *before* anything else reads stale state.
+        context.coordinator.apply(self)
         guard let tv = context.coordinator.textView else { return }
         tv.isEditable = !readOnly
         if tv.string != text && !context.coordinator.isEditing {
@@ -101,8 +109,34 @@ struct CodeEditor: NSViewRepresentable {
 
         init(_ parent: CodeEditor) { self.parent = parent }
 
+        /// Point the coordinator at the representable's current state.
+        /// Called from `updateNSView` on every SwiftUI update, so a reused
+        /// view never writes into the previous document's binding. On a
+        /// document switch it cancels pending highlight work, resets editing
+        /// state and clears the undo stack — undo must be per-document.
+        @MainActor
+        func apply(_ parent: CodeEditor) {
+            let switched = parent.documentID != self.parent.documentID
+            self.parent = parent
+            if switched {
+                highlightWork?.cancel()
+                isEditing = false
+                textView?.undoManager?.removeAllActions()
+            }
+            textView?.isEditable = !parent.readOnly
+        }
+
         func textDidBeginEditing(_ n: Notification) { isEditing = true }
         func textDidEndEditing(_ n: Notification) { isEditing = false }
+
+        func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange,
+                      replacementString: String?) -> Bool {
+            guard let limit = parent.maximumEditableLength else { return true }
+            let length = (textView.string as NSString).length - affectedCharRange.length
+                + ((replacementString ?? "") as NSString).length
+            guard length <= limit else { parent.onLimitExceeded?(); return false }
+            return true
+        }
 
         func textDidChange(_ n: Notification) {
             guard let tv = textView else { return }

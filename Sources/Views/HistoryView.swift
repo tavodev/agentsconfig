@@ -2,15 +2,52 @@ import SwiftUI
 
 /// Timeline of recorded versions for a file, with diff preview and restore.
 struct HistoryView: View {
+    @AppStorage("historyEnabled", store: AppSettings.defaults) private var globallyEnabled = true
     let path: String
     @Environment(ConfigStore.self) private var store
     @State private var selected: FileVersion?
     @State private var compareWith: FileVersion?   // nil = actual en disco
-    @State private var confirmRestore = false
 
     var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Toggle(L("Record history for this file"), isOn: Binding(
+                    get: { !store.excludedHistoryPaths.contains(path) && store.historyPolicyAllowsRecording(path) },
+                    set: { store.setHistoryEnabled($0, for: path) }
+                ))
+                .disabled(!store.historyPolicyAllowsRecording(path))
+                .accessibilityIdentifier("file-history-enabled")
+                Spacer()
+                Button(L("Clear file history")) { store.requestHistoryRemoval(path: path) }
+                    .disabled(store.history(for: path).isEmpty || store.historyErrors[path] != nil)
+                    .accessibilityIdentifier("clear-file-history")
+            }.padding(12)
+            Text(L("Global history settings and source exclusions still apply. Removing versions does not change the config file or legacy backups."))
+                .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 12)
+            if !globallyEnabled {
+                Text(L("History recording is globally disabled in Settings.")).font(.caption).foregroundStyle(.orange)
+            }
+            if let error = store.historyRemovalErrors[path] {
+                HStack {
+                    Text(error).font(.caption).foregroundStyle(.red)
+                    Button(L("Retry content cleanup")) { store.retryHistoryCleanup(path: path) }
+                }.padding(8)
+            }
+            Divider()
+            historyContent
+        }
+    }
+
+    @ViewBuilder private var historyContent: some View {
         let versions = store.history(for: path)
-        if versions.isEmpty {
+        if let err = store.historyErrors[path] {
+            // a corrupt/ambiguous index is surfaced, never silently emptied
+            ContentUnavailableView(
+                L("History unavailable"),
+                systemImage: "exclamationmark.triangle",
+                description: Text(err)
+            )
+        } else if versions.isEmpty {
             ContentUnavailableView(
                 L("No history"),
                 systemImage: "clock",
@@ -22,6 +59,9 @@ struct HistoryView: View {
                     ForEach(versions) { v in
                         VersionRow(version: v)
                             .tag(v)
+                            .contextMenu {
+                                Button(L("Remove this version")) { store.requestHistoryRemoval(path: path, version: v) }
+                            }
                     }
                 }
                 .listStyle(.inset)
@@ -62,8 +102,11 @@ struct HistoryView: View {
                         }
                     }
                     .frame(width: 260)
-                    Button(L("Restore this version")) { confirmRestore = true }
-                        .controlSize(.small)
+                    Button(L("Restore this version")) {
+                        store.requestRestore(path: path, version: v)
+                    }
+                    .controlSize(.small)
+                    .disabled(store.isReadOnly(path))
                 }
                 .padding(12)
                 Divider()
@@ -77,16 +120,6 @@ struct HistoryView: View {
                     )
                     .padding(14)
                 }
-            }
-            .confirmationDialog(
-                L("Restore this version?"),
-                isPresented: $confirmRestore,
-                titleVisibility: .visible
-            ) {
-                Button(L("Restore")) { store.restoreVersion(path: path, version: v) }
-                Button(L("Cancel"), role: .cancel) {}
-            } message: {
-                Text(L("Current content will be kept as another history snapshot."))
             }
         } else {
             ContentUnavailableView(L("Select a version"),

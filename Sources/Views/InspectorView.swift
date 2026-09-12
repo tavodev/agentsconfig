@@ -116,9 +116,9 @@ struct FileInspectorView: View {
                 store.copyPath(path)
             }
             InspectorAction(icon: "arrow.uturn.backward", label: L("Restore previous version")) {
-                store.restorePrevious(path)
+                store.requestRestorePrevious(path)
             }
-            .disabled(store.history(for: path).isEmpty)
+            .disabled(store.history(for: path).isEmpty || store.isReadOnly(path))
         }
     }
 

@@ -1,51 +1,50 @@
 #!/usr/bin/env swift
-// Renders the app icon: 1024×1024 squircle, indigo→blue gradient,
-// white "sliders" glyph. Usage: swift scripts/make_icon.swift Resources/icon.png
-import AppKit
+// Packages the approved AI-chip artwork as a macOS ICNS and Xcode app icon catalog.
+// Usage: swift scripts/make_icon.swift [Resources/icon.png] [Resources/AppIcon.icns]
+// The source PNG is preserved; sips retains its transparency at every size.
+import Foundation
 
-let outPath = CommandLine.arguments.dropFirst().first ?? "Resources/icon.png"
-let s: CGFloat = 1024
+let arguments = Array(CommandLine.arguments.dropFirst())
+let source = URL(fileURLWithPath: arguments.first ?? "Resources/icon.png").standardizedFileURL
+let destination = URL(fileURLWithPath: arguments.dropFirst().first ?? "Resources/AppIcon.icns").standardizedFileURL
+let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("agentsconfig-icon-\(UUID())", isDirectory: true)
+let iconset = temporary.appendingPathComponent("AppIcon.iconset", isDirectory: true)
+try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
+defer { try? FileManager.default.removeItem(at: temporary) }
 
-let image = NSImage(size: NSSize(width: s, height: s))
-image.lockFocus()
-
-// Squircle-ish rounded rect
-let path = NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: s, height: s),
-                        xRadius: 230, yRadius: 230)
-let grad = NSGradient(colors: [
-    NSColor(calibratedRed: 0.42, green: 0.33, blue: 0.92, alpha: 1), // indigo
-    NSColor(calibratedRed: 0.18, green: 0.50, blue: 0.98, alpha: 1), // blue
-])!
-grad.draw(in: path, angle: -60)
-
-// Inner subtle ring
-NSColor.white.withAlphaComponent(0.12).setStroke()
-path.lineWidth = 10
-path.stroke()
-
-// Glyph
-if let sym = NSImage(systemSymbolName: "slider.horizontal.3",
-                     variableValue: 1,
-                     accessibilityDescription: nil)?
-    .withSymbolConfiguration(.init(pointSize: 540, weight: .semibold)) {
-    let tinted = NSImage(size: sym.size, flipped: false) { r in
-        sym.draw(in: r)
-        NSColor.white.set()
-        r.fill(using: .sourceAtop)
-        return true
+enum IconError: Error { case commandFailed(String, Int32) }
+func run(_ executable: String, _ arguments: [String]) throws {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: executable)
+    process.arguments = arguments
+    process.standardOutput = FileHandle.nullDevice
+    try process.run()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else {
+        throw IconError.commandFailed(executable, process.terminationStatus)
     }
-    tinted.isTemplate = false
-    let sz = tinted.size
-    tinted.draw(in: NSRect(x: (s - sz.width) / 2, y: (s - sz.height) / 2 + 10,
-                           width: sz.width, height: sz.height))
 }
 
-image.unlockFocus()
-
-guard let tiff = image.tiffRepresentation,
-      let rep = NSBitmapImageRep(data: tiff),
-      let png = rep.representation(using: .png, properties: [:]) else {
-    fatalError("no se pudo renderizar el PNG")
+let catalog = destination.deletingLastPathComponent().appendingPathComponent("Assets.xcassets", isDirectory: true)
+let appIcon = catalog.appendingPathComponent("AppIcon.appiconset", isDirectory: true)
+try FileManager.default.createDirectory(at: appIcon, withIntermediateDirectories: true)
+var images: [[String: String]] = []
+for size in [16, 32, 128, 256, 512] {
+    for scale in [1, 2] {
+        let pixels = String(size * scale)
+        let suffix = scale == 2 ? "@2x" : ""
+        let output = iconset.appendingPathComponent("icon_\(size)x\(size)\(suffix).png")
+        try run("/usr/bin/sips", ["-s", "format", "png", "-z", pixels, pixels, source.path, "--out", output.path])
+        try Data(contentsOf: output).write(to: appIcon.appendingPathComponent(output.lastPathComponent), options: .atomic)
+        images.append(["idiom": "mac", "size": "\(size)x\(size)", "scale": "\(scale)x", "filename": output.lastPathComponent])
+    }
 }
-try png.write(to: URL(fileURLWithPath: outPath))
-print("icon → \(outPath)")
+let info: [String: Any] = ["author": "xcode", "version": 1]
+try JSONSerialization.data(withJSONObject: ["info": info], options: [.prettyPrinted, .sortedKeys])
+    .write(to: catalog.appendingPathComponent("Contents.json"), options: .atomic)
+try JSONSerialization.data(withJSONObject: ["images": images, "info": info], options: [.prettyPrinted, .sortedKeys])
+    .write(to: appIcon.appendingPathComponent("Contents.json"), options: .atomic)
+let packaged = temporary.appendingPathComponent("AppIcon.icns")
+try run("/usr/bin/iconutil", ["-c", "icns", iconset.path, "-o", packaged.path])
+try Data(contentsOf: packaged).write(to: destination, options: .atomic)
+print("App icon generated: \(destination.path)")

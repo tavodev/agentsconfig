@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Format & roles
 
-enum ConfigFormat: String, CaseIterable {
+enum ConfigFormat: String, CaseIterable, Sendable {
     case json, jsonc, toml, markdown, shell, dsl, plist, text, binary
 
     var badge: String { rawValue.uppercased() }
@@ -68,6 +68,7 @@ struct ConfigSource: Hashable {
     var format: ConfigFormat? = nil  // override; nil = infer from extension
     var role: TrackedRole = .other
     var volatile = false             // state files: watched live, but no history/badge noise
+    var excludeFromHistory = false   // may hold secrets: never snapshot to disk
     var readOnly = false
     var note: String? = nil
 
@@ -83,6 +84,10 @@ struct AgentDefinition {
     var color: Color
     var detectionPaths: [String]
     var sources: [ConfigSource]
+    /// Project-root-relative sources (no leading "~") inspected when the user
+    /// registers a local repository/project folder. Empty = no local support.
+    var localSources: [ConfigSource] = []
+    var mcpDestinationPaths: [String] = []
     var notes: String? = nil
 }
 
@@ -94,6 +99,7 @@ struct TrackedFile: Identifiable, Hashable {
     var format: ConfigFormat
     var role: TrackedRole
     var volatile: Bool
+    var excludeFromHistory: Bool
     var readOnly: Bool
     var note: String?
     var exists: Bool
@@ -114,6 +120,13 @@ struct Agent: Identifiable {
     var files: [TrackedFile]
     var detectionPath: String
     var notes: String?
+    /// Non-nil for a project-local agent group: the registered project root
+    /// it belongs to. `nil` for a global (home-rooted) agent.
+    var projectRoot: String? = nil
+    /// Non-nil when this agent group lives inside a git submodule of
+    /// `projectRoot` rather than the project root itself (path relative to
+    /// `projectRoot`, e.g. "backend-olon").
+    var submodulePath: String? = nil
 
     var issueCount: Int { files.reduce(0) { $0 + $1.issues.count } }
     var editableCount: Int { files.filter { $0.format.isTextEditable }.count }
@@ -130,8 +143,8 @@ struct FileIssue: Hashable {
     var message: String
 }
 
-struct SemanticChange: Identifiable, Hashable {
-    enum Kind: String { case added = "Added", removed = "Removed", modified = "Modified" }
+struct SemanticChange: Identifiable, Hashable, Sendable {
+    enum Kind: String, Sendable { case added = "Added", removed = "Removed", modified = "Modified" }
     var id = UUID()
     var keyPath: String
     var kind: Kind
@@ -139,16 +152,18 @@ struct SemanticChange: Identifiable, Hashable {
     var newValue: String?
 }
 
-struct FileVersion: Identifiable, Hashable {
-    var id: String { file }
+/// `id` is a UUID — unique even for A→B→A within a second; `file` is the
+/// content-addressed blob name inside the file's history dir.
+struct FileVersion: Identifiable, Hashable, Sendable {
+    var id = UUID().uuidString
     var date: Date
     var hash: String
-    var file: String            // content file name inside the history dir
+    var file: String            // content blob name inside the history dir
     var origin: Origin
     var changeCount: Int
     var summary: String
 
-    enum Origin: String, Codable { case baseline, external, app, revert }
+    enum Origin: String, Codable, Sendable { case baseline, external, app, revert }
 }
 
 struct ExternalChange: Identifiable {
@@ -156,6 +171,8 @@ struct ExternalChange: Identifiable {
     var date = Date()
     var changes: [SemanticChange]
     var previousContent: String?     // kept in memory for revert
+    var diskContent: String?         // content observed on disk when flagged
+    var isDeletion = false           // file disappeared while we had a base
 }
 
 /// One entry in the cross-agent activity feed.
@@ -169,6 +186,17 @@ struct ActivityEvent: Identifiable, Hashable {
     var summary: String
     var changeCount: Int
     var changes: [SemanticChange] = []   // populated for in-session events
+}
+
+/// A restore/revert action awaiting explicit user confirmation — every UI
+/// entry point funnels here so they all share the same dialog and the same
+/// F2 write guarantees.
+struct RestoreRequest: Identifiable, Equatable {
+    enum Kind: Equatable { case version, previous, revertExternal }
+    let id = UUID()
+    let kind: Kind
+    let path: String
+    let version: FileVersion?   // only for .version
 }
 
 /// A normalized MCP server definition extracted from any agent config.
@@ -208,8 +236,16 @@ struct ConfigDocument {
 /// `AGENTSCONFIG_HOME` (env) redirects every `~` expansion and the
 /// Application Support root — used for demo screenshots and tests.
 enum AppPaths {
-    static let home: String =
-        ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] ?? NSHomeDirectory()
+    /// Test seam: when set, every `~` expansion and the Application Support
+    /// root resolve inside this directory. Must be assigned before first use;
+    /// not synchronized — suites that mutate it must run serialized.
+    nonisolated(unsafe) static var overrideHome: String?
+
+    static var home: String {
+        overrideHome
+            ?? ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"]
+            ?? NSHomeDirectory()
+    }
 
     /// Expands a leading "~" against `home`.
     static func expand(_ path: String) -> String {
@@ -219,7 +255,8 @@ enum AppPaths {
     }
 
     static var applicationSupport: URL {
-        if let custom = ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] {
+        if let custom = overrideHome
+            ?? ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] {
             return URL(fileURLWithPath: custom, isDirectory: true)
                 .appendingPathComponent("Library/Application Support", isDirectory: true)
         }

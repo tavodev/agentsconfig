@@ -13,15 +13,32 @@ final class ConfigStore {
 
     private(set) var documents: [String: ConfigDocument] = [:]
     private(set) var edits: [String: String] = [:]          // unsaved buffers
+    /// Content each edit buffer diverged from, captured at first edit and
+    /// never updated by the watcher — the base any save is verified against.
+    private var editBases: [String: DiskState] = [:]
     private(set) var dirtyPaths: Set<String> = []
     private(set) var conflicts: Set<String> = []            // dirty buffer + disk changed
     private(set) var externalChanges: [String: ExternalChange] = [:]
+    private(set) var excludedHistoryPaths = Set(AppSettings.defaults.stringArray(forKey: "excludedHistoryPaths") ?? [])
     private(set) var histories: [String: [FileVersion]] = [:]
     private(set) var saveErrors: [String: String] = [:]
+    /// History paths whose index is corrupt or ambiguous (never overwritten).
+    private(set) var historyErrors: [String: String] = [:]
+    /// Visible failure of the last MCP copy or similar action.
+    private(set) var actionError: String?
+    /// A restore/revert action awaiting explicit user confirmation.
+    /// Set by every restore entry point (history, context menu, inspector,
+    /// external-change banner); the single dialog in ContentView acts on it.
+    var pendingRestore: RestoreRequest?
+    /// History paths whose legacy permissions could not be tightened.
+    private(set) var permissionWarnings: [String] = []
     private(set) var lastEventAt: Date?
     private(set) var watchedCount = 0
     private(set) var activity: [ActivityEvent] = []
     private(set) var mcpIndex: [McpServerEntry] = []
+    /// Registered project/repository roots inspected for local config,
+    /// in addition to the global (home-rooted) agents.
+    private(set) var projectRoots: [String] = AppSettings.defaults.stringArray(forKey: "projectRoots") ?? []
     var selectedEventID: UUID?
     var selectedMcpName: String?
     var requestedTab: EditorTab?
@@ -30,34 +47,133 @@ final class ConfigStore {
 
     static let activityID = "__activity__"
     static let mcpID = "__mcp__"
+    static let settingsID = "__settings__"
 
     // MARK: internals
-    private let snapshots = SnapshotStore()
+    private var snapshots: SnapshotStore
+    private let notifier: Notifier?
     private var selfWriteHashes: [String: String] = [:]
     private var fileOwners: [String: String] = [:]          // path → agentID
     private var dirOwners: [String: String] = [:]           // dir path → agentID
     private var fileSource: [String: ConfigSource] = [:]    // file path → source spec
+    private let largeWorker = LargeFileWorker()
+    private(set) var loadingPaths: Set<String> = []
+    private(set) var savingPaths: Set<String> = []
+    @ObservationIgnored private var largeLoads: [String: Task<Void, Never>] = [:]
+    private var loadTokens: [String: UUID] = [:]
+    @ObservationIgnored private var reviewTask: Task<Void, Never>?
+    private var reviewToken: UUID?
+    @ObservationIgnored private var saveTasks: [String: Task<Void, Never>] = [:]
     private var definitions: [String: AgentDefinition] = [:]
+    /// Ids in `definitions` synthesized for project-local agents — rebuilt
+    /// on every `refresh()` so removed/renamed projects don't leave stale
+    /// entries behind.
+    private var projectDefinitionIDs: Set<String> = []
 
     @ObservationIgnored private let watcher = FileWatcher(onChange: { _ in })
 
-    init() {
+    /// `notifier: nil` disables UserNotifications entirely — tests pass nil so
+    /// constructing a store never touches the real notification center.
+    init(notifier: Notifier? = .shared) {
+        self.notifier = notifier
+        var tracked = Set<String>()
+        for def in AgentRegistry.definitions {
+            for src in def.sources { tracked.insert(src.expandedPath) }
+        }
+        snapshots = SnapshotStore(isPathTracked: {
+            tracked.contains($0) || FileManager.default.fileExists(atPath: $0)
+        })
         watcher.onChange = { [weak self] path in
             Task { @MainActor in self?.handleWatchEvent(path) }
         }
+        // the real number of attached watchers (missing files don't count)
+        watcher.onAttachedCount = { [weak self] n in
+            Task { @MainActor in self?.watchedCount = n }
+        }
         for def in AgentRegistry.definitions { definitions[def.id] = def }
-        Notifier.shared.configure()
-        Notifier.shared.onSelect = { [weak self] path in self?.openFile(path) }
+        notifier?.configure()
+        notifier?.onSelect = { [weak self] path in self?.openFile(path) }
+        // One-time audit: tighten permissions on history written by older
+        // versions; failures surface as warnings (no content is deleted).
+        permissionWarnings = snapshots.secureExistingPermissions()
         refresh()
         seedActivity()
+    }
+
+    /// Files that get on-disk history. Volatile state files and sources
+    /// flagged `excludeFromHistory` (may hold secrets) are never snapshotted.
+    private func keepsHistory(_ tf: TrackedFile?) -> Bool {
+        AppSettings.historyEnabled && !(tf?.volatile ?? false) && !(tf?.excludeFromHistory ?? false)
+            && !(tf.map { excludedHistoryPaths.contains($0.path) } ?? false)
+    }
+
+    func historyPolicyAllowsRecording(_ path: String) -> Bool {
+        guard let file = trackedFile(for: path) else { return false }
+        return !file.volatile && !file.excludeFromHistory
+    }
+
+    func setHistoryEnabled(_ enabled: Bool, for path: String) {
+        guard historyPolicyAllowsRecording(path) else { return }
+        if enabled { excludedHistoryPaths.remove(path) } else { excludedHistoryPaths.insert(path) }
+        AppSettings.defaults.set(excludedHistoryPaths.sorted(), forKey: "excludedHistoryPaths")
+    }
+
+    struct HistoryRemoval: Identifiable {
+        let id = UUID()
+        let path: String
+        let ids: Set<String>
+        let expectedIDs: Set<String>
+    }
+    private(set) var pendingHistoryRemoval: HistoryRemoval?
+    private(set) var historyRemovalErrors: [String: String] = [:]
+
+    func requestHistoryRemoval(path: String, version: FileVersion? = nil) {
+        refreshHistory(path: path)
+        guard historyErrors[path] == nil else { return }
+        let all = Set(history(for: path).map(\.id))
+        let ids = version.map { Set([$0.id]) } ?? all
+        guard !ids.isEmpty, ids.isSubset(of: all) else { return }
+        pendingHistoryRemoval = HistoryRemoval(path: path, ids: ids, expectedIDs: all)
+    }
+
+    func cancelHistoryRemoval() { pendingHistoryRemoval = nil }
+
+    func retryHistoryCleanup(path: String) {
+        do {
+            try snapshots.cleanupOrphans(for: path)
+            historyRemovalErrors.removeValue(forKey: path)
+        } catch { historyRemovalErrors[path] = error.localizedDescription }
+    }
+
+    func confirmHistoryRemoval() {
+        guard let request = pendingHistoryRemoval else { return }
+        pendingHistoryRemoval = nil
+        do {
+            try snapshots.removeVersions(for: request.path, ids: request.ids, expectedIDs: request.expectedIDs)
+            historyRemovalErrors.removeValue(forKey: request.path)
+        } catch { historyRemovalErrors[request.path] = L(error.localizedDescription) }
+        refreshHistory(path: request.path)
+    }
+
+    /// History reads that surface corrupt/ambiguous indexes instead of
+    /// silently treating them as empty.
+    private func safeLoadHistory(_ path: String) -> [FileVersion] {
+        do {
+            let h = try snapshots.loadHistory(for: path)
+            historyErrors.removeValue(forKey: path)
+            return h
+        } catch {
+            historyErrors[path] = error.localizedDescription
+            return []
+        }
     }
 
     /// Seed the activity feed from persisted snapshot indexes (recent history).
     private func seedActivity() {
         var events: [ActivityEvent] = []
         for agent in agents {
-            for f in agent.files where !f.volatile {
-                for v in snapshots.loadHistory(for: f.path).prefix(15) {
+            for f in agent.files where keepsHistory(f) {
+                for v in safeLoadHistory(f.path).prefix(15) {
                     events.append(ActivityEvent(
                         date: v.date, path: f.path, agentID: agent.id,
                         agentName: agent.name, origin: v.origin,
@@ -84,15 +200,23 @@ final class ConfigStore {
     // MARK: - scanning
 
     func refresh() {
+        for id in projectDefinitionIDs { definitions.removeValue(forKey: id) }
+        projectDefinitionIDs.removeAll()
         agents = AgentRegistry.detect()
+        for root in projectRoots {
+            for (def, agent) in AgentRegistry.detectLocal(projectRoot: root) {
+                definitions[agent.id] = def
+                projectDefinitionIDs.insert(agent.id)
+                agents.append(agent)
+            }
+        }
         fileOwners.removeAll(); dirOwners.removeAll(); fileSource.removeAll()
         var watchPaths: [String] = []
 
         for agent in agents {
             guard let def = definitions[agent.id] else { continue }
             for src in def.sources {
-                let p = src.expandedPath
-                if src.isDirectory {
+                for p in AgentRegistry.watchDirectories(for: src) {
                     dirOwners[p] = agent.id
                     watchPaths.append(p)
                 }
@@ -101,13 +225,13 @@ final class ConfigStore {
                 fileOwners[f.path] = agent.id
                 fileSource[f.path] = ConfigSource(
                     path: f.path, format: f.format, role: f.role,
-                    volatile: f.volatile, readOnly: f.readOnly, note: f.note
+                    volatile: f.volatile, excludeFromHistory: f.excludeFromHistory,
+                    readOnly: f.readOnly, note: f.note
                 )
                 watchPaths.append(f.path)
             }
         }
         watcher.watch(watchPaths)
-        watchedCount = watchPaths.count
         if selectedAgentID == nil { selectedAgentID = agents.first?.id }
         // Preload all tracked files so external changes can be diffed even
         // before the user opens them. Skip anything over ~2MB.
@@ -120,6 +244,43 @@ final class ConfigStore {
         // the index (we skip per-event reparsing of these heavy files).
         volatileMcpEntries = extractVolatileMcp()
         rebuildMcpIndex()
+    }
+
+    // MARK: - Projects (local per-repository config)
+
+    /// Registers a project root for local-config inspection (idempotent) and
+    /// rescans. History for its files is content-addressed by absolute path,
+    /// so nothing special is needed to start/resume tracking it.
+    func addProject(path: String) {
+        // No `standardizingPath`/realpath normalization: kept exactly as
+        // given so it matches the resolved `TrackedFile` paths built from it
+        // (which are plain string concatenations, like the global sources).
+        guard !projectRoots.contains(path) else { return }
+        projectRoots.append(path)
+        AppSettings.defaults.set(projectRoots, forKey: "projectRoots")
+        refresh()
+    }
+
+    /// Unregisters a project: stops watching/showing it. Its on-disk history
+    /// is retained (same policy as elsewhere — purging is always manual) and
+    /// resumes automatically if the same root is re-added later.
+    func removeProject(path: String) {
+        guard let idx = projectRoots.firstIndex(of: path) else { return }
+        projectRoots.remove(at: idx)
+        AppSettings.defaults.set(projectRoots, forKey: "projectRoots")
+        refresh()
+    }
+
+    /// Presents a folder picker and registers the chosen directory as a
+    /// project, if any.
+    func pickAndAddProject() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = L("Add")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        addProject(path: url.path)
     }
 
     // MARK: - MCP index (cross-agent)
@@ -162,9 +323,7 @@ final class ConfigStore {
         for agent in agents {
             for f in agent.files where f.exists && f.volatile {
                 guard let text = documents[f.path]?.text
-                    ?? (FileManager.default.contents(atPath: f.path).flatMap {
-                        String(data: $0, encoding: .utf8)
-                    }),
+                    ?? (try? Parsers.readText(at: f.path)),
                     let tree = Parsers.parse(text, format: f.format).tree as? [String: Any]
                 else { continue }
                 out += Self.mcpEntries(in: tree, agentID: agent.id,
@@ -172,6 +331,21 @@ final class ConfigStore {
             }
         }
         return out
+    }
+
+    /// Re-extract a volatile file's MCP entries after it changed on disk or
+    /// was written by us — otherwise the index would keep stale servers until
+    /// the next full scan.
+    private func refreshVolatileMcp(path: String) {
+        guard let tf = trackedFile(for: path), tf.volatile else { return }
+        volatileMcpEntries.removeAll { $0.sourcePath == path }
+        guard let text = documents[path]?.text,
+              let tree = Parsers.parse(text, format: tf.format).tree as? [String: Any],
+              let agent = agents.first(where: { $0.id == fileOwners[path] })
+        else { return }
+        volatileMcpEntries += Self.mcpEntries(in: tree, agentID: agent.id,
+                                              agentName: agent.name,
+                                              sourcePath: path)
     }
 
     private static func normalizeMcp(name: String, spec: [String: Any],
@@ -208,85 +382,172 @@ final class ConfigStore {
         mcpIndex.filter { $0.name == name }
     }
 
-    /// File where an agent's MCP entries should be inserted.
+    /// Known user-scope destinations, independent of existing MCP entries.
+    /// Multiple existing files require an explicit selection instead of guessing
+    /// precedence. If none exists, offer only the declared default path.
+    func mcpTargetFiles(for agentID: String) -> [TrackedFile] {
+        guard let agent = agents.first(where: { $0.id == agentID }),
+              let definition = definitions[agentID] else { return [] }
+        let paths = definition.mcpDestinationPaths.map(AppPaths.expand)
+        let candidates = paths.compactMap { path in agent.files.first { $0.path == path && !$0.readOnly } }
+        let existing = candidates.filter { $0.exists }
+        let selected = existing.isEmpty ? Array(candidates.prefix(1)) : existing
+        return selected.filter { !usesBackgroundProcessing($0.path) }
+    }
+
     func mcpTargetFile(for agentID: String) -> TrackedFile? {
-        guard let agent = agents.first(where: { $0.id == agentID }) else { return nil }
-        // prefer a role-.mcp file that already hosts the container key
-        let candidates = agent.files.filter { $0.exists && !$0.volatile && !$0.readOnly }
-        if let mcpFile = candidates.first(where: {
-            $0.role == .mcp && (documents[$0.path]?.tree as? [String: Any])?.keys
-                .contains(where: { Self.mcpContainerKeys.contains($0) }) == true
-        }) ?? candidates.first(where: { $0.role == .mcp }) {
-            return mcpFile
+        let candidates = mcpTargetFiles(for: agentID)
+        return candidates.count == 1 ? candidates.first : nil
+    }
+
+    func isMcpDestination(_ path: String) -> Bool {
+        guard let agentID = fileOwners[path], !isReadOnly(path), !usesBackgroundProcessing(path) else { return false }
+        return definitions[agentID]?.mcpDestinationPaths.map(AppPaths.expand).contains(path) == true
+    }
+
+    struct McpReview: Identifiable {
+        let id = UUID()
+        let path: String
+        let agentID: String
+        let name: String
+        let originalText: String
+        let proposedText: String
+        let format: ConfigFormat
+        let replacesExisting: Bool
+        let warnings: [String]
+    }
+    private(set) var pendingMcpReview: McpReview?
+    private var mcpReviewDisk: DiskState?
+
+    /// Stages an operation. Neither the disk nor the edit buffer changes until
+    /// the user approves the concrete diff in McpReviewSheet.
+    @discardableResult
+    func copyMcpServer(_ entry: McpServerEntry, to agentID: String, targetPath: String? = nil) -> Bool {
+        actionError = nil
+        let selectedTarget = targetPath.flatMap { path in mcpTargetFiles(for: agentID).first { $0.path == path } }
+            ?? (targetPath == nil ? mcpTargetFile(for: agentID) : nil)
+        guard let target = selectedTarget,
+              let sourceDialect = McpAdapter.dialect(agentID: entry.agentID, path: entry.sourcePath),
+              let targetDialect = McpAdapter.dialect(agentID: agentID, path: target.path) else {
+            actionError = L("No supported MCP source or destination for this operation.")
+            return false
         }
-        return candidates.first(where: {
-            ($0.role == .settings || $0.role == .other)
-            && (documents[$0.path]?.tree as? [String: Any])?.keys
-                .contains(where: { Self.mcpContainerKeys.contains($0) }) == true
-        })
+        do {
+            let converted = try McpAdapter.convert(entry.raw, from: sourceDialect, to: targetDialect)
+            return try prepareMcpReview(path: target.path, agentID: agentID,
+                name: entry.name, spec: converted.spec, warnings: converted.warnings)
+        } catch { actionError = error.localizedDescription; return false }
     }
 
-    /// Insert a server into another agent's config as an unsaved edit,
-    /// then select that file so the user can review and ⌘S.
-    func copyMcpServer(_ entry: McpServerEntry, to agentID: String) {
-        guard let target = mcpTargetFile(for: agentID) else { return }
-        let path = target.path
-        _ = document(for: path)
-        let format = format(for: path)
-        var root = Parsers.parse(text(for: path), format: format).tree as? [String: Any] ?? [:]
-        let container = Self.mcpContainerKeys.first(where: { root[$0] is [String: Any] })
-            ?? (agentID == "codex" ? "mcp_servers" : agentID == "opencode" ? "mcp" : "mcpServers")
-        var servers = root[container] as? [String: Any] ?? [:]
-        servers[entry.name] = mcpSpec(for: agentID, from: entry)
-        root[container] = servers
-        let out: String? = format == .toml ? Parsers.serializeTOML(root) : Parsers.serializeJSON(root)
-        guard let out else { return }
-        selectedAgentID = agentID
-        selectedPath = path
-        requestedTab = .structured
-        updateEdit(path: path, text: out)
+    @discardableResult
+    func addMcpServer(path: String, name: String, transport: McpAdapter.Transport,
+                      command: String, args: [String], url: String) -> Bool {
+        actionError = nil
+        guard isMcpDestination(path), let agentID = fileOwners[path],
+              let dialect = McpAdapter.dialect(agentID: agentID, path: path) else {
+            actionError = L("This file has no supported MCP adapter.")
+            return false
+        }
+        do {
+            let spec = try McpAdapter.makeSpec(dialect: dialect, transport: transport,
+                                             command: command, args: args, url: url)
+            return try prepareMcpReview(path: path, agentID: agentID, name: name,
+                                        spec: spec, warnings: [])
+        } catch { actionError = error.localizedDescription; return false }
     }
 
-    /// Map a normalized entry into the target agent's MCP schema.
-    private func mcpSpec(for agentID: String, from e: McpServerEntry) -> [String: Any] {
-        let env = (e.raw["env"] ?? e.raw["environment"]) as? [String: Any]
-        switch agentID {
-        case "opencode":
-            if e.isRemote, let url = e.url {
-                return ["type": "remote", "url": url, "enabled": e.enabled ?? true]
+    private func prepareMcpReview(path: String, agentID: String, name: String,
+                                  spec: [String: Any], warnings: [String]) throws -> Bool {
+        pendingMcpReview = nil
+        mcpReviewDisk = nil
+        guard isMcpDestination(path), let target = trackedFile(for: path), !target.readOnly,
+              let dialect = McpAdapter.dialect(agentID: agentID, path: path) else {
+            throw McpAdapter.Failure(message: L("Read-only file"))
+        }
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw McpAdapter.Failure(message: L("An MCP server name is required."))
+        }
+        let disk = readDiskState(path)
+        guard disk != .unreadable else { throw McpAdapter.Failure(message: L("Could not read the current file")) }
+        let original = edits[path] ?? disk.text ?? ""
+        let root: [String: Any]
+        if disk == .missing && edits[path] == nil { root = [:] }
+        else {
+            guard let parsed = Parsers.parse(original, format: target.format).tree as? [String: Any] else {
+                throw McpAdapter.Failure(message: L("The destination must contain a valid configuration object."))
             }
-            var spec: [String: Any] = [
-                "type": "local",
-                "command": ([e.command ?? ""] + e.args),
-                "enabled": e.enabled ?? true,
-            ]
-            if let env { spec["environment"] = env }
-            return spec
-        case "codex":
-            if e.isRemote, let url = e.url { return ["url": url] }
-            var spec: [String: Any] = ["command": e.command ?? ""]
-            if !e.args.isEmpty { spec["args"] = e.args }
-            if let env { spec["env"] = env }
-            if let en = e.enabled { spec["enabled"] = en }
-            return spec
-        default:   // mcpServers schema (claude, gemini/antigravity, cursor…)
-            if e.isRemote, let url = e.url { return ["type": "http", "url": url] }
-            var spec: [String: Any] = ["command": e.command ?? ""]
-            if !e.args.isEmpty { spec["args"] = e.args }
-            if let env { spec["env"] = env }
-            return spec
+            root = parsed
         }
+        let container = dialect.container
+        guard root[container] == nil || root[container] is [String: Any] else {
+            throw McpAdapter.Failure(message: L("The MCP container must be an object."))
+        }
+        var servers = root[container] as? [String: Any] ?? [:]
+        let replacing = servers[name] != nil
+        servers[name] = spec
+        var proposedRoot = root
+        proposedRoot[container] = servers
+        let proposed: String
+        var notices = warnings
+        if target.format == .toml {
+            proposed = try Parsers.updatingTOMLMcp(original, container: container, name: name, spec: spec)
+            notices.append(L("TOML comments and formatting will be normalized. Unrelated values keep their TOML types."))
+        } else {
+            guard let serialized = Parsers.serializeJSON(proposedRoot) else {
+                throw McpAdapter.Failure(message: L("Cannot serialize %@", URL(fileURLWithPath: path).lastPathComponent))
+            }
+            proposed = serialized
+            if target.format == .jsonc { notices.append(L("JSONC comments and formatting will be normalized.")) }
+        }
+        if !keepsHistory(target) {
+            notices.append(L("History is disabled for this destination; saving will not create a backup."))
+        }
+        // Refresh an unedited document to the exact state used by this review.
+        if edits[path] == nil {
+            if let text = disk.text { installDocument(path, text: text) }
+            else { documents.removeValue(forKey: path) }
+        }
+        pendingMcpReview = McpReview(path: path, agentID: agentID, name: name,
+            originalText: original, proposedText: proposed, format: target.format,
+            replacesExisting: replacing, warnings: notices)
+        mcpReviewDisk = disk
+        return true
     }
+
+    func cancelMcpReview() { pendingMcpReview = nil; mcpReviewDisk = nil }
+
+    @discardableResult
+    func confirmMcpReview() -> Bool {
+        guard let review = pendingMcpReview, let disk = mcpReviewDisk else { return false }
+        guard !isReadOnly(review.path), text(for: review.path) == review.originalText,
+              readDiskState(review.path) == disk else {
+            actionError = L("The destination changed during review. Review the operation again.")
+            cancelMcpReview()
+            return false
+        }
+        updateEdit(path: review.path, text: review.proposedText)
+        selectedAgentID = review.agentID
+        selectedPath = review.path
+        requestedTab = .structured
+        cancelMcpReview()
+        return true
+    }
+
+    func clearActionError() { actionError = nil }
 
     /// Re-resolve one agent's file list (called when a watched dir changes).
+    /// Uses the existing agent's `name`/`projectRoot` rather than `def`'s,
+    /// since a project-local agent's display name (with its folder suffix)
+    /// and `projectRoot` only live on the resolved `Agent`, not on the
+    /// synthetic `AgentDefinition` registered for it.
     private func rescan(agentID: String) {
         guard let def = definitions[agentID],
               let idx = agents.firstIndex(where: { $0.id == agentID }) else { return }
         let oldPaths = Set(agents[idx].files.map(\.path))
         let updated = Agent(
-            id: def.id, name: def.name, symbol: def.symbol, color: def.color,
+            id: def.id, name: agents[idx].name, symbol: def.symbol, color: def.color,
             files: AgentRegistry.resolveFiles(def), detectionPath: agents[idx].detectionPath,
-            notes: def.notes
+            notes: def.notes, projectRoot: agents[idx].projectRoot, submodulePath: agents[idx].submodulePath
         )
         agents[idx] = updated
         for f in updated.files where !oldPaths.contains(f.path) {
@@ -296,6 +557,12 @@ final class ConfigStore {
     }
 
     private func refreshWatchList() {
+        dirOwners.removeAll()
+        for agent in agents {
+            for source in definitions[agent.id]?.sources ?? [] {
+                for path in AgentRegistry.watchDirectories(for: source) { dirOwners[path] = agent.id }
+            }
+        }
         var paths = Array(dirOwners.keys)
         for agent in agents {
             paths.append(contentsOf: agent.files.map(\.path))
@@ -303,19 +570,90 @@ final class ConfigStore {
                 fileOwners[f.path] = agent.id
                 fileSource[f.path] = ConfigSource(
                     path: f.path, format: f.format, role: f.role,
-                    volatile: f.volatile, readOnly: f.readOnly, note: f.note
+                    volatile: f.volatile, excludeFromHistory: f.excludeFromHistory,
+                    readOnly: f.readOnly, note: f.note
                 )
             }
         }
         watcher.watch(paths)
-        watchedCount = paths.count
         rebuildMcpIndex()
+    }
+
+    func usesBackgroundProcessing(_ path: String) -> Bool {
+        (trackedFile(for: path)?.size ?? 0) > Int64(Parsers.maximumFileBytes)
+            || (documents[path]?.text.utf8.count ?? 0) > Parsers.maximumFileBytes
+            || (edits[path]?.utf8.count ?? 0) > Parsers.maximumFileBytes
+    }
+
+    private func backgroundHistory(_ path: String, minimum: Int = 1) -> LargeFileWorker.HistoryPolicy {
+        let boundary = AppPaths.applicationSupport
+        return .init(root: boundary.appendingPathComponent("AgentsConfig/History"), boundary: boundary,
+                     enabled: keepsHistory(trackedFile(for: path)), limit: max(minimum, AppSettings.historyLimit))
+    }
+
+    func loadLargeFile(_ path: String) {
+        guard !savingPaths.contains(path) else { return }
+        largeLoads[path]?.cancel()
+        let token = UUID()
+        loadTokens[path] = token
+        loadingPaths.insert(path)
+        let format = format(for: path)
+        let previous = documents[path]
+        let policy = backgroundHistory(path)
+        let worker = largeWorker
+        largeLoads[path] = Task { [weak self] in
+            do {
+                let loaded = try await worker.load(path, format: format, previousHash: previous?.hash, history: policy)
+                guard !Task.isCancelled, let self, self.loadTokens[path] == token else { return }
+                if let previous, previous.hash != loaded.hash {
+                    if self.dirtyPaths.contains(path) { self.flagConflict(path: path, disk: .content(loaded.text)) }
+                    else {
+                        self.externalChanges[path] = ExternalChange(changes: [], previousContent: previous.text,
+                                                                   diskContent: loaded.text)
+                    }
+                }
+                self.installLargeResult(path, loaded)
+            } catch {
+                guard !Task.isCancelled, let self, self.loadTokens[path] == token else { return }
+                self.saveErrors[path] = error.localizedDescription
+            }
+            guard let self, self.loadTokens[path] == token else { return }
+            self.loadingPaths.remove(path)
+            self.largeLoads.removeValue(forKey: path)
+        }
+    }
+
+    private func installLargeResult(_ path: String, _ result: LargeFileWorker.Loaded) {
+        updateFileMeta(path: path) { $0.exists = true; $0.size = Int64(result.text.utf8.count) }
+        if result.text.utf8.count <= Parsers.maximumFileBytes { installDocument(path, text: result.text) }
+        else {
+            documents[path] = ConfigDocument(text: result.text, tree: nil, parseError: Parsers.localizedError(result.parseError),
+                                            loadedAt: Date(), hash: result.hash)
+        }
+        saveErrors.removeValue(forKey: path)
+        if keepsHistory(trackedFile(for: path)) { histories[path] = safeLoadHistory(path) }
+        if let error = result.historyError { historyErrors[path] = error }
+        volatileMcpEntries.removeAll { $0.sourcePath == path }
+        if result.text.utf8.count <= Parsers.maximumFileBytes { refreshVolatileMcp(path: path) }
+        rebuildMcpIndex()
+    }
+
+    func waitForBackgroundWork(path: String) async {
+        await largeLoads[path]?.value
+        await reviewTask?.value
+        await restoreTask?.value
+        await saveTasks[path]?.value
+        await largeLoads[path]?.value
     }
 
     // MARK: - documents
 
     func document(for path: String) -> ConfigDocument? {
-        if documents[path] == nil { load(path) }
+        if documents[path] == nil {
+            if usesBackgroundProcessing(path) {
+                if !loadingPaths.contains(path), saveErrors[path] == nil { loadLargeFile(path) }
+            } else { load(path) }
+        }
         return documents[path]
     }
 
@@ -334,10 +672,17 @@ final class ConfigStore {
 
     @discardableResult
     private func load(_ path: String) -> ConfigDocument? {
-        guard let data = FileManager.default.contents(atPath: path),
-              let text = String(data: data, encoding: .utf8) else {
+        do {
+            let text = try Parsers.readText(at: path)
+            return installDocument(path, text: text)
+        } catch {
+            if FileManager.default.fileExists(atPath: path) { saveErrors[path] = L(error.localizedDescription) }
             return nil
         }
+    }
+
+    @discardableResult
+    private func installDocument(_ path: String, text: String) -> ConfigDocument {
         let format = format(for: path)
         // Same throttle as handleFileChanged: skip parsing huge volatile files
         // unless the user is actually looking at them.
@@ -358,15 +703,25 @@ final class ConfigStore {
             f.issues = lint.issues
             f.managedBlocks = lint.managed
         }
-        if histories[path] == nil { histories[path] = snapshots.loadHistory(for: path) }
+        if histories[path] == nil { histories[path] = safeLoadHistory(path) }
 
-        // baseline snapshot for files that have none yet (skip volatile)
-        if let tf = trackedFile(for: path), !tf.volatile,
-           (histories[path]?.isEmpty ?? true) {
-            snapshots.record(path: path, content: text, origin: .baseline, changes: [])
-            histories[path] = snapshots.loadHistory(for: path)
+        // baseline snapshot for files that have none yet (skip volatile/excluded)
+        if let tf = trackedFile(for: path), keepsHistory(tf),
+           historyErrors[path] == nil, (histories[path]?.isEmpty ?? true) {
+            do {
+                try recordSnapshot(path: path, content: text, origin: .baseline, changes: [])
+            } catch {
+                historyErrors[path] = error.localizedDescription
+            }
         }
         return doc
+    }
+
+    private func recordSnapshot(path: String, content: String, origin: FileVersion.Origin,
+                                changes: [SemanticChange]) throws {
+        _ = try snapshots.record(path: path, content: content, origin: origin, changes: changes)
+        histories[path] = try snapshots.loadHistory(for: path)
+        historyErrors.removeValue(forKey: path)
     }
 
     private func updateFileMeta(path: String, _ mutate: (inout TrackedFile) -> Void) {
@@ -381,6 +736,13 @@ final class ConfigStore {
     // MARK: - editing
 
     func updateEdit(path: String, text: String) {
+        guard !savingPaths.contains(path), !loadingPaths.contains(path) else { return }
+        if edits[path] == nil {
+            // capture the base this buffer diverges from, once — the watcher
+            // must not silently rebase an in-flight edit
+            editBases[path] = documents[path].map { .content($0.text) }
+                ?? readDiskState(path)
+        }
         edits[path] = text
         if let doc = documents[path], doc.text == text {
             dirtyPaths.remove(path)
@@ -390,9 +752,12 @@ final class ConfigStore {
     }
 
     func discardEdit(path: String) {
+        guard !savingPaths.contains(path) else { return }
         edits.removeValue(forKey: path)
+        editBases.removeValue(forKey: path)
         dirtyPaths.remove(path)
         conflicts.remove(path)
+        externalChanges.removeValue(forKey: path)
     }
 
     var selectedFormat: ConfigFormat {
@@ -402,78 +767,322 @@ final class ConfigStore {
 
     var canSaveSelected: Bool {
         guard let p = selectedPath else { return false }
-        return dirtyPaths.contains(p)
+        return dirtyPaths.contains(p) && !savingPaths.contains(p)
     }
 
     func saveSelected() {
         guard let p = selectedPath else { return }
-        save(path: p)
+        requestSave(path: p)
     }
 
-    func save(path: String) {
-        guard let text = edits[path] else { return }
-        guard let tf = trackedFile(for: path), !tf.readOnly else {
-            saveErrors[path] = "Archivo de solo lectura"
+    struct SaveReview: Identifiable {
+        let id = UUID()
+        let path: String
+        let original: String
+        let proposed: String
+        let format: ConfigFormat
+        let overwritesConflict: Bool
+        let historyEnabled: Bool
+    }
+    private(set) var pendingSaveReview: SaveReview?
+    private(set) var preparingSavePath: String?
+    private var saveReviewDisk: DiskState?
+
+    /// UI entry point: capture a concrete, redacted preview before committing.
+    func requestSave(path: String, overwrite: Bool = false) {
+        cancelSaveReview()
+        guard let proposed = edits[path], let file = trackedFile(for: path) else { return }
+        guard !isReadOnly(path), !savingPaths.contains(path) else { saveErrors[path] = L("Read-only file"); return }
+        if usesBackgroundProcessing(path) { requestLargeSave(path: path, proposed: proposed, overwrite: overwrite); return }
+        if let error = Parsers.parse(proposed, format: file.format).error {
+            saveErrors[path] = error; return
+        }
+        let disk = readDiskState(path)
+        guard disk != .unreadable else { saveErrors[path] = L("Could not read the current file"); return }
+        let expected: DiskState?
+        if overwrite {
+            guard let change = externalChanges[path], conflicts.contains(path) else { return }
+            expected = change.isDeletion ? .missing : change.diskContent.map { .content($0) }
+        } else { expected = baseFor(path) ?? .missing }
+        guard disk == expected else { flagConflict(path: path, disk: disk); return }
+        saveErrors.removeValue(forKey: path)
+        pendingSaveReview = SaveReview(path: path, original: disk.text ?? "", proposed: proposed,
+            format: file.format, overwritesConflict: overwrite, historyEnabled: keepsHistory(file))
+        saveReviewDisk = disk
+    }
+
+    func cancelSaveReview() {
+        pendingSaveReview = nil; saveReviewDisk = nil; preparingSavePath = nil
+        reviewTask?.cancel(); reviewTask = nil; reviewToken = nil
+    }
+
+    func confirmSaveReview() {
+        guard let review = pendingSaveReview, let disk = saveReviewDisk else { return }
+        cancelSaveReview()
+        guard edits[review.path] == review.proposed,
+              keepsHistory(trackedFile(for: review.path)) == review.historyEnabled else {
+            saveErrors[review.path] = L("The buffer or history setting changed. Review the save again.")
             return
         }
+        if usesBackgroundProcessing(review.path) {
+            commitLargeSave(review, disk: disk)
+            return
+        }
+        // commitWrite rechecks this exact disk state, including deletions.
+        attemptSave(path: review.path, mode: .force(expected: disk))
+    }
 
-        // validate
+    private func requestLargeSave(path: String, proposed: String, overwrite: Bool) {
+        let token = UUID()
+        reviewToken = token
+        preparingSavePath = path
+        let format = format(for: path)
+        let base = baseFor(path) ?? .missing
+        let change = externalChanges[path]
+        let expected = overwrite ? (change?.isDeletion == true ? DiskState.missing : change?.diskContent.map { .content($0) }) : base
+        let historyEnabled = keepsHistory(trackedFile(for: path))
+        let worker = largeWorker
+        reviewTask = Task { [weak self] in
+            defer { if self?.reviewToken == token { self?.preparingSavePath = nil } }
+            do {
+                if let error = try await worker.validate(proposed, format: format) {
+                    guard let self, self.reviewToken == token else { return }
+                    self.saveErrors[path] = Parsers.localizedError(error); return
+                }
+                let state = try await worker.disk(path)
+                guard !Task.isCancelled, let self, self.reviewToken == token, self.edits[path] == proposed else { return }
+                let disk: DiskState = switch state { case .missing: .missing; case .content(let text): .content(text) }
+                guard disk == expected else { self.flagConflict(path: path, disk: disk); return }
+                self.saveErrors.removeValue(forKey: path)
+                self.pendingSaveReview = SaveReview(path: path, original: disk.text ?? "", proposed: proposed,
+                    format: format, overwritesConflict: overwrite, historyEnabled: historyEnabled)
+                self.saveReviewDisk = disk
+            } catch {
+                guard !Task.isCancelled, let self, self.reviewToken == token else { return }
+                self.saveErrors[path] = error.localizedDescription
+            }
+        }
+    }
+
+    private func commitLargeSave(_ review: SaveReview, disk: DiskState,
+                                 origin: FileVersion.Origin = .app, draft: String? = nil) {
+        guard !isReadOnly(review.path), !savingPaths.contains(review.path) else { return }
+        let expected: LargeFileWorker.Disk
+        switch disk {
+        case .missing: expected = .missing
+        case .content(let text): expected = .content(text)
+        case .unreadable: saveErrors[review.path] = L("Could not read the current file"); return
+        }
+        let path = review.path
+        largeLoads[path]?.cancel()
+        loadTokens.removeValue(forKey: path)
+        loadingPaths.remove(path)
+        savingPaths.insert(path)
+        let policy = backgroundHistory(path, minimum: draft == nil ? 2 : 3)
+        let worker = largeWorker
+        saveTasks[path] = Task { [weak self] in
+            let result = await worker.save(path, proposed: review.proposed, format: review.format, expected: expected, history: policy, origin: origin, draft: draft)
+            guard let self else { return }
+            self.savingPaths.remove(path)
+            switch result {
+            case .saved(let loaded):
+                self.discardEdit(path: path)
+                self.selfWriteHashes[path] = loaded.hash
+                self.installLargeResult(path, loaded)
+                self.logActivity(path: path, origin: origin, changes: [])
+                self.loadLargeFile(path) // detect writes that arrived while the UI was saving
+            case .conflict(let state):
+                self.flagConflict(path: path, disk: state == .missing ? .missing : {
+                    if case .content(let text) = state { return DiskState.content(text) }; return .unreadable
+                }())
+            case .failed(let error): self.saveErrors[path] = Parsers.localizedError(error)
+            }
+            self.saveTasks.removeValue(forKey: path)
+        }
+    }
+
+    /// Commit primitive for model tests. App controls call requestSave instead.
+    func save(path: String) {
+        attemptSave(path: path, mode: .guarded)
+    }
+
+    /// What is actually on disk right now.
+    private enum DiskState: Equatable {
+        case missing, unreadable, content(String)
+        var text: String? {
+            if case .content(let s) = self { return s }
+            return nil
+        }
+    }
+
+    /// `.guarded` — write only if the live disk state still equals the base
+    /// the buffer diverged from. `.force(expected:)` — the user explicitly
+    /// confirmed overwriting a *specific* disk state; a nil expectation
+    /// overwrites unconditionally (e.g. a file that never existed).
+    private enum WriteMode {
+        case guarded
+        case force(expected: DiskState?)
+    }
+
+    private enum CommitOutcome {
+        case written
+        case conflict(DiskState)
+        case failed(String)
+    }
+
+    private func readDiskState(_ path: String) -> DiskState {
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) else { return .missing }
+        guard !isDirectory.boolValue, let text = try? Parsers.readText(at: path) else { return .unreadable }
+        return .content(text)
+    }
+
+    /// The base a write is verified against: the buffer's own base when one
+    /// exists, else the last document read from disk.
+    private func baseFor(_ path: String) -> DiskState? {
+        editBases[path] ?? documents[path].map { .content($0.text) }
+    }
+
+    /// The single write path for save / restore / revert:
+    /// verify the live disk state, back up the content actually found on
+    /// disk, atomically replace it, then update in-memory state + history.
+    ///
+    /// This is *not* a compare-and-swap: a non-cooperative writer landing
+    /// between the check and `rename` can still be lost. The window is one
+    /// short synchronous stretch; the backup cannot recover a later external write.
+    private func commitWrite(path: String, text: String, tf: TrackedFile,
+                             origin: FileVersion.Origin, mode: WriteMode,
+                             postRecord: Bool) -> CommitOutcome {
+        let disk = readDiskState(path)
+        let base = baseFor(path)
+
+        switch mode {
+        case .guarded:
+            if case .unreadable = disk {
+                return .failed(L("Could not read the current file"))
+            }
+            let inSync = base.map { disk == $0 } ?? (disk == .missing)
+            guard inSync else { return .conflict(disk) }
+        case .force(let expected):
+            if case .unreadable = disk {
+                return .failed(L("Could not read the current file"))
+            }
+            if let expected, disk != expected { return .conflict(disk) }
+        }
+
+        // Back up the content really found on disk before replacing it;
+        // if the required backup fails, abort — never write blind.
+        if keepsHistory(tf) {
+            do {
+                if case .content(let d) = disk, d != text {
+                    let fmt = tf.format
+                    let ch = DiffEngine.diff(
+                        oldText: d, newText: text,
+                        oldTree: Parsers.parse(d, format: fmt).tree,
+                        newTree: Parsers.parse(text, format: fmt).tree)
+                    try recordSnapshot(path: path, content: d, origin: .app, changes: ch)
+                } else if disk == .missing, let b = base?.text {
+                    // externally deleted — keep the pre-edit base recoverable
+                    try recordSnapshot(path: path, content: b, origin: .external, changes: [])
+                }
+            } catch {
+                return .failed(L("Backup failed — not writing: %@",
+                                 error.localizedDescription))
+            }
+        }
+
+        do {
+            try writeAtomic(text, to: path)
+        } catch {
+            return .failed(L("Could not write: %@", error.localizedDescription))
+        }
+
+        selfWriteHashes[path] = SnapshotStore.sha256(text)
+        edits.removeValue(forKey: path)
+        editBases.removeValue(forKey: path)
+        dirtyPaths.remove(path)
+        conflicts.remove(path)
+        externalChanges.removeValue(forKey: path)
+        saveErrors.removeValue(forKey: path)
+        reload(path, origin: nil)
+
+        var changes: [SemanticChange] = []
+        if let d = disk.text, d != text {
+            let fmt = format(for: path)
+            changes = DiffEngine.diff(
+                oldText: d, newText: text,
+                oldTree: Parsers.parse(d, format: fmt).tree,
+                newTree: Parsers.parse(text, format: fmt).tree)
+        }
+        if postRecord, keepsHistory(tf) {
+            do {
+                try recordSnapshot(path: path, content: text, origin: origin, changes: changes)
+            } catch {
+                historyErrors[path] = error.localizedDescription
+            }
+        }
+        refreshVolatileMcp(path: path)
+        rebuildMcpIndex()
+        // success activity is logged only after the write really happened
+        logActivity(path: path, origin: origin, changes: changes)
+        return .written
+    }
+
+    /// Mark a detected divergence: keep the buffer, surface a conflict with
+    /// the disk content captured so resolution can be verified again later.
+    private func flagConflict(path: String, disk: DiskState) {
+        conflicts.insert(path)
+        var changes: [SemanticChange] = []
+        if let d = disk.text, let b = baseFor(path)?.text {
+            let f = format(for: path)
+            changes = DiffEngine.diff(oldText: b, newText: d,
+                                      oldTree: Parsers.parse(b, format: f).tree,
+                                      newTree: Parsers.parse(d, format: f).tree)
+        }
+        externalChanges[path] = ExternalChange(
+            changes: changes,
+            previousContent: baseFor(path)?.text,
+            diskContent: disk.text,
+            isDeletion: disk == .missing)
+    }
+
+    private func attemptSave(path: String, mode: WriteMode) {
+        guard !savingPaths.contains(path) else { return }
+        guard let text = edits[path] else { return }
+        guard let tf = trackedFile(for: path) else { return }
+        guard !isReadOnly(path) else {
+            saveErrors[path] = L("Read-only file")
+            return
+        }
         let parsed = Parsers.parse(text, format: tf.format)
         if let err = parsed.error {
             saveErrors[path] = err
             return
         }
         saveErrors.removeValue(forKey: path)
-
-        // snapshot current disk version before overwriting
-        var changeList: [SemanticChange] = []
-        if let current = documents[path]?.text, current != text {
-            let prevTree = documents[path]?.tree
-            changeList = DiffEngine.diff(oldText: current, newText: text,
-                                         oldTree: prevTree, newTree: parsed.tree)
-            if !tf.volatile {
-                snapshots.record(path: path, content: current, origin: .app, changes: changeList)
-            }
-        }
-        logSave(path: path, changes: changeList)
-
-        do {
-            try writeAtomic(text, to: path)
-            selfWriteHashes[path] = SnapshotStore.sha256(text)
-            edits.removeValue(forKey: path)
-            dirtyPaths.remove(path)
-            conflicts.remove(path)
-            externalChanges.removeValue(forKey: path)
-            reload(path, origin: .app)
-        } catch {
-            saveErrors[path] = "No se pudo escribir: \(error.localizedDescription)"
+        let previousLimit = snapshots.historyLimit
+        snapshots.historyLimit = { max(2, previousLimit()) }
+        defer { snapshots.historyLimit = previousLimit }
+        switch commitWrite(path: path, text: text, tf: tf,
+                           origin: .app, mode: mode, postRecord: true) {
+        case .written:
+            break
+        case .conflict(let disk):
+            flagConflict(path: path, disk: disk)
+        case .failed(let msg):
+            saveErrors[path] = msg
         }
     }
 
-    /// Write preserving existing POSIX permissions (configs are often 600).
+    /// Write preserving existing POSIX permissions (configs are often 600);
+    /// resolves symlinks to the real target. See `AtomicWriter` for policy.
     private func writeAtomic(_ text: String, to path: String) throws {
-        let url = URL(fileURLWithPath: path)
-        let fm = FileManager.default
-        var perms: NSNumber? = nil
-        if let attrs = try? fm.attributesOfItem(atPath: path) {
-            perms = attrs[.posixPermissions] as? NSNumber
-        }
-        let tmp = url.deletingLastPathComponent()
-            .appendingPathComponent(".\(url.lastPathComponent).acfg-tmp-\(UUID().uuidString.prefix(8))")
-        try text.write(to: tmp, atomically: false, encoding: .utf8)
-        if let perms {
-            try fm.setAttributes([.posixPermissions: perms], ofItemAtPath: tmp.path)
-        }
-        if fm.fileExists(atPath: path) {
-            _ = try fm.replaceItemAt(url, withItemAt: tmp)
-        } else {
-            try fm.moveItem(at: tmp, to: url)
-        }
+        try AtomicWriter.writePreservingPermissions(text, toPath: path)
     }
 
     // MARK: - watch events
 
-    private func handleWatchEvent(_ path: String) {
+    func handleWatchEvent(_ path: String) {
         lastEventAt = Date()
 
         if let agentID = dirOwners[path] {
@@ -487,14 +1096,45 @@ final class ConfigStore {
         handleFileChanged(path)
     }
 
-    private func handleFileChanged(_ path: String) {
+    /// Also a test seam: suites call it directly to simulate watcher events.
+    func handleFileChanged(_ path: String) {
         let fm = FileManager.default
         guard fm.fileExists(atPath: path) else {
-            updateFileMeta(path: path) { $0.exists = false }
+            largeLoads[path]?.cancel(); loadTokens.removeValue(forKey: path); loadingPaths.remove(path)
+            let previous = documents[path]?.text
+            updateFileMeta(path: path) {
+                $0.exists = false; $0.size = 0; $0.mtime = nil
+                $0.issues = []; $0.managedBlocks = []
+            }
+            if dirtyPaths.contains(path) { flagConflict(path: path, disk: .missing) }
+            else if let previous {
+                externalChanges[path] = ExternalChange(changes: [], previousContent: previous,
+                                                       diskContent: nil, isDeletion: true)
+            }
+            documents.removeValue(forKey: path)
+            selfWriteHashes.removeValue(forKey: path)
+            volatileMcpEntries.removeAll { $0.sourcePath == path }
+            rebuildMcpIndex()
             return
         }
-        guard let data = fm.contents(atPath: path),
-              let newText = String(data: data, encoding: .utf8) else { return }
+        if savingPaths.contains(path) { return }
+        let attributes = try? fm.attributesOfItem(atPath: path)
+        updateFileMeta(path: path) {
+            $0.exists = true
+            $0.size = (attributes?[.size] as? NSNumber)?.int64Value ?? 0
+            $0.mtime = attributes?[.modificationDate] as? Date
+        }
+        if usesBackgroundProcessing(path) { loadLargeFile(path); return }
+        let newText: String
+        do { newText = try Parsers.readText(at: path) }
+        catch {
+            saveErrors[path] = L(error.localizedDescription)
+            if dirtyPaths.contains(path) { flagConflict(path: path, disk: .unreadable) }
+            documents.removeValue(forKey: path)
+            volatileMcpEntries.removeAll { $0.sourcePath == path }
+            rebuildMcpIndex()
+            return
+        }
 
         let newHash = SnapshotStore.sha256(newText)
 
@@ -531,26 +1171,28 @@ final class ConfigStore {
             changes = []
         }
 
-        if !(tf?.volatile ?? false) {
-            if let v = snapshots.record(path: path, content: newText,
-                                        origin: .external, changes: changes) {
-                var h = histories[path] ?? []
-                h.insert(v, at: 0)
-                histories[path] = h
+        if keepsHistory(tf) {
+            do {
+                try recordSnapshot(path: path, content: newText, origin: .external, changes: changes)
+            } catch {
+                historyErrors[path] = error.localizedDescription
             }
         }
 
         logActivity(path: path, origin: .external, changes: changes)
 
-        externalChanges[path] = ExternalChange(changes: changes, previousContent: oldText)
+        externalChanges[path] = ExternalChange(changes: changes,
+                                               previousContent: oldText,
+                                               diskContent: newText)
 
         reload(path, origin: nil)
+        refreshVolatileMcp(path: path)
         rebuildMcpIndex()
 
         if !(tf?.volatile ?? false), !changes.isEmpty {
             let agentName = agents.first { $0.id == fileOwners[path] }?.name ?? "Agente"
-            Notifier.shared.postChange(path: path, agentName: agentName,
-                                       summary: DiffEngine.summary(changes))
+            notifier?.postChange(path: path, agentName: agentName,
+                                 summary: DiffEngine.summary(changes))
         }
 
         // dirty buffer → conflict (don't clobber user's typing)
@@ -558,6 +1200,7 @@ final class ConfigStore {
             conflicts.insert(path)
         } else {
             edits.removeValue(forKey: path)
+            editBases.removeValue(forKey: path)
         }
     }
 
@@ -581,56 +1224,289 @@ final class ConfigStore {
         externalChanges.removeValue(forKey: path)
     }
 
-    /// User keeps their unsaved buffer despite a disk change.
+    /// "Keep mine": overwrite — but only the disk state the conflict was
+    /// flagged on. If disk moved again, this re-flags instead of clobbering
+    /// the newer change.
     func resolveConflictKeepMine(path: String) {
-        conflicts.remove(path)
-        externalChanges.removeValue(forKey: path)
+        let e = externalChanges[path]
+        let expected: DiskState? = e?.isDeletion == true
+            ? .missing
+            : e?.diskContent.map { .content($0) }
+        attemptSave(path: path, mode: .force(expected: expected))
+    }
+
+    /// Accept one fresh read. A read failure keeps the draft and conflict;
+    /// accepting a deletion clears the stale document and MCP entries.
+    func resolveConflictUseDisk(path: String) {
+        guard !savingPaths.contains(path) else { return }
+        if usesBackgroundProcessing(path) { takeLargeDiskVersion(path); return }
+        let disk = readDiskState(path)
+        switch disk {
+        case .unreadable:
+            saveErrors[path] = L("Could not read the current file")
+            return
+        case .content(let text):
+            installDocument(path, text: text)
+            let attrs = try? FileManager.default.attributesOfItem(atPath: path)
+            updateFileMeta(path: path) {
+                $0.exists = true
+                $0.size = Int64(text.utf8.count)
+                $0.mtime = attrs?[.modificationDate] as? Date
+            }
+        case .missing:
+            documents.removeValue(forKey: path)
+            updateFileMeta(path: path) {
+                $0.exists = false; $0.size = 0; $0.mtime = nil
+                $0.issues = []; $0.managedBlocks = []
+            }
+        }
+        discardEdit(path: path)
+        saveErrors.removeValue(forKey: path)
+        selfWriteHashes.removeValue(forKey: path)
+        refreshVolatileMcp(path: path)
+        rebuildMcpIndex()
+    }
+
+    private func takeLargeDiskVersion(_ path: String) {
+        let originalBuffer = edits[path]
+        let worker = largeWorker
+        let format = format(for: path)
+        loadingPaths.insert(path)
+        largeLoads[path]?.cancel()
+        let token = UUID(); loadTokens[path] = token
+        largeLoads[path] = Task { [weak self] in
+            do {
+                let disk = try await worker.disk(path)
+                let parsedError: String?
+                if case .content(let text) = disk { parsedError = try await worker.validate(text, format: format) }
+                else { parsedError = nil }
+                let contentHash: String?
+                if case .content(let text) = disk { contentHash = await worker.hash(text) } else { contentHash = nil }
+                guard !Task.isCancelled, let self, self.loadTokens[path] == token else { return }
+                guard self.edits[path] == originalBuffer else {
+                    self.saveErrors[path] = L("The buffer changed while reading disk. Try again.")
+                    self.loadingPaths.remove(path); return
+                }
+                self.discardEdit(path: path)
+                switch disk {
+                case .content(let text):
+                    self.installLargeResult(path, .init(text: text, hash: contentHash!, parseError: parsedError, historyError: nil))
+                case .missing:
+                    self.documents.removeValue(forKey: path)
+                    self.updateFileMeta(path: path) { $0.exists = false; $0.size = 0; $0.mtime = nil }
+                    self.volatileMcpEntries.removeAll { $0.sourcePath == path }
+                    self.rebuildMcpIndex()
+                }
+            } catch {
+                if !Task.isCancelled { self?.saveErrors[path] = error.localizedDescription }
+            }
+            guard let self, self.loadTokens[path] == token else { return }
+            self.loadingPaths.remove(path); self.largeLoads.removeValue(forKey: path)
+        }
     }
 
     func revertExternal(path: String) {
-        guard let prev = externalChanges[path]?.previousContent else { return }
-        applyContent(path: path, text: prev, origin: .revert)
-        externalChanges.removeValue(forKey: path)
+        guard let change = externalChanges[path],
+              let prev = change.previousContent else { return }
+        let expected: DiskState? = change.isDeletion
+            ? .missing
+            : change.diskContent.map { .content($0) }
+        applyContent(path: path, text: prev, origin: .revert,
+                     mode: .force(expected: expected))
     }
 
-    func restoreVersion(path: String, version: FileVersion) {
-        guard let content = snapshots.content(for: path, version: version) else { return }
-        applyContent(path: path, text: content, origin: .revert)
+    // MARK: - restore confirmation flow
+
+    private(set) var restoreOriginalText = ""
+    private(set) var restoreProposedText: String?
+    private(set) var preparingRestore = false
+    private var restoreDisk: DiskState?
+    private var restoreBuffer: String?
+    private var restoreHistoryEnabled = false
+    @ObservationIgnored private var restoreTask: Task<Void, Never>?
+
+    func requestRestore(path: String, version: FileVersion) {
+        prepareRestore(RestoreRequest(kind: .version, path: path, version: version))
     }
 
-    private func applyContent(path: String, text: String, origin: FileVersion.Origin) {
-        let tf = trackedFile(for: path)
-        if let current = documents[path]?.text {
-            let parsed = Parsers.parse(text, format: format(for: path))
-            let ch = DiffEngine.diff(oldText: current, newText: text,
-                                     oldTree: documents[path]?.tree, newTree: parsed.tree)
-            if !(tf?.volatile ?? false) {
-                snapshots.record(path: path, content: current, origin: .app, changes: ch)
+    func requestRestorePrevious(_ path: String) {
+        let version = history(for: path).first { $0.hash != documents[path]?.hash }
+        prepareRestore(RestoreRequest(kind: .previous, path: path, version: version))
+    }
+
+    func requestRevertExternal(_ path: String) {
+        prepareRestore(RestoreRequest(kind: .revertExternal, path: path, version: nil))
+    }
+
+    private func prepareRestore(_ request: RestoreRequest) {
+        cancelRestore()
+        guard !savingPaths.contains(request.path) else { return }
+        pendingRestore = request
+        restoreBuffer = edits[request.path]
+        restoreHistoryEnabled = keepsHistory(trackedFile(for: request.path))
+        let previous = externalChanges[request.path]?.previousContent
+        if usesBackgroundProcessing(request.path) {
+            preparingRestore = true
+            let worker = largeWorker
+            let policy = backgroundHistory(request.path)
+            restoreTask = Task { [weak self] in
+                do {
+                    let disk = try await worker.disk(request.path)
+                    let target: String?
+                    if request.kind == .revertExternal { target = previous }
+                    else if let version = request.version { target = await worker.versionContent(path: request.path, version: version, history: policy) }
+                    else { target = nil }
+                    guard !Task.isCancelled, let self, self.pendingRestore?.id == request.id else { return }
+                    self.restoreDisk = disk == .missing ? .missing : {
+                        if case .content(let text) = disk { return DiskState.content(text) }; return .unreadable
+                    }()
+                    self.restoreOriginalText = self.restoreDisk?.text ?? ""
+                    self.restoreProposedText = target
+                } catch { if !Task.isCancelled { self?.saveErrors[request.path] = error.localizedDescription } }
+                if self?.pendingRestore?.id == request.id { self?.preparingRestore = false }
+            }
+        } else {
+            restoreDisk = readDiskState(request.path)
+            restoreOriginalText = restoreDisk?.text ?? ""
+            restoreProposedText = request.kind == .revertExternal ? previous
+                : request.version.flatMap { snapshots.content(for: request.path, version: $0) }
+        }
+    }
+
+    func cancelRestore() {
+        pendingRestore = nil; restoreTask?.cancel(); restoreTask = nil
+        restoreDisk = nil; restoreProposedText = nil; restoreOriginalText = ""; preparingRestore = false
+    }
+
+    /// The preview pins target content, disk and draft; watcher reloads cannot
+    /// silently broaden what the user approved while the sheet was open.
+    func confirmRestore() {
+        guard let request = pendingRestore, !preparingRestore else { return }
+        let target = restoreProposedText
+        let expected = restoreDisk
+        let originalBuffer = restoreBuffer
+        let historyEnabled = restoreHistoryEnabled
+        cancelRestore()
+        guard !isReadOnly(request.path) else { saveErrors[request.path] = L("Read-only file"); return }
+        guard let target, let expected, expected != .unreadable else {
+            saveErrors[request.path] = L("Version content unavailable"); return
+        }
+        guard edits[request.path] == originalBuffer,
+              keepsHistory(trackedFile(for: request.path)) == historyEnabled else {
+            saveErrors[request.path] = L("The buffer or history setting changed. Review the save again."); return
+        }
+        applyContent(path: request.path, text: target, origin: .revert, mode: .force(expected: expected))
+    }
+
+    /// What the confirm dialog should explain for this request.
+    func restoreExplanation(for req: RestoreRequest) -> String {
+        let historyEnabled = keepsHistory(trackedFile(for: req.path))
+        if dirtyPaths.contains(req.path) {
+            return historyEnabled
+                ? L("You have unsaved edits — they will be archived as a history snapshot, not lost.")
+                : L("Restore is blocked: this file has unsaved edits and history is disabled. Save or discard the edits first.")
+        }
+        if !historyEnabled {
+            return L("History is disabled for this file. Restoring replaces the current disk content without a history backup.")
+        }
+        if req.kind == .revertExternal {
+            return L("The current disk content will be replaced by the previous version.")
+        }
+        return L("Current content will be kept as another history snapshot.")
+    }
+
+    func clearSaveError(path: String) { saveErrors.removeValue(forKey: path) }
+
+    /// Read-only check usable by UI entry points (menus, inspector).
+    func isReadOnly(_ path: String) -> Bool {
+        (fileSource[path]?.readOnly ?? trackedFile(for: path)?.readOnly ?? false)
+            || (trackedFile(for: path)?.size ?? 0) > Int64(Parsers.maximumBackgroundBytes)
+    }
+
+    func restoreVersion(path: String, version: FileVersion, overwrite: Bool = false) {
+        guard trackedFile(for: path) != nil, !isReadOnly(path) else {
+            saveErrors[path] = L("Read-only file")
+            return
+        }
+        guard let content = snapshots.content(for: path, version: version) else {
+            saveErrors[path] = L("Version content unavailable")
+            return
+        }
+        if dirtyPaths.contains(path) && !overwrite {
+            // never silently drop unsaved work
+            saveErrors[path] = L("Unsaved changes — save or discard before restoring")
+            return
+        }
+        applyContent(path: path, text: content, origin: .revert, mode: .guarded)
+    }
+
+    private func applyContent(path: String, text: String,
+                              origin: FileVersion.Origin, mode: WriteMode) {
+        guard !savingPaths.contains(path) else { return }
+        guard let tf = trackedFile(for: path) else { return }
+        guard !isReadOnly(path) else {
+            saveErrors[path] = L("Read-only file")
+            return
+        }
+        if usesBackgroundProcessing(path) || text.utf8.count > Parsers.maximumFileBytes {
+            let draft = dirtyPaths.contains(path) ? edits[path] : nil
+            guard draft == nil || keepsHistory(tf) else {
+                saveErrors[path] = L("Restore is blocked: this file has unsaved edits and history is disabled. Save or discard the edits first.")
+                return
+            }
+            let expected: DiskState
+            switch mode {
+            case .guarded: expected = baseFor(path) ?? .missing
+            case .force(let state): expected = state ?? baseFor(path) ?? .missing
+            }
+            let review = SaveReview(path: path, original: expected.text ?? "", proposed: text,
+                format: tf.format, overwritesConflict: false, historyEnabled: keepsHistory(tf))
+            commitLargeSave(review, disk: expected, origin: origin, draft: draft)
+            return
+        }
+        if let error = Parsers.parse(text, format: tf.format).error {
+            saveErrors[path] = error
+            return
+        }
+        let dirty = dirtyPaths.contains(path)
+        guard !dirty || keepsHistory(tf) else {
+            saveErrors[path] = L("Restore is blocked: this file has unsaved edits and history is disabled. Save or discard the edits first.")
+            return
+        }
+        let previousLimit = snapshots.historyLimit
+        snapshots.historyLimit = { max(dirty ? 3 : 2, previousLimit()) }
+        defer { snapshots.historyLimit = previousLimit }
+        // restoring over a dirty buffer is only reachable via an explicit
+        // overwrite — preserve the buffer in history before dropping it
+        if dirty, let buf = edits[path] {
+            do {
+                try recordSnapshot(path: path, content: buf, origin: .app, changes: [])
+            } catch {
+                historyErrors[path] = error.localizedDescription
+                saveErrors[path] = L("Backup failed — not writing: %@", error.localizedDescription)
+                return
             }
         }
-        do {
-            try writeAtomic(text, to: path)
-            selfWriteHashes[path] = SnapshotStore.sha256(text)
-            edits.removeValue(forKey: path)
-            dirtyPaths.remove(path)
-            conflicts.remove(path)
-            reload(path, origin: origin)
-            if !(tf?.volatile ?? false) {
-                if let v = snapshots.record(path: path, content: text,
-                                            origin: origin, changes: []) {
-                    var h = histories[path] ?? []
-                    h.insert(v, at: 0)
-                    histories[path] = h
-                }
-            }
-        } catch {
-            saveErrors[path] = "No se pudo restaurar: \(error.localizedDescription)"
+        switch commitWrite(path: path, text: text, tf: tf,
+                           origin: origin, mode: mode, postRecord: true) {
+        case .written:
+            break
+        case .conflict(let disk):
+            flagConflict(path: path, disk: disk)
+        case .failed(let msg):
+            saveErrors[path] = msg
         }
     }
 
     func history(for path: String) -> [FileVersion] {
-        if histories[path] == nil { histories[path] = snapshots.loadHistory(for: path) }
+        if histories[path] == nil { histories[path] = safeLoadHistory(path) }
         return histories[path] ?? []
+    }
+
+    /// Re-read persisted history for a path (after external repairs/tests).
+    func refreshHistory(path: String) {
+        histories.removeValue(forKey: path)
+        histories[path] = safeLoadHistory(path)
     }
 
     func versionContent(path: String, version: FileVersion) -> String? {
@@ -669,16 +1545,13 @@ final class ConfigStore {
     }
 
     /// Restore the most recent snapshot that differs from the current content.
-    func restorePrevious(_ path: String) {
+    func restorePrevious(_ path: String, overwrite: Bool = false) {
         let currentHash = documents[path]?.hash
         guard let target = history(for: path).first(where: { $0.hash != currentHash }) else { return }
-        restoreVersion(path: path, version: target)
+        restoreVersion(path: path, version: target, overwrite: overwrite)
     }
 
     func requestFind() { findRequest += 1 }
 
-    /// Log an app-originated save into the activity feed.
-    private func logSave(path: String, changes: [SemanticChange]) {
-        logActivity(path: path, origin: .app, changes: changes)
-    }
+    func setWatchDebounce(_ interval: TimeInterval) { watcher.setDebounce(interval) }
 }

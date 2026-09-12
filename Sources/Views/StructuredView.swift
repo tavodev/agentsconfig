@@ -119,13 +119,28 @@ struct StructuredView: View {
     @Environment(ConfigStore.self) private var store
 
     private var canWriteStructured: Bool {
-        format == .json || format == .jsonc || format == .toml
+        format == .json || format == .jsonc
     }
 
     private var editable: Bool { !readOnly && canWriteStructured && root != nil }
 
     private var root: [String: Any]? {
         Parsers.parse(store.text(for: path), format: format).tree as? [String: Any]
+    }
+
+    /// An empty TOML parses to an empty (non-nil) table and an empty JSON
+    /// string parses to nil/an error — either way there's nothing to show,
+    /// so this is checked first and short-circuits both of those cases with
+    /// one clear message instead of a confusing blank card or parse error.
+    private var isEmptyOrMissing: Bool {
+        store.text(for: path).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var fileExists: Bool {
+        for agent in store.agents {
+            if let f = agent.files.first(where: { $0.path == path }) { return f.exists }
+        }
+        return FileManager.default.fileExists(atPath: path)
     }
 
     private func mutate(_ block: (inout [String: Any]) -> Void) {
@@ -141,7 +156,15 @@ struct StructuredView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                if let err = doc?.parseError {
+                if isEmptyOrMissing {
+                    Card {
+                        Label(fileExists ? L("Empty file — nothing to show yet.")
+                                         : L("This file doesn't exist on disk yet."),
+                              systemImage: fileExists ? "doc" : "doc.badge.ellipsis")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else if let err = doc?.parseError {
                     Card {
                         Label(err, systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
@@ -174,7 +197,7 @@ struct StructuredView: View {
                     }
                     specialCards
                     GenericInspector(filePath: path, root: root ?? [:],
-                                     editable: editable, mutate: mutate)
+                                     editable: editable, excludedKeys: handledTopLevelKeys, mutate: mutate)
                 }
             }
             .padding(14)
@@ -183,12 +206,27 @@ struct StructuredView: View {
 
     // MARK: special sections
 
+    /// Top-level keys already rendered by a card in `specialCards` — kept
+    /// out of the generic "All keys" tree below so nothing shows twice.
+    private var handledTopLevelKeys: Set<String> {
+        guard let r = root else { return [] }
+        var keys: Set<String> = []
+        if let mcpKey = ["mcpServers", "mcp", "mcp_servers"].first(where: { r[$0] is [String: Any] }) {
+            keys.insert(mcpKey)
+        }
+        if r["permissions"] is [String: Any] { keys.insert("permissions") }
+        if r["hooks"] is [String: Any] { keys.insert("hooks") }
+        if r["enabledPlugins"] is [String: Any] { keys.insert("enabledPlugins") }
+        if r["env"] is [String: Any] { keys.insert("env") }
+        return keys
+    }
+
     @ViewBuilder
     private var specialCards: some View {
         if let r = root {
             if let mcpKey = ["mcpServers", "mcp", "mcp_servers"].first(where: { r[$0] is [String: Any] }),
                let servers = r[mcpKey] as? [String: Any] {
-                MCPCard(keyPath: [Seg.key(mcpKey)], servers: servers,
+                MCPCard(filePath: path, keyPath: [Seg.key(mcpKey)], servers: servers,
                         editable: editable, mutate: mutate)
             }
             if let perms = r["permissions"] as? [String: Any] {
@@ -289,28 +327,25 @@ struct KeyDocButton: View {
 // MARK: - MCP servers card
 
 struct MCPCard: View {
+    let filePath: String
+    @Environment(ConfigStore.self) private var store
     let keyPath: [Seg]
     let servers: [String: Any]
     let editable: Bool
     let mutate: ((inout [String: Any]) -> Void) -> Void
     @State private var showAdd = false
-    @State private var newName = ""
-    @State private var newCommand = ""
-    @State private var newArgs = ""
-    @State private var newURL = ""
-
     private var names: [String] { servers.keys.sorted() }
 
     var body: some View {
         Card {
             HStack {
                 CardHeader(title: L("MCP servers"), icon: "network")
-                if editable {
+                if store.isMcpDestination(filePath) {
                     Button { showAdd = true } label: {
                         Image(systemName: "plus.circle.fill")
                     }
                     .buttonStyle(.plain)
-                    .popover(isPresented: $showAdd) { addForm }
+                    .popover(isPresented: $showAdd) { McpAddForm(path: filePath) { showAdd = false } }
                 }
             }
             ForEach(names, id: \.self) { name in
@@ -331,43 +366,10 @@ struct MCPCard: View {
         }
     }
 
-    private var addForm: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Nuevo servidor MCP").font(.headline)
-            TextField(L("Name"), text: $newName)
-            TextField(L("Command (e.g. npx)"), text: $newCommand)
-            TextField(L("Args (space-separated)"), text: $newArgs)
-            TextField(L("or remote URL (http…)"), text: $newURL)
-            HStack {
-                Spacer()
-                Button(L("Add")) {
-                    let name = newName.trimmingCharacters(in: .whitespaces)
-                    guard !name.isEmpty else { return }
-                    mutate { r in
-                        var spec: [String: Any] = [:]
-                        if !newURL.isEmpty {
-                            spec["url"] = newURL
-                        } else {
-                            spec["command"] = newCommand
-                            if !newArgs.isEmpty {
-                                spec["args"] = newArgs.split(separator: " ").map(String.init)
-                            }
-                        }
-                        setAt(&r, keyPath + [.key(name)], spec)
-                    }
-                    newName = ""; newCommand = ""; newArgs = ""; newURL = ""
-                    showAdd = false
-                }
-                .disabled(newName.isEmpty || (newCommand.isEmpty && newURL.isEmpty))
-            }
-        }
-        .padding(12)
-        .frame(width: 320)
-        .textFieldStyle(.roundedBorder)
-    }
 }
 
 struct MCPServerRow: View {
+    @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     let name: String
     let spec: Any?
     let editable: Bool
@@ -380,15 +382,6 @@ struct MCPServerRow: View {
         if let d = dict["disabled"] as? Bool { return !d }
         return true
     }
-    private var summary: String {
-        if let url = dict["url"] as? String ?? dict["httpUrl"] as? String ?? dict["serverUrl"] as? String {
-            return url
-        }
-        let cmd = dict["command"] as? String ?? ""
-        let args = (dict["args"] as? [Any])?.compactMap { "\($0)" }.joined(separator: " ") ?? ""
-        return [cmd, args].filter { !$0.isEmpty }.joined(separator: " ")
-    }
-
     var body: some View {
         HStack(spacing: 10) {
             Circle()
@@ -396,7 +389,7 @@ struct MCPServerRow: View {
                 .frame(width: 7, height: 7)
             VStack(alignment: .leading, spacing: 1) {
                 Text(name).font(.system(size: 12, weight: .medium))
-                Text(summary)
+                Text(Secrets.mcpEndpoint(dict, masking: maskSecrets))
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -453,6 +446,7 @@ struct PermissionsCard: View {
 }
 
 struct StringListEditor: View {
+    @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     let title: String
     let keyPath: [Seg]
     let values: [Any]
@@ -465,7 +459,7 @@ struct StringListEditor: View {
             Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
             ForEach(Array(values.enumerated()), id: \.offset) { i, v in
                 HStack(spacing: 6) {
-                    Text(String(describing: v))
+                    Text(Secrets.displayText(String(describing: v), path: pathLabel(keyPath), masking: maskSecrets))
                         .font(.system(size: 10.5, design: .monospaced))
                         .lineLimit(1)
                     Spacer()
@@ -543,6 +537,7 @@ struct HooksCard: View {
 }
 
 struct HookCommandRow: View {
+    @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     let command: String
 
     private var missingPaths: [String] {
@@ -556,13 +551,13 @@ struct HookCommandRow: View {
                 .fill(missingPaths.isEmpty ? Color.green : Color.red)
                 .frame(width: 7, height: 7)
                 .padding(.top, 4)
-            Text(command)
+            Text(Secrets.displayText(command, path: "command", masking: maskSecrets))
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundStyle(missingPaths.isEmpty ? Color.primary : Color.red)
                 .lineLimit(3)
                 .textSelection(.enabled)
         }
-        .help(missingPaths.isEmpty ? L("Command available") : L("Missing path: %@", missingPaths.joined(separator: ", ")))
+        .help(missingPaths.isEmpty ? L("Command available") : L("Missing path: %@", Secrets.displayText(missingPaths.joined(separator: ", "), masking: maskSecrets)))
     }
 }
 
@@ -602,6 +597,7 @@ struct BoolMapCard: View {
 // MARK: - String map card (env)
 
 struct StringMapCard: View {
+    @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     let title: String
     let icon: String
     let keyPath: [Seg]
@@ -617,13 +613,20 @@ struct StringMapCard: View {
                     Text(k)
                         .font(.system(size: 10.5, weight: .medium, design: .monospaced))
                         .frame(minWidth: 140, alignment: .leading)
-                    TextField(L("value"), text: Binding(
-                        get: { map[k] as? String ?? "\(map[k] ?? "")" },
-                        set: { v in mutate { r in setAt(&r, keyPath + [.key(k)], v) } }
-                    ))
-                    .font(.system(size: 11, design: .monospaced))
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!editable)
+                    let value = map[k] as? String ?? "\(map[k] ?? "")"
+                    if maskSecrets && Secrets.isSensitive(value, path: pathLabel(keyPath + [.key(k)])) {
+                        SecretValueRow(value: value, editable: editable) { v in
+                            mutate { r in setAt(&r, keyPath + [.key(k)], v) }
+                        }
+                    } else {
+                        TextField(L("value"), text: Binding(
+                            get: { value },
+                            set: { v in mutate { r in setAt(&r, keyPath + [.key(k)], v) } }
+                        ))
+                        .font(.system(size: 11, design: .monospaced))
+                        .textFieldStyle(.roundedBorder)
+                        .disabled(!editable)
+                    }
                 }
             }
         }
@@ -636,19 +639,27 @@ struct GenericInspector: View {
     let filePath: String
     let root: [String: Any]
     let editable: Bool
+    var excludedKeys: Set<String> = []
     let mutate: ((inout [String: Any]) -> Void) -> Void
 
     var body: some View {
-        Card {
-            CardHeader(title: L("All keys"), icon: "list.bullet.indent")
-            OutlineGroup(nodes, children: \.children) { node in
-                NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate)
+        // Top-level keys a special card above already displays (MCP servers,
+        // permissions, hooks, plugins, env) are left out here so the same
+        // data isn't shown twice; nothing left means no card at all.
+        Group {
+            if !nodes.isEmpty {
+                Card {
+                    CardHeader(title: L("All keys"), icon: "list.bullet.indent")
+                    OutlineGroup(nodes, children: \.children) { node in
+                        NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate)
+                    }
+                }
             }
         }
     }
 
     private var nodes: [TreeNode] {
-        root.keys.sorted().map { k in
+        root.keys.sorted().filter { !excludedKeys.contains($0) }.map { k in
             TreeNode.build(key: k, value: root[k] ?? NSNull(), segs: [.key(k)])
         }
     }
@@ -679,6 +690,7 @@ struct TreeNode: Identifiable {
 }
 
 struct NodeRow: View {
+    @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     let node: TreeNode
     let filePath: String
     let editable: Bool
@@ -692,15 +704,22 @@ struct NodeRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
-            Text(node.label)
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundStyle(.secondary)
-            if let doc {
-                KeyDocButton(doc: doc)
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Text(Secrets.displayText(node.label, masking: maskSecrets))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                if let doc {
+                    KeyDocButton(doc: doc)
+                }
+                Spacer()
+                valueView
             }
-            Spacer()
-            valueView
+            if let doc {
+                Text(doc.localizedSummary)
+                    .font(.system(size: 9.5))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .onAppear { draft = scalarText(node.value) }
     }
@@ -708,7 +727,9 @@ struct NodeRow: View {
     @ViewBuilder
     private var valueView: some View {
         let v = node.value
-        if isBool(v) {
+        if maskSecrets && Secrets.isSensitive(v, path: pathLabel(node.segs)), !(v is String) {
+            Text(Secrets.maskedValue).font(.system(size: 11, design: .monospaced))
+        } else if isBool(v) {
             Toggle("", isOn: Binding(
                 get: { (v as? NSNumber)?.boolValue ?? false },
                 set: { n in mutate { r in setAt(&r, node.segs, n) } }
@@ -718,7 +739,7 @@ struct NodeRow: View {
         } else if v is NSNull {
             Text("null").font(.system(size: 10.5, design: .monospaced)).foregroundStyle(.tertiary)
         } else if let s = v as? String {
-            if AppSettings.maskSecrets && Secrets.isSecretKey(node.label) {
+            if maskSecrets && Secrets.isSensitive(s, path: pathLabel(node.segs)) {
                 SecretValueRow(value: s, editable: editable) { n in
                     mutate { r in setAt(&r, node.segs, n) }
                 }
@@ -736,8 +757,8 @@ struct NodeRow: View {
             TextField("", text: Binding(
                 get: { n.stringValue },
                 set: { txt in
-                    if let d = Double(txt) {
-                        mutate { r in setAt(&r, node.segs, txt.contains(".") ? d : Int(d)) }
+                    if let v = NodeRow.parseNumber(txt) {
+                        mutate { r in setAt(&r, node.segs, v) }
                     }
                 }
             ))
@@ -750,6 +771,14 @@ struct NodeRow: View {
                 .font(.system(size: 10.5, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Int only when the value is finite, integral and in Int64 range;
+    /// everything else stays a Double. `Int(d)` would trap on "1e300"/"inf".
+    static func parseNumber(_ txt: String) -> Any? {
+        if let integer = Int(txt) { return integer }
+        guard let d = Double(txt), d.isFinite else { return nil }
+        return d
     }
 
     private func scalarText(_ v: Any) -> String {
@@ -787,6 +816,8 @@ struct SecretValueRow: View {
                 Image(systemName: revealed ? "eye.slash" : "eye")
             }
             .buttonStyle(.plain).foregroundStyle(.secondary)
+            .help(revealed ? L("Hide value") : L("Reveal value"))
+            .accessibilityIdentifier("reveal-secret")
             Button {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(value, forType: .string)
@@ -794,6 +825,7 @@ struct SecretValueRow: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.plain).foregroundStyle(.secondary)
+            .help(L("Copy value"))
         }
     }
 }

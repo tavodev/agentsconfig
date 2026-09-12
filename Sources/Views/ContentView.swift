@@ -14,6 +14,8 @@ struct ContentView: View {
                     ActivityFeedView()
                 } else if store.selectedAgentID == ConfigStore.mcpID {
                     McpMatrixView()
+                } else if store.selectedAgentID == ConfigStore.settingsID {
+                    AppSettingsView()
                 } else {
                     FileListView()
                 }
@@ -24,6 +26,8 @@ struct ContentView: View {
                 ActivityDetailView()
             } else if store.selectedAgentID == ConfigStore.mcpID {
                 McpDetailView()
+            } else if store.selectedAgentID == ConfigStore.settingsID {
+                ContentUnavailableView(L("Settings"), systemImage: "gearshape")
             } else {
                 EditorView()
             }
@@ -61,6 +65,30 @@ struct ContentView: View {
                 .help("Re-escanear agentes")
             }
         }
+        .sheet(item: Binding(get: { store.pendingSaveReview }, set: { if $0 == nil { store.cancelSaveReview() } })) { review in
+            SaveReviewSheet(review: review)
+        }
+        .sheet(item: Binding(get: { store.pendingMcpReview }, set: { if $0 == nil { store.cancelMcpReview() } })) { review in
+            McpReviewSheet(review: review)
+        }
+        .alert(L("MCP operation failed"), isPresented: Binding(
+            get: { store.actionError != nil },
+            set: { if !$0 { store.clearActionError() } }
+        )) {
+            Button(L("OK")) { store.clearActionError() }
+        } message: { Text(store.actionError ?? "") }
+        .confirmationDialog(L("Remove history versions?"), isPresented: Binding(
+            get: { store.pendingHistoryRemoval != nil },
+            set: { if !$0 { store.cancelHistoryRemoval() } }
+        ), titleVisibility: .visible, presenting: store.pendingHistoryRemoval) { _ in
+            Button(L("Remove versions"), role: .destructive) { store.confirmHistoryRemoval() }
+            Button(L("Cancel"), role: .cancel) { store.cancelHistoryRemoval() }
+        } message: { request in
+            Text(L("Remove %d recorded version(s) for this file? This cannot be undone. The config file and legacy backups are kept; future changes may create new versions.", request.ids.count))
+        }
+        .sheet(item: Binding(get: { store.pendingRestore }, set: { if $0 == nil { store.cancelRestore() } })) { request in
+            RestoreReviewSheet(request: request)
+        }
     }
 }
 
@@ -68,6 +96,27 @@ struct ContentView: View {
 
 struct SidebarView: View {
     @Environment(ConfigStore.self) private var store
+    @AppStorage("sidebarScope") private var scope: String = "global"
+    @State private var activeProject: String?
+    @State private var activeSubmodule: String?
+
+    private var projectAgents: [Agent] {
+        guard let activeProject else { return [] }
+        return store.agents.filter { $0.projectRoot == activeProject }
+    }
+    private var submodulePaths: [String] {
+        Array(Set(projectAgents.compactMap(\.submodulePath))).sorted()
+    }
+    private var scopedAgents: [Agent] {
+        projectAgents.filter { $0.submodulePath == activeSubmodule }
+    }
+
+    private func syncActiveProject() {
+        if activeProject == nil || !store.projectRoots.contains(activeProject!) {
+            activeProject = store.projectRoots.first
+            activeSubmodule = nil
+        }
+    }
 
     var body: some View {
         @Bindable var store = store
@@ -81,23 +130,35 @@ struct SidebarView: View {
                          subtitle: L("cross-agent comparator"), count: store.mcpNames.count,
                          color: .teal)
                     .tag(ConfigStore.mcpID)
+                PanelRow(icon: "gearshape", title: L("Settings"),
+                         subtitle: L("appearance, privacy"), count: 0,
+                         color: .gray)
+                    .tag(ConfigStore.settingsID)
             }
-            Section(L("Detected agents")) {
-                ForEach(store.agents) { agent in
-                    AgentRow(agent: agent)
-                        .tag(agent.id)
-                        .help(agent.notes.map { L($0) } ?? "")
-                        .contextMenu {
-                            Button(L("Open folder in Finder")) {
-                                store.revealInFinder(
-                                    AppPaths.expand(agent.detectionPath))
-                            }
-                            Button(L("Re-scan")) { store.refresh() }
-                        }
+
+            Section {
+                Picker(L("Scope"), selection: $scope) {
+                    Text(L("Global")).tag("global")
+                    Text(L("Projects")).tag("projects")
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+            .listRowSeparator(.hidden)
+
+            if scope == "global" {
+                Section(L("Detected agents")) {
+                    ForEach(store.agents.filter { $0.projectRoot == nil }) { agent in
+                        AgentGroupRow(agent: agent)
+                    }
+                }
+            } else {
+                projectsSection
             }
         }
         .listStyle(.sidebar)
+        .onAppear { syncActiveProject() }
+        .onChange(of: store.projectRoots) { _, _ in syncActiveProject() }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 if !store.externalChanges.isEmpty {
@@ -131,6 +192,111 @@ struct SidebarView: View {
             }
             .background(.bar)
         }
+    }
+
+    @ViewBuilder
+    private var projectsSection: some View {
+        Section {
+            if store.projectRoots.isEmpty {
+                Text(L("No projects registered yet."))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else {
+                projectPicker
+                if !submodulePaths.isEmpty {
+                    scopeChips
+                }
+                ForEach(scopedAgents) { agent in AgentGroupRow(agent: agent) }
+                if scopedAgents.isEmpty {
+                    Text(L("No known agent config found in this folder yet."))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            HStack {
+                Text(L("Projects"))
+                Spacer()
+                Button { store.pickAndAddProject() } label: {
+                    Image(systemName: "plus.circle")
+                }
+                .buttonStyle(.plain)
+                .help(L("Add project…"))
+            }
+        }
+    }
+
+    private var projectPicker: some View {
+        Menu {
+            ForEach(store.projectRoots, id: \.self) { root in
+                Button {
+                    activeProject = root
+                    activeSubmodule = nil
+                } label: {
+                    Label(URL(fileURLWithPath: root).lastPathComponent, systemImage: "folder")
+                }
+            }
+            Divider()
+            if let activeProject {
+                Button(role: .destructive) {
+                    store.removeProject(path: activeProject)
+                } label: {
+                    Label(L("Remove this project"), systemImage: "trash")
+                }
+            }
+            Button { store.pickAndAddProject() } label: {
+                Label(L("Add project…"), systemImage: "plus")
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "folder")
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(activeProject.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? "")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                Spacer()
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 2)
+        }
+        .menuStyle(.borderlessButton)
+    }
+
+    private var scopeChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                scopeChip(label: L("Root"), systemImage: "folder", selected: activeSubmodule == nil) {
+                    activeSubmodule = nil
+                }
+                ForEach(submodulePaths, id: \.self) { sub in
+                    scopeChip(label: sub, systemImage: "shippingbox", selected: activeSubmodule == sub) {
+                        activeSubmodule = sub
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private func scopeChip(label: String, systemImage: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(label, systemImage: systemImage)
+                .font(.system(size: 10.5, weight: .semibold))
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(selected ? Color.accentColor : Color.primary.opacity(0.06))
+                .foregroundStyle(selected ? .white : .secondary)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -200,6 +366,27 @@ struct AgentRow: View {
     }
 }
 
+/// A single agent row inside a project or submodule group — shared context
+/// menu (reveals the agent's own resolution root, not necessarily the
+/// project root: a submodule agent reveals the submodule's own folder).
+struct AgentGroupRow: View {
+    @Environment(ConfigStore.self) private var store
+    let agent: Agent
+
+    var body: some View {
+        AgentRow(agent: agent)
+            .tag(agent.id)
+            .accessibilityIdentifier("agent-row:\(agent.id)")
+            .help(agent.notes.map { L($0) } ?? "")
+            .contextMenu {
+                Button(L("Open folder in Finder")) {
+                    store.revealInFinder(AppPaths.expand(agent.detectionPath))
+                }
+                Button(L("Re-scan")) { store.refresh() }
+            }
+    }
+}
+
 // MARK: - File list
 
 struct FileListView: View {
@@ -231,6 +418,7 @@ struct FileListView: View {
                                         pending: store.externalChanges[file.path] != nil,
                                         dirty: store.dirtyPaths.contains(file.path))
                                     .tag(file.path)
+                                    .accessibilityIdentifier("file-row:\(file.path)")
                                     .contextMenu { fileMenu(file) }
                             }
                         } header: {
@@ -269,8 +457,8 @@ struct FileListView: View {
         Button(L("Open with default app")) { store.openInDefaultApp(file.path) }
         Button(L("Copy path")) { store.copyPath(file.path) }
         Divider()
-        Button(L("Restore previous version")) { store.restorePrevious(file.path) }
-            .disabled(store.history(for: file.path).isEmpty)
+        Button(L("Restore previous version")) { store.requestRestorePrevious(file.path) }
+            .disabled(store.history(for: file.path).isEmpty || file.readOnly)
         Button(L("Dismiss change banner")) { store.acknowledgeExternal(path: file.path) }
             .disabled(store.externalChanges[file.path] == nil)
     }

@@ -6,45 +6,120 @@ globales de agentes de IA (Claude Code, Codex, Antigravity/Gemini, OpenCode).
 ## Build & run
 
 ```bash
-xcodegen generate            # tras añadir/quitar archivos en Sources/
+xcodegen generate            # tras añadir/quitar archivos en Sources/ o Tests/
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
   -configuration Debug -destination 'platform=macOS' build
 open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/AgentsConfig.app
 ```
 
-Para correr la app contra un home alternativo (demos, screenshots, tests)
-sin tocar tus configs reales:
+## Tests
+
+```bash
+xcodegen generate
+xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
+  -configuration Debug -destination 'platform=macOS' test
+```
+
+El target `AgentsConfigTests` compila `Sources/` (sin el `@main`) dentro del
+bundle de tests: la app nunca arranca, no escanea el home real ni pide
+notificaciones. Cada test usa `TestEnvironment` (home temporal canonizado +
+suite UserDefaults exclusiva + fixtures ficticios de Claude/Codex/Gemini/
+OpenCode). Todas las suites cuelgan de `AgentsConfigTestSuite.serialized`: serializar
+hermanas por separado no impide solapamientos durante `await`.
+
+Para correr la app contra un home alternativo (demos, screenshots) sin tocar
+tus configs reales:
 
 ```bash
 AGENTSCONFIG_HOME=/tmp/demo-home \
   .../Build/Products/Debug/AgentsConfig.app/Contents/MacOS/AgentsConfig
 ```
 
+Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
+`scripts/run-demo.py --app /ruta/AgentsConfig.app`: añade una suite exclusiva
+`AGENTSCONFIG_DEFAULTS_SUITE` y desactiva Notifier. No ejecutar fixtures MCP.
+`scripts/verify-history-processes.py` verifica storage real entre 4 procesos.
+
 ## Arquitectura
 
 - `Sources/Services/AgentRegistry.swift` — catálogo declarativo de agentes
   (paths de detección + fuentes de config). Añadir un agente = añadir una entrada.
+  `AgentDefinition.localSources` declara las fuentes relativas a la raíz de un
+  proyecto (`.claude/settings.json`, `.mcp.json`, `AGENTS.md`, etc.);
+  `detectLocal(projectRoot:)` las resuelve en agentes sintéticos
+  (`id: "<agentID>::<projectRoot>"`) reutilizando `resolveFiles` sin tocarlo.
+  También recorre los submódulos git del proyecto (`.gitmodules`, vía
+  `submodulePaths`/`directSubmodulePaths`, acotado a 4 niveles/200 entradas
+  como `skillTree`): cada submódulo con config propia se resuelve igual,
+  con `absRoot = proyecto/submódulo` — el id ya sale único por ruta absoluta,
+  sin lógica especial. `Agent.submodulePath` (relativo al proyecto) es lo
+  único nuevo que distingue a estos agentes en el sidebar.
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
-  buffers de edición, cambios externos, historiales, guardado atómico.
+  buffers de edición, cambios externos, historiales, índice MCP, guardado
+  atómico con control de conflictos (base de edición explícita + verificación
+  del estado real de disco + respaldo previo al reemplazo).
+  `projectRoots`/`addProject`/`removeProject`/`pickAndAddProject` gestionan
+  proyectos locales registrados (persistidos como `[String]` en
+  `UserDefaults["projectRoots"]`, sin normalizar la ruta); `refresh()` los
+  añade a `agents`/`definitions` junto a los globales. Sus servidores MCP
+  aparecen en el comparador cross-agent en modo solo lectura: no son
+  destino válido de copiar/añadir (`mcpDestinationPaths` no se hereda a
+  las rutas locales).
 - `Sources/Services/FileWatcher.swift` — DispatchSource vnode por archivo/dir,
-  debounce 350ms, re-attach tras rename (atomic saves).
+  debounce configurable, reconexión con backoff (150 ms → 15 s) tras
+  rename/delete o fichero ausente; `onAttachedCount` reporta watchers reales.
 - `Sources/Services/Parsers.swift` — JSON/JSONC via JSONSerialization,
   TOML via TOMLKit (`TOMLTable.convert(to: .json)` → árbol Foundation).
 - `Sources/Services/DiffEngine.swift` — diff semántico por key-path;
-  fallback a diff de líneas (`CollectionDifference`).
+  fallback a diff de líneas; los valores bajo claves secretas se emiten
+  enmascarados en todos los consumidores.
 - `Sources/Services/SnapshotStore.swift` — historial en
-  `~/Library/Application Support/AgentsConfig/History/` (index.json + contenido).
+  `~/Library/Application Support/AgentsConfig/History/<sha256(path)>/`
+  (`index.json` formato 2 + `objects/<sha256(content)>` content-addressed,
+  lock de índice `.index.lock`, migración perezosa no destructiva de
+  directorios legado `a__b`). Dirs `0700`, archivos `0600`.
+- `Sources/Services/AtomicWriter.swift` — escritura atómica con preservación
+  de permisos POSIX, escritura a través de symlinks, temporales `0600`
+  exclusivos limpiados en éxito y en fallo.
 - `Sources/Services/Linter.swift` — issues (hooks huérfanos, parse errors) y
   bloques gestionados por terceros (orca-managed, hooks.state, etc.).
-- `Sources/Views/` — NavigationSplitView de 3 columnas: Sidebar (agentes +
-  paneles fijos Actividad/MCP) → lista (archivos | feed | matriz MCP) →
-  Editor (Estructurado | Fuente | Historial) + banners de cambio.
+- `Sources/Services/DocsCatalog.swift` — doc por archivo (ⓘ junto al nombre)
+  y por clave (ⓘ junto a cada fila en "Todas las claves"/tarjetas). Ambas
+  búsquedas emparejan por **sufijo relativo** (`pathSuffixDocs`/
+  `keyTableSuffixes`), no por ruta absoluta exacta: así una copia local de
+  proyecto (`.codex/config.toml`, `.claude/settings.json`, etc.) obtiene la
+  misma documentación que la global sin duplicar entradas.
+- `Sources/Views/` — NavigationSplitView de 3 columnas: Sidebar → lista
+  (archivos | feed | matriz MCP | ajustes) → Editor (Estructurado | Fuente |
+  Historial) + banners de cambio. El Sidebar fija Actividad/MCP/Ajustes
+  arriba, luego un `Picker` segmentado Global/Proyectos (`@AppStorage`):
+  en Global lista los 4 agentes detectados tal cual; en Proyectos, un
+  `Menu` selector de proyecto (con alta/baja) + chips de alcance (raíz +
+  submódulos) + los agentes detectados en ese alcance — nunca los dos
+  árboles a la vez, y sin anidar `DisclosureGroup`s por proyecto/submódulo.
+  `StructuredView.GenericInspector` excluye de "Todas las claves" cualquier
+  clave de nivel superior ya mostrada por una tarjeta especial (MCP,
+  permisos, hooks, plugins, env) — no se duplica; `NodeRow` muestra la
+  descripción de `DocsCatalog` como texto visible bajo la clave, no solo
+  detrás del ⓘ. `McpMatrixView` alinea un ícono por agente en el header con
+  una celda de ancho fijo por fila (check/círculo), en vez de píldoras de
+  texto sin wrap. `MarkdownPreview` (en `EditorView.swift`) parsea bloques
+  reales vía `PresentationIntent` (`.full`, no solo inline) y estiliza cada
+  uno a mano (encabezados, listas, citas, código, regla) — antes solo
+  interpretaba negrita/cursiva y dejaba `#`/`-`/`>` literales.
+- `Sources/Views/SettingsView.swift` — `AppSettingsView`, en archivo propio
+  (no en `AgentsConfigApp.swift`) porque el target de tests excluye ese
+  archivo por el `@main`; se reusa tal cual desde la escena `Settings`
+  nativa (Cmd+,, con `.frame(width: 480)` puesto ahí) y como destino de
+  sidebar (`ConfigStore.settingsID`, sin frame fijo — se adapta al panel).
 - `Sources/Services/Notifier.swift` — notificaciones macOS de cambios
   externos con app en background; click → selecciona el archivo.
+  Inyectable (`ConfigStore(notifier:)`).
 - `Sources/Services/Secrets.swift` — detección/enmascaramiento de
-  apiKeys/tokens en vistas estructurada y fuente read-only.
+  apiKeys/tokens: una sola lista de tokens alimenta `isSecretKey`,
+  `maskText` (JSON/TOML/shell) y `maskLine` (diffs por líneas).
 - `Sources/Services/AppSettings.swift` — preferencias (UserDefaults) usadas
-  por watcher/snapshots/notifier; editables en la escena Settings (⌘,).
+  por watcher/snapshots/notifier; `AppSettings.defaults` es el seam de tests.
 
 ## Convenciones
 
@@ -52,6 +127,62 @@ AGENTSCONFIG_HOME=/tmp/demo-home \
   `AppPaths` (Models.swift); `AGENTSCONFIG_HOME` los redirige.
 - `volatile: true` en un `ConfigSource` = se vigila en vivo pero sin historial
   ni badges (para `~/.claude.json` y otros archivos de estado ruidosos).
-- Escritura estructurada solo para JSON/JSONC; TOML se edita en pestaña Fuente.
-- Guardado atómico preservando permisos POSIX originales.
+- `excludeFromHistory: true` = nunca se hace snapshot (ficheros con secretos).
+- Escritura estructurada solo para JSON/JSONC. TOML se edita en la pestaña
+  Fuente; alta/copia MCP hacia Codex modifica el árbol TOML nativo y conserva
+  tipos ajenos a MCP. Normaliza comentarios/formato, con revisión explícita
+  de diff antes de modificar el buffer y guardado posterior por el usuario.
+- Guardado atómico preservando permisos POSIX originales; symlinks escriben
+  a su destino; enlaces colgantes/ciclos se rechazan; nuevos nacen en `0600`.
+  La comprobación previa + rename no es CAS: cambios externos posteriores al
+  respaldo pueden perderse y no quedan recuperados por dicho respaldo.
+- `McpAdapter.swift` comparte esquemas entre alta/copia; destinos explícitos en
+  AgentRegistry y contrato en `docs/repair-plan/MCP-SCHEMAS.md`. No se asumen
+  equivalencias de auth/timeouts/opciones desconocidas. Review invalidado si
+  cambia buffer o disco; arguments son lista, nunca split por espacios.
+- Hasta 2 MB: inspección estructurada. Entre 2 y 16 MB: `LargeFileWorker`
+  lee/valida/guarda fuera de MainActor; `LargeSourceEditor` pagina Fuente sin
+  cortar caracteres. Deshacer/Buscar por página; límite de pegado visible.
+  Fuera del índice MCP, diff detallado omitido con aviso. Más de 16 MB se rechaza.
+  Diff de líneas máximo
+  2,000 por lado; salida semántica máxima 500. Skills hasta 8 niveles/1,000
+  directorios, sin symlinks de directorio ni `.git`.
+- Diffs siempre redactados; vistas reactivas a máscara, reveal reinicia al
+  cambiar de archivo. Source editable advierte que contiene valores reales.
+- Un archivo declarado que no existe en disco o está vacío nunca se muestra
+  como una tarjeta en blanco sin explicación: `StructuredView`/`MarkdownPreview`
+  distinguen "no existe todavía" de "vacío" y muestran una etiqueta acorde.
+- `historyEnabled` desactiva nuevos snapshots/respaldos sin purgar existentes.
+  HistoryView permite exclusión por archivo y eliminación confirmada de versiones;
+  ID set revisado bajo lock, publicación antes de GC, errores de limpieza reintentables.
+- Guardados UI usan `requestSave` + review/confirmación (incluye Retry/Keep mine).
+  `save(path:)` es primitiva para tests del modelo, no para controles UI.
+  Restauración también muestra diff y fija el contenido/estado revisado.
+  Guardado conserva al menos 2 versiones durante la operación; restore con
+  draft conserva 3, después aplica retención configurada.
 - `selfWriteHashes` distingue escrituras propias de cambios externos.
+- Restaurar/revertir pasa siempre por `pendingRestore` + confirmación única
+  en `ContentView`; un buffer sucio se archiva en el historial antes de
+  descartarse; si falla el archivo se aborta, y si el historial está
+  deshabilitado/excluido se bloquea la restauración de buffers dirty.
+- Errores de guardado en `saveErrors[path]` (visibles con Retry/Dismiss en
+  el footer, independientes del flag dirty); errores de historial en
+  `historyErrors[path]` (nunca se sobrescribe un índice corrupto).
+- Al salir con buffers dirty, `AppDelegate.applicationShouldTerminate`
+  pide confirmación: los edits sin guardar no persisten en disco.
+
+## Reparaciones en curso
+
+- Plan de reparación: `docs/repair-plan/FOLLOWUP.md`. Mejoras nuevas autorizadas:
+  `docs/repair-plan/IMPROVEMENTS.md`.
+- `AgentsConfigUI` compila `UITests/` con host propio `AgentsConfigUITestHost`
+  (`com.tavodev.agentsconfig.ui-fixture`), separado de la app real y del esquema hostless.
+  El host exige home+defaults aislados para arrancar. Compilar con
+  build-for-testing; ejecutar solo con sesión gráfica desbloqueada. Nunca afirmar
+  ejecución UI por el hecho de que compile.
+- Antes de retomar reparaciones, leer su punto de reanudación y comprobar el
+  estado/diff de Git: la primera implementación contiene cambios sin commit.
+- Actualizar tablero, evidencia y próxima acción después de cada reproducción,
+  implementación y verificación relevante; no esperar al final de la sesión.
+- El registro de primera ronda en `docs/repair-plan/PLAN.md` no certifica cierre:
+  la auditoría reabrió garantías de historial, restauración, máscara y escritura.

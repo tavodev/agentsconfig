@@ -4,3 +4,15 @@ xcuserdata/
 DerivedData/
 build/
 .swiftpm/
+
+# Local credentials and release artifacts
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
+*.xcresult/
+*.xcarchive/
+release-artifacts/
+__pycache__/
+*.pyc

@@ -42,23 +42,8 @@ enum DocsCatalog {
     static func fileDoc(for path: String) -> FileDoc? {
         let home = AppPaths.home
         let name = URL(fileURLWithPath: path).lastPathComponent
+        // Home-only files: no project-local equivalent exists for these.
         switch path {
-        case "\(home)/.claude/settings.json":
-            return .init(
-                title: "Claude Code global settings",
-                body: "User-level configuration applied to every Claude Code session: default model, tool permissions, hooks, enabled plugins and environment variables.\n\nPrecedence: managed > local > project > user (this file).",
-                docsURL: URL(string: "https://code.claude.com/docs/en/settings"),
-                titleES: "Ajustes globales de Claude Code",
-                bodyES: "Configuración a nivel usuario que se aplica a todas tus sesiones de Claude Code: modelo por defecto, permisos de herramientas, hooks, plugins activados y variables de entorno.\n\nPrecedencia: sistema gestionado > local > proyecto > usuario (este archivo)."
-            )
-        case "\(home)/.claude/mcp.json":
-            return .init(
-                title: "Claude MCP servers",
-                body: "MCP (Model Context Protocol) servers available to Claude. Each entry defines a local command (stdio) or a remote URL exposing extra tools to the agent.",
-                docsURL: nil,
-                titleES: "Servidores MCP de Claude",
-                bodyES: "Servidores MCP (Model Context Protocol) disponibles para Claude. Cada entrada define un comando local (stdio) o una URL remota que expone herramientas extra al agente."
-            )
         case "\(home)/.claude.json":
             return .init(
                 title: "Claude Code global state",
@@ -66,54 +51,6 @@ enum DocsCatalog {
                 docsURL: nil,
                 titleES: "Estado global de Claude Code",
                 bodyES: "Archivo grande mantenido por Claude Code con estado global: proyectos conocidos, historial y —dentro de la clave mcpServers— los MCP a nivel usuario.\n\nCambia constantemente: se vigila en vivo pero sin historial."
-            )
-        case "\(home)/.codex/config.toml":
-            return .init(
-                title: "Codex configuration",
-                body: "Main Codex file (TOML): model and reasoning effort, approval policy, sandbox, MCP servers, plugins and trusted projects.\n\nCodex rewrites parts of this file; [hooks.state] sections are internal state.",
-                docsURL: URL(string: "https://developers.openai.com/codex/config-reference"),
-                titleES: "Configuración de Codex",
-                bodyES: "Archivo principal de Codex (formato TOML): modelo y esfuerzo de razonamiento, política de aprobación, sandbox, MCP servers, plugins y proyectos de confianza.\n\nCodex reescribe partes de este archivo; las secciones [hooks.state] son estado interno."
-            )
-        case "\(home)/.codex/hooks.json":
-            return .init(
-                title: "Codex hooks",
-                body: "Scripts Codex runs on lifecycle events (before/after tools, on session start…). Check that the referenced paths exist — broken hooks fail silently.",
-                docsURL: nil,
-                titleES: "Hooks de Codex",
-                bodyES: "Scripts que Codex ejecuta en eventos del ciclo de vida (antes/después de herramientas, al iniciar sesión…). Revisa que las rutas apuntadas existan — los hooks rotos fallan en silencio."
-            )
-        case "\(home)/.gemini/settings.json":
-            return .init(
-                title: "Gemini CLI settings",
-                body: "Gemini CLI preferences: selected authentication, theme, IDE integration, checkpoints and MCP servers.",
-                docsURL: nil,
-                titleES: "Ajustes de Gemini CLI",
-                bodyES: "Preferencias del CLI de Gemini: autenticación seleccionada, tema, integración con IDE, checkpoints y servidores MCP."
-            )
-        case "\(home)/.gemini/config/mcp_config.json":
-            return .init(
-                title: "Antigravity/Gemini MCP (post-migration)",
-                body: "After the 2.0 migration, Antigravity (app, IDE and CLI) shares this folder: the common MCP servers live here.",
-                docsURL: nil,
-                titleES: "MCP de Antigravity/Gemini (post-migración)",
-                bodyES: "Tras la migración 2.0, Antigravity (app, IDE y CLI) comparte esta carpeta: aquí viven los servidores MCP comunes."
-            )
-        case "\(home)/.gemini/antigravity/mcp_config.json":
-            return .init(
-                title: "Antigravity MCP (legacy)",
-                body: "Pre-migration location. If ~/.gemini/config/mcp_config.json exists, this file may be ignored — verify before editing.",
-                docsURL: nil,
-                titleES: "MCP de Antigravity (legacy)",
-                bodyES: "Ubicación anterior a la migración. Si existe ~/.gemini/config/mcp_config.json, este archivo puede estar ignorado — verifica antes de editar."
-            )
-        case "\(home)/.config/opencode/opencode.json":
-            return .init(
-                title: "OpenCode configuration",
-                body: "Providers (API keys/endpoints), default model, custom agents, MCP servers and keybindings.\n\nIt declares $schema: the file is validatable against the official schema.",
-                docsURL: nil,
-                titleES: "Configuración de OpenCode",
-                bodyES: "Providers (API keys/endpoints), modelo por defecto, agentes personalizados, MCP servers y atajos de teclado.\n\nDeclara $schema: el archivo es validable contra el esquema oficial."
             )
         case "\(home)/Library/Application Support/Antigravity/User/settings.json":
             return .init(
@@ -125,6 +62,12 @@ enum DocsCatalog {
             )
         default:
             break
+        }
+        // Matched by relative suffix, so the same doc applies whether the
+        // file lives under the global agent home or a registered project
+        // root (Codex/Claude/Gemini/OpenCode local config).
+        if let doc = pathSuffixDocs.first(where: { path.hasSuffix($0.0) })?.1 {
+            return doc
         }
         // Patterns by file name
         switch name {
@@ -182,23 +125,108 @@ enum DocsCatalog {
         }
     }
 
+    /// (relative suffix, doc) pairs — matched against the end of an absolute
+    /// path, so the same entry covers both `~/.codex/config.toml` and any
+    /// registered project's `.codex/config.toml`. Order matters only where
+    /// one suffix could be a tail of another; none of these overlap.
+    private static let pathSuffixDocs: [(String, FileDoc)] = [
+        (".claude/settings.json", .init(
+            title: "Claude Code settings",
+            body: "Configuration applied to Claude Code sessions: default model, tool permissions, hooks, enabled plugins and environment variables.\n\nPrecedence: managed > local > project > user.",
+            docsURL: URL(string: "https://code.claude.com/docs/en/settings"),
+            titleES: "Ajustes de Claude Code",
+            bodyES: "Configuración aplicada a las sesiones de Claude Code: modelo por defecto, permisos de herramientas, hooks, plugins activados y variables de entorno.\n\nPrecedencia: sistema gestionado > local > proyecto > usuario."
+        )),
+        (".claude/settings.local.json", .init(
+            title: "Claude Code local overrides",
+            body: "Personal overrides layered on top of settings.json for this project — meant to stay out of version control (usually gitignored), so teammates don't inherit them.",
+            docsURL: URL(string: "https://code.claude.com/docs/en/settings"),
+            titleES: "Overrides locales de Claude Code",
+            bodyES: "Ajustes personales que se superponen a settings.json en este proyecto — pensados para quedar fuera del control de versiones (normalmente en .gitignore), así el equipo no los hereda."
+        )),
+        (".claude/mcp.json", .init(
+            title: "Claude MCP servers (nonstandard)",
+            body: "MCP servers for Claude in a nonstandard location. The standard project file is .mcp.json at the project root.",
+            docsURL: nil,
+            titleES: "Servidores MCP de Claude (no estándar)",
+            bodyES: "Servidores MCP para Claude en una ubicación no estándar. El archivo estándar de proyecto es .mcp.json en la raíz del proyecto."
+        )),
+        (".mcp.json", .init(
+            title: "Project MCP servers",
+            body: "Standard Claude Code file for project-scoped MCP servers. Checked into the repo and shared with the team, unlike user-level servers in ~/.claude.json.",
+            docsURL: URL(string: "https://code.claude.com/docs/en/mcp"),
+            titleES: "Servidores MCP del proyecto",
+            bodyES: "Archivo estándar de Claude Code para servidores MCP a nivel de proyecto. Se versiona y se comparte con el equipo, a diferencia de los servidores a nivel usuario en ~/.claude.json."
+        )),
+        (".codex/config.toml", .init(
+            title: "Codex configuration",
+            body: "Codex file (TOML): model and reasoning effort, approval policy, sandbox, MCP servers, subagents and hooks.\n\nA project-level copy overrides the user one for the same keys, and is only loaded if the project is trusted.",
+            docsURL: URL(string: "https://developers.openai.com/codex/config-reference"),
+            titleES: "Configuración de Codex",
+            bodyES: "Archivo de Codex (TOML): modelo y esfuerzo de razonamiento, política de aprobación, sandbox, servidores MCP, subagentes y hooks.\n\nUna copia de proyecto sobrescribe la de usuario para las mismas claves, y solo se carga si el proyecto es de confianza."
+        )),
+        (".codex/hooks.json", .init(
+            title: "Codex hooks",
+            body: "Scripts Codex runs on lifecycle events (before/after tools, on session start…). Check that the referenced paths exist — broken hooks fail silently.",
+            docsURL: nil,
+            titleES: "Hooks de Codex",
+            bodyES: "Scripts que Codex ejecuta en eventos del ciclo de vida (antes/después de herramientas, al iniciar sesión…). Revisa que las rutas apuntadas existan — los hooks rotos fallan en silencio."
+        )),
+        (".gemini/settings.json", .init(
+            title: "Gemini CLI settings",
+            body: "Gemini CLI preferences: selected authentication, theme, IDE integration, checkpoints and MCP servers.\n\nA project-level copy overrides the user one for the same keys.",
+            docsURL: nil,
+            titleES: "Ajustes de Gemini CLI",
+            bodyES: "Preferencias del CLI de Gemini: autenticación seleccionada, tema, integración con IDE, checkpoints y servidores MCP.\n\nUna copia de proyecto sobrescribe la de usuario para las mismas claves."
+        )),
+        (".gemini/config/mcp_config.json", .init(
+            title: "Antigravity/Gemini MCP (post-migration)",
+            body: "After the 2.0 migration, Antigravity (app, IDE and CLI) shares this folder: the common MCP servers live here.",
+            docsURL: nil,
+            titleES: "MCP de Antigravity/Gemini (post-migración)",
+            bodyES: "Tras la migración 2.0, Antigravity (app, IDE y CLI) comparte esta carpeta: aquí viven los servidores MCP comunes."
+        )),
+        (".gemini/antigravity/mcp_config.json", .init(
+            title: "Antigravity MCP (legacy)",
+            body: "Pre-migration location. If ~/.gemini/config/mcp_config.json exists, this file may be ignored — verify before editing.",
+            docsURL: nil,
+            titleES: "MCP de Antigravity (legacy)",
+            bodyES: "Ubicación anterior a la migración. Si existe ~/.gemini/config/mcp_config.json, este archivo puede estar ignorado — verifica antes de editar."
+        )),
+        ("opencode.json", .init(
+            title: "OpenCode configuration",
+            body: "Providers (API keys/endpoints), default model, custom agents, MCP servers and keybindings.\n\nIt declares $schema: the file is validatable against the official schema. A project-level copy merges with, and takes precedence over, the user one.",
+            docsURL: nil,
+            titleES: "Configuración de OpenCode",
+            bodyES: "Providers (API keys/endpoints), modelo por defecto, agentes personalizados, MCP servers y atajos de teclado.\n\nDeclara $schema: el archivo es validable contra el esquema oficial. Una copia de proyecto se combina con la de usuario y tiene prioridad sobre ella."
+        )),
+        ("opencode.jsonc", .init(
+            title: "OpenCode configuration (JSONC)",
+            body: "Same as opencode.json, with comments allowed.",
+            docsURL: nil,
+            titleES: "Configuración de OpenCode (JSONC)",
+            bodyES: "Igual que opencode.json, mismo esquema pero con comentarios permitidos."
+        )),
+    ]
+
     // MARK: - Key docs
 
     static func keyDoc(filePath: String, keyPath: [String]) -> KeyDoc? {
-        guard let table = keyTables[filePath] else { return nil }
+        guard let table = keyTableSuffixes.first(where: { filePath.hasSuffix($0.0) })?.1 else { return nil }
         let dotted = keyPath.joined(separator: ".")
         return table[dotted] ?? keyPath.last.flatMap { table[$0] }
     }
 
-    private static var keyTables: [String: [String: KeyDoc]] {
-        let home = AppPaths.home
-        return [
-            "\(home)/.claude/settings.json": claudeKeys,
-            "\(home)/.codex/config.toml": codexKeys,
-            "\(home)/.config/opencode/opencode.json": opencodeKeys,
-            "\(home)/.gemini/settings.json": geminiKeys,
-        ]
-    }
+    /// (relative suffix, key table) pairs — same suffix-matching rationale
+    /// as `pathSuffixDocs`, so per-key docs apply to project-local files too.
+    private static let keyTableSuffixes: [(String, [String: KeyDoc])] = [
+        (".claude/settings.json", claudeKeys),
+        (".claude/settings.local.json", claudeKeys),
+        (".codex/config.toml", codexKeys),
+        ("opencode.json", opencodeKeys),
+        ("opencode.jsonc", opencodeKeys),
+        (".gemini/settings.json", geminiKeys),
+    ]
 
     private static let claudeKeys: [String: KeyDoc] = [
         "model": .init("Claude Code's default model.",
@@ -267,12 +295,16 @@ enum DocsCatalog {
                                       es: "Tamaño de la ventana de contexto en tokens. Bájalo si tu plan limita el contexto."),
         "model_auto_compact_token_limit": .init("Token threshold where Codex auto-compacts the session history.",
                                                 es: "Umbral de tokens donde Codex compacta automáticamente el historial de la sesión."),
-        "approval_policy": .init("When Codex asks for approval before acting.",
-                                 es: "Cuándo Codex pide aprobación antes de actuar.",
-                                 values: ["untrusted": "Asks on anything untrusted", "on-failure": "Only when a command fails",
-                                          "on-request": "The model decides when to ask", "never": "Never asks — use with a strict sandbox"],
-                                 valuesES: ["untrusted": "Pregunta ante todo no-confiable", "on-failure": "Solo si un comando falla",
-                                            "on-request": "El modelo decide cuándo pedir", "never": "Nunca pide — usa con sandbox estricto"]),
+        "model_reasoning_summary": .init("How much of the model's reasoning is summarized and shown.",
+                                         es: "Cuánto del razonamiento del modelo se resume y se muestra.",
+                                         values: ["auto": "Codex decides", "concise": "Short summary",
+                                                  "detailed": "Full summary", "none": "Hidden"],
+                                         valuesES: ["auto": "Codex decide", "concise": "Resumen breve",
+                                                    "detailed": "Resumen completo", "none": "Oculto"]),
+        "approval_policy": .init("When Codex asks for approval before acting. Can also be a table for granular control (per sandbox/rule/MCP elicitation).",
+                                 es: "Cuándo Codex pide aprobación antes de actuar. También puede ser una tabla con control granular (por sandbox/regla/elicitación MCP).",
+                                 values: ["on-request": "The model decides when to ask", "never": "Never asks — use with a strict sandbox"],
+                                 valuesES: ["on-request": "El modelo decide cuándo pedir", "never": "Nunca pide — usa con sandbox estricto"]),
         "sandbox_mode": .init("Isolation level when running commands.",
                               es: "Nivel de aislamiento al ejecutar comandos.",
                               values: ["read-only": "Only reads your filesystem",
@@ -281,38 +313,72 @@ enum DocsCatalog {
                               valuesES: ["read-only": "Solo lee tu sistema de archivos",
                                          "workspace-write": "Puede escribir en el proyecto",
                                          "danger-full-access": "Acceso total — sin sandbox"]),
-        "approvals_reviewer": .init("Who reviews approvals (guardian / user).",
-                                    es: "Quién revisa las aprobaciones (guardian / usuario)."),
+        "approvals_reviewer": .init("Who reviews approval requests.",
+                                    es: "Quién revisa las solicitudes de aprobación.",
+                                    values: ["user": "You review each request", "auto_review": "Codex reviews them automatically"],
+                                    valuesES: ["user": "Tú revisas cada solicitud", "auto_review": "Codex las revisa automáticamente"]),
         "notify": .init("Command Codex sends event notifications to (e.g. a sound script or a toast).",
                         es: "Comando al que Codex envía notificaciones de eventos (ej. un script de sonido o un toast)."),
         "projects": .init("Directories marked as trusted. Codex treats trusted vs new projects differently.",
                           es: "Directorios marcados como de confianza. Codex trata diferente los proyectos trusted vs nuevos."),
-        "mcp_servers": .init("MCP servers available to Codex: [mcp_servers.name] with command/args/env or a remote url.",
-                             es: "Servidores MCP disponibles para Codex: [mcp_servers.nombre] con command/args/env o url remota."),
-        "features": .init("Experimental or beta feature flags Codex recognizes.",
-                          es: "Feature flags experimentales o beta que Codex reconoce."),
-        "plugins": .init("Installed plugins and their state (enabled, path, marketplace).",
-                         es: "Plugins instalados y su estado (enabled, ruta, marketplace)."),
-        "marketplaces": .init("Configured plugin marketplaces (GitHub repos, local…).",
-                              es: "Marketplaces de plugins configurados (GitHub repos, locales…)."),
-        "desktop": .init("Codex desktop app settings (notifications, behavior).",
-                         es: "Ajustes de la app de escritorio de Codex (notificaciones, comportamiento)."),
-        "shell_environment_policy": .init("Which environment variables commands run by Codex inherit (include/exclude/patterns).",
-                                          es: "Qué variables de entorno heredan los comandos que ejecuta Codex (incluir/excluir/patrones)."),
-        "tui": .init("Terminal UI settings (animations, terminal notifications, multi-line paste).",
-                     es: "Ajustes de la interfaz de terminal (animaciones, notificaciones de terminal, paste multi-línea)."),
-        "hooks": .init("Lifecycle hooks + [hooks.state] = internal hashes Codex uses to detect changes.",
-                       es: "Hooks de ciclo de vida + [hooks.state] = hashes internos que Codex usa para detectar cambios."),
+        "mcp_servers": .init("MCP servers available to Codex: [mcp_servers.name] with command/args/env or a remote url. Per-server options include timeouts and an approval mode for its tools.",
+                             es: "Servidores MCP disponibles para Codex: [mcp_servers.nombre] con command/args/env o url remota. Por servidor se pueden definir timeouts y un modo de aprobación para sus herramientas."),
+        "startup_timeout_sec": .init("Seconds Codex waits for an MCP server to start before giving up.",
+                                     es: "Segundos que Codex espera a que un servidor MCP arranque antes de desistir."),
+        "tool_timeout_sec": .init("Seconds Codex waits for an MCP tool call to finish.",
+                                  es: "Segundos que Codex espera a que termine una llamada a herramienta MCP."),
+        "default_tools_approval_mode": .init("Default approval requirement for this MCP server's tools.",
+                                             es: "Requisito de aprobación por defecto para las herramientas de este servidor MCP.",
+                                             values: ["auto": "No approval needed", "prompt": "Always asks",
+                                                      "writes": "Only asks for write-like actions", "approve": "Requires explicit approval"],
+                                             valuesES: ["auto": "No requiere aprobación", "prompt": "Siempre pregunta",
+                                                        "writes": "Solo pregunta en acciones de escritura", "approve": "Requiere aprobación explícita"]),
+        "features": .init("Experimental or beta feature flags Codex recognizes (e.g. hooks, apps, multi_agent, network_proxy, memories, shell_tool) — most default to off.",
+                          es: "Feature flags experimentales o beta que Codex reconoce (p. ej. hooks, apps, multi_agent, network_proxy, memories, shell_tool) — la mayoría vienen desactivados por defecto."),
+        "plugins": .init("Installed plugins and their state (enabled, and which of their MCP servers are on).",
+                         es: "Plugins instalados y su estado (enabled, y cuáles de sus servidores MCP están activos)."),
+        "marketplaces": .init("Configured plugin marketplaces: where to fetch them from (git repo or local path) and which ref/subpaths to use.",
+                              es: "Marketplaces de plugins configurados: de dónde se obtienen (repo git o ruta local) y qué ref/subrutas usar."),
+        "desktop": .init("Codex desktop app settings, including custom file handlers (which app opens which file type).",
+                         es: "Ajustes de la app de escritorio de Codex, incluidos manejadores de archivo personalizados (qué app abre qué tipo de archivo)."),
+        "shell_environment_policy": .init("Which environment variables commands run by Codex inherit: inherit mode (all/core/none), include/exclude filters and extra variables to set.",
+                                          es: "Qué variables de entorno heredan los comandos que ejecuta Codex: modo de herencia (all/core/none), filtros de inclusión/exclusión y variables extra a definir."),
+        "tui": .init("Terminal UI settings: notifications, keymaps, theme, vim mode, raw output mode, animations.",
+                     es: "Ajustes de la interfaz de terminal: notificaciones, atajos de teclado, tema, modo vim, modo de salida cruda, animaciones."),
+        "hooks": .init("Lifecycle hook scripts, grouped by event (PreToolUse, PostToolUse, SessionStart, SessionEnd, SubagentStart, SubagentStop, UserPromptSubmit, Stop, Interrupt). Gated behind features.hooks (off by default); [hooks.state] holds internal hashes Codex uses to detect changes.",
+                       es: "Scripts de hooks agrupados por evento (PreToolUse, PostToolUse, SessionStart, SessionEnd, SubagentStart, SubagentStop, UserPromptSubmit, Stop, Interrupt). Depende de features.hooks (desactivado por defecto); [hooks.state] guarda hashes internos que Codex usa para detectar cambios."),
+        "hooks.PreToolUse": .init("Runs before Codex executes a tool call.", es: "Se ejecuta antes de que Codex corra una llamada a herramienta."),
+        "hooks.PostToolUse": .init("Runs after a tool call finishes.", es: "Se ejecuta después de que termina una llamada a herramienta."),
+        "hooks.SessionStart": .init("Runs when a new Codex session starts.", es: "Se ejecuta al iniciar una nueva sesión de Codex."),
+        "hooks.SessionEnd": .init("Runs when a Codex session ends.", es: "Se ejecuta al terminar una sesión de Codex."),
+        "hooks.SubagentStart": .init("Runs when Codex spawns a subagent.", es: "Se ejecuta cuando Codex crea un subagente."),
+        "hooks.SubagentStop": .init("Runs when a subagent finishes.", es: "Se ejecuta cuando un subagente termina."),
+        "hooks.UserPromptSubmit": .init("Runs when the user submits a prompt.", es: "Se ejecuta cuando el usuario envía un prompt."),
+        "hooks.Stop": .init("Runs when the main agent stops responding.", es: "Se ejecuta cuando el agente principal deja de responder."),
+        "hooks.Interrupt": .init("Runs when a running agent is interrupted.", es: "Se ejecuta cuando se interrumpe un agente en curso."),
         "profiles": .init("Named config profiles — activated with --profile or CODEX_PROFILE.",
                           es: "Perfiles nombrados de configuración — activables con --profile o CODEX_PROFILE."),
         "personality": .init("Tone/style of the agent's answers.",
                              es: "Tono/estilo de las respuestas del agente.",
                              values: ["friendly": "Warm", "pragmatic": "Direct", "none": "Neutral"],
                              valuesES: ["friendly": "Cercano", "pragmatic": "Directo", "none": "Neutral"]),
-        "review_model": .init("Separate model for code review, if you want it different from the main one.",
-                              es: "Modelo distinto usado para code review, si quieres separarlo del principal."),
-        "hide_agent_reasoning": .init("Hides agent reasoning in the UI (cleaner answers).",
-                                      es: "Oculta el razonamiento del agente en la UI (respuestas más limpias)."),
+        "review_model": .init("Separate model for code review (/review), if you want it different from the main one.",
+                              es: "Modelo distinto usado para code review (/review), si quieres separarlo del principal."),
+        "hide_agent_reasoning": .init("Hides agent reasoning in the TUI and codex exec (cleaner answers). See also show_raw_agent_reasoning.",
+                                      es: "Oculta el razonamiento del agente en el TUI y en codex exec (respuestas más limpias). Ver también show_raw_agent_reasoning."),
+        "show_raw_agent_reasoning": .init("Shows the model's raw, unsummarized reasoning instead of the default summary.",
+                                          es: "Muestra el razonamiento crudo del modelo, sin resumir, en vez del resumen por defecto."),
+        "agents": .init("Multi-agent / subagent settings: default model and reasoning effort for spawned subagents, and how many can run concurrently.",
+                        es: "Ajustes de multi-agente/subagentes: modelo y esfuerzo de razonamiento por defecto para los subagentes que se crean, y cuántos pueden correr a la vez."),
+        "agents.enabled": .init("Enables multi-agent tools (spawning subagents).", es: "Activa las herramientas de multi-agente (creación de subagentes).", def: "true"),
+        "agents.default_subagent_model": .init("Default model used for subagents Codex spawns.",
+                                                es: "Modelo por defecto usado para los subagentes que crea Codex."),
+        "agents.default_subagent_reasoning_effort": .init("Default reasoning effort for those subagents.",
+                                                           es: "Esfuerzo de razonamiento por defecto de esos subagentes."),
+        "agents.max_concurrent_threads_per_session": .init("Maximum number of subagent threads running at once, per session.",
+                                                            es: "Máximo de hilos de subagentes corriendo a la vez, por sesión."),
+        "agents.interrupt_message": .init("Shows the model a visible message when a subagent gets interrupted.",
+                                          es: "Muestra al modelo un mensaje visible cuando se interrumpe un subagente.", def: "true"),
     ]
 
     private static let opencodeKeys: [String: KeyDoc] = [

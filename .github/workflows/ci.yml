@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.1.1.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Check publication credential patterns
+        run: python3 scripts/audit-publication.py
+
+      - name: Install pinned XcodeGen
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/yonaskolb/XcodeGen/releases/download/2.45.4/xcodegen.zip \
+            -o "$RUNNER_TEMP/xcodegen.zip"
+          echo "090ec29491aad50aec10631bf6e62253fed733c50f3aab0f5ffc86bc170bdbef  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen-tools"
+          echo "$RUNNER_TEMP/xcodegen-tools/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Check generated project
+        run: |
+          xcodegen --version
+          xcodegen generate
+          git diff --exit-code -- AgentsConfig.xcodeproj Support/Info.plist
+
+      - name: Resolve locked packages
+        run: |
+          xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
+            -configuration Debug -destination 'platform=macOS' \
+            -onlyUsePackageVersionsFromResolvedFile -resolvePackageDependencies
+          git diff --exit-code -- AgentsConfig.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+      - name: Build release candidate
+        run: |
+          xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
+            -configuration Release -destination 'platform=macOS' \
+            -disableAutomaticPackageResolution build
+
+      # Hostless logic + AppKit tests; live UI acceptance is documented separately.
+      # The shared serialized parent prevents overlap of temporary-home seams.
+      - name: Test
+        run: |
+          xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
+            -configuration Debug -destination 'platform=macOS' \
+            -disableAutomaticPackageResolution test
+
+      - name: Compile isolated UI tests (no launch)
+        run: |
+          xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfigUI \
+            -configuration Debug -destination 'platform=macOS' \
+            -disableAutomaticPackageResolution build-for-testing
+
+      - name: Verify multiprocess history
+        run: python3 scripts/verify-history-processes.py

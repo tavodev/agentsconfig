@@ -133,3 +133,67 @@ struct CompareView: View {
         }
     }
 }
+
+struct SaveReviewSheet: View {
+    let review: ConfigStore.SaveReview
+    @Environment(ConfigStore.self) private var store
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L("Review save")).font(.headline)
+            Text(review.path.replacingOccurrences(of: AppPaths.home, with: "~")).font(.caption)
+            if review.overwritesConflict {
+                Label(L("This save replaces the conflicting disk version."), systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+            }
+            if !review.historyEnabled {
+                Text(L("History is disabled for this destination; saving will not create a backup."))
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            Text(L("Secret values remain hidden in the review. Saving writes the original values."))
+                .font(.caption).foregroundStyle(.secondary)
+            if review.original.utf8.count > Parsers.maximumFileBytes || review.proposed.utf8.count > Parsers.maximumFileBytes {
+                Text(L("Large-file review: %d bytes on disk → %d proposed bytes. Detailed diff is omitted; inspect Source before confirming.", review.original.utf8.count, review.proposed.utf8.count))
+                    .font(.caption).foregroundStyle(.orange)
+            }
+            Divider()
+            ScrollView {
+                CompareView(baseText: review.original, baseLabel: L("Current on disk"),
+                            otherText: review.proposed, otherLabel: L("Proposed"), format: review.format)
+            }
+            HStack {
+                Button(L("Cancel")) { store.cancelSaveReview() }.keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(L("Confirm save")) { store.confirmSaveReview() }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("confirm-save")
+            }
+        }.padding(20).frame(minWidth: 650, minHeight: 420)
+        .accessibilityIdentifier("save-review")
+    }
+}
+
+struct RestoreReviewSheet: View {
+    let request: RestoreRequest
+    @Environment(ConfigStore.self) private var store
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L("Review restore")).font(.headline)
+            Text(store.restoreExplanation(for: request)).font(.caption).foregroundStyle(.secondary)
+            if store.preparingRestore { ProgressView(L("Preparing review…")) }
+            else if let proposed = store.restoreProposedText {
+                ScrollView {
+                    CompareView(baseText: store.restoreOriginalText, baseLabel: L("Current on disk"),
+                                otherText: proposed, otherLabel: L("Proposed"), format: store.format(for: request.path))
+                }
+            } else { Text(L("Version content unavailable")).foregroundStyle(.red) }
+            HStack {
+                Button(L("Cancel")) { store.cancelRestore() }.keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(L("Restore")) { store.confirmRestore() }
+                    .disabled(store.preparingRestore || store.restoreProposedText == nil || store.isReadOnly(request.path))
+                    .accessibilityIdentifier("confirm-restore")
+            }
+        }.padding(20).frame(minWidth: 650, minHeight: 420)
+        .accessibilityIdentifier("restore-review")
+    }
+}
