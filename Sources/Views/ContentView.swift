@@ -99,6 +99,8 @@ struct SidebarView: View {
     @AppStorage("sidebarScope") private var scope: String = "global"
     @State private var activeProject: String?
     @State private var activeSubmodule: String?
+    @State private var showProjectSelector = false
+    @State private var showScopeSelector = false
 
     private var projectAgents: [Agent] {
         guard let activeProject else { return [] }
@@ -111,11 +113,36 @@ struct SidebarView: View {
         projectAgents.filter { $0.submodulePath == activeSubmodule }
     }
 
+    private var activeProjectName: String {
+        guard let activeProject else { return "" }
+        return URL(fileURLWithPath: activeProject).lastPathComponent
+    }
+
+    private var activeScopeTitle: String { activeSubmodule ?? L("Project root") }
+
+    private var activeScopeDetail: String {
+        activeSubmodule == nil
+            ? L("%d agents with configuration", scopedAgents.count)
+            : L("Git submodule")
+    }
+
+    private var activeScopeSymbol: String {
+        activeSubmodule == nil ? "folder.fill" : "shippingbox.fill"
+    }
+
     private func syncActiveProject() {
         if activeProject == nil || !store.projectRoots.contains(activeProject!) {
             activeProject = store.projectRoots.first
             activeSubmodule = nil
         }
+        if let activeSubmodule, !submodulePaths.contains(activeSubmodule) {
+            self.activeSubmodule = nil
+        }
+    }
+
+    private func selectProject(_ root: String) {
+        activeProject = root
+        activeSubmodule = nil
     }
 
     var body: some View {
@@ -159,6 +186,7 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .onAppear { syncActiveProject() }
         .onChange(of: store.projectRoots) { _, _ in syncActiveProject() }
+        .onChange(of: submodulePaths) { _, _ in syncActiveProject() }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 if !store.externalChanges.isEmpty {
@@ -204,7 +232,7 @@ struct SidebarView: View {
             } else {
                 projectPicker
                 if !submodulePaths.isEmpty {
-                    scopeChips
+                    scopeSelector
                 }
                 ForEach(scopedAgents) { agent in AgentGroupRow(agent: agent) }
                 if scopedAgents.isEmpty {
@@ -227,76 +255,184 @@ struct SidebarView: View {
     }
 
     private var projectPicker: some View {
-        Menu {
-            ForEach(store.projectRoots, id: \.self) { root in
-                Button {
-                    activeProject = root
-                    activeSubmodule = nil
-                } label: {
-                    Label(URL(fileURLWithPath: root).lastPathComponent, systemImage: "folder")
-                }
-            }
-            Divider()
-            if let activeProject {
-                Button(role: .destructive) {
-                    store.removeProject(path: activeProject)
-                } label: {
-                    Label(L("Remove this project"), systemImage: "trash")
-                }
-            }
-            Button { store.pickAndAddProject() } label: {
-                Label(L("Add project…"), systemImage: "plus")
-            }
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "folder")
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(L("Project"))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(activeProject.map { URL(fileURLWithPath: $0).lastPathComponent } ?? "")
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundStyle(.primary)
-                    Text(activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? "")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                }
                 Spacer()
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
+                projectActions
             }
-            .padding(.vertical, 2)
-        }
-        .menuStyle(.borderlessButton)
-    }
-
-    private var scopeChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                scopeChip(label: L("Root"), systemImage: "folder", selected: activeSubmodule == nil) {
-                    activeSubmodule = nil
-                }
-                ForEach(submodulePaths, id: \.self) { sub in
-                    scopeChip(label: sub, systemImage: "shippingbox", selected: activeSubmodule == sub) {
-                        activeSubmodule = sub
+            Button { showProjectSelector = true } label: {
+                ContextSelectorLabel(
+                    icon: "folder.fill",
+                    title: activeProjectName,
+                    detail: activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? ""
+                )
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showProjectSelector, arrowEdge: .trailing) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L("Select project"))
+                        .font(.headline)
+                    ForEach(store.projectRoots, id: \.self) { root in
+                        Button {
+                            selectProject(root)
+                            showProjectSelector = false
+                        } label: {
+                            SelectorOptionRow(
+                                icon: "folder.fill",
+                                title: URL(fileURLWithPath: root).lastPathComponent,
+                                detail: root.replacingOccurrences(of: AppPaths.home, with: "~"),
+                                selected: root == activeProject
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(12)
+                .frame(width: 290, alignment: .leading)
             }
-            .padding(.vertical, 2)
         }
     }
 
-    private func scopeChip(label: String, systemImage: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(label, systemImage: systemImage)
-                .font(.system(size: 10.5, weight: .semibold))
-                .padding(.horizontal, 8).padding(.vertical, 3)
-                .background(selected ? Color.accentColor : Color.primary.opacity(0.06))
-                .foregroundStyle(selected ? .white : .secondary)
-                .clipShape(Capsule())
+    private var projectActions: some View {
+        Menu {
+            if let activeProject {
+                Button(L("Open folder in Finder")) {
+                    store.revealInFinder(activeProject)
+                }
+                Divider()
+                Button(L("Remove project"), role: .destructive) {
+                    store.removeProject(path: activeProject)
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
         }
-        .buttonStyle(.plain)
+        .menuStyle(.borderlessButton)
+        .help(L("Project actions"))
+    }
+
+    private var scopeSelector: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(L("Scope"))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            Button { showScopeSelector = true } label: {
+                ContextSelectorLabel(
+                    icon: activeScopeSymbol,
+                    title: activeScopeTitle,
+                    detail: activeScopeDetail
+                )
+            }
+            .buttonStyle(.plain)
+            .popover(isPresented: $showScopeSelector, arrowEdge: .trailing) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L("Select scope"))
+                        .font(.headline)
+                    Button {
+                        activeSubmodule = nil
+                        showScopeSelector = false
+                    } label: {
+                        SelectorOptionRow(
+                            icon: "folder.fill",
+                            title: L("Project root"),
+                            detail: activeProjectName,
+                            selected: activeSubmodule == nil
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    ForEach(submodulePaths, id: \.self) { sub in
+                        Button {
+                            activeSubmodule = sub
+                            showScopeSelector = false
+                        } label: {
+                            SelectorOptionRow(
+                                icon: "shippingbox.fill",
+                                title: sub,
+                                detail: L("Git submodule"),
+                                selected: activeSubmodule == sub
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(12)
+                .frame(width: 290, alignment: .leading)
+            }
+        }
+    }
+}
+
+/// A context selector makes project and scope visible without turning a
+/// sidebar into a horizontally scrolling navigation strip.
+private struct ContextSelectorLabel: View {
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: icon)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Color.accentColor)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 30, height: 30)
+                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Text(detail)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Spacer(minLength: 6)
+            Image(systemName: "chevron.up.chevron.down")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.tertiary)
+        }
+        .contentShape(Rectangle())
+        .padding(.vertical, 3)
+    }
+}
+
+private struct SelectorOptionRow: View {
+    let icon: String
+    let title: String
+    let detail: String
+    let selected: Bool
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Image(systemName: icon)
+                .foregroundStyle(selected ? .white : Color.accentColor)
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .lineLimit(1)
+                Text(detail)
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Spacer()
+            if selected {
+                Image(systemName: "checkmark")
+                    .font(.caption.weight(.bold))
+            }
+        }
+        .foregroundStyle(selected ? .white : .primary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(selected ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .contentShape(Rectangle())
     }
 }
 
@@ -335,19 +471,13 @@ struct PanelRow: View {
 
 struct AgentRow: View {
     let agent: Agent
+    var displayName: String? = nil
 
     var body: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(agent.color.gradient)
-                    .frame(width: 28, height: 28)
-                Image(systemName: agent.symbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
+            AgentProductIcon(agent: agent, size: 28)
             VStack(alignment: .leading, spacing: 1) {
-                Text(agent.name)
+                Text(displayName ?? agent.name)
                     .font(.system(size: 13, weight: .medium))
                 Text(L("%d files", agent.files.count))
                     .font(.caption2)
@@ -374,7 +504,7 @@ struct AgentGroupRow: View {
     let agent: Agent
 
     var body: some View {
-        AgentRow(agent: agent)
+        AgentRow(agent: agent, displayName: sidebarDisplayName)
             .tag(agent.id)
             .accessibilityIdentifier("agent-row:\(agent.id)")
             .help(agent.notes.map { L($0) } ?? "")
@@ -384,6 +514,12 @@ struct AgentGroupRow: View {
                 }
                 Button(L("Re-scan")) { store.refresh() }
             }
+    }
+
+    private var sidebarDisplayName: String? {
+        guard agent.projectRoot != nil,
+              let suffix = agent.name.range(of: " (", options: .backwards) else { return nil }
+        return String(agent.name[..<suffix.lowerBound])
     }
 }
 

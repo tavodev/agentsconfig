@@ -1,5 +1,18 @@
 import SwiftUI
 
+/// The matrix compares agent *families*, while its detail pane still exposes
+/// every global/project source. Project-local configurations have synthetic
+/// ids (`codex::/path/to/project`), which must not turn a narrow matrix into
+/// one column per project.
+private func mcpAgentFamilyID(_ id: String) -> String {
+    String(id.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).first ?? Substring(id))
+}
+
+private func mcpMatrixAgents(_ agents: [Agent]) -> [Agent] {
+    var families = Set<String>()
+    return agents.filter { families.insert(mcpAgentFamilyID($0.id)).inserted }
+}
+
 /// Content column: matrix of MCP server names × agents.
 struct McpMatrixView: View {
     @Environment(ConfigStore.self) private var store
@@ -11,6 +24,8 @@ struct McpMatrixView: View {
         guard !query.isEmpty else { return all }
         return all.filter { $0.localizedCaseInsensitiveContains(query) }
     }
+
+    private var agents: [Agent] { mcpMatrixAgents(store.agents) }
 
     var body: some View {
         @Bindable var store = store
@@ -25,7 +40,7 @@ struct McpMatrixView: View {
                 List(selection: $store.selectedMcpName) {
                     Section {
                         ForEach(names, id: \.self) { name in
-                            McpMatrixRow(name: name, agents: store.agents)
+                            McpMatrixRow(name: name, agents: agents)
                                 .tag(name)
                         }
                     } header: {
@@ -34,10 +49,9 @@ struct McpMatrixView: View {
                         // a real table instead of a wrapping pill list.
                         HStack(spacing: 0) {
                             Text(L("Server"))
-                            Spacer()
-                            ForEach(store.agents) { agent in
-                                Image(systemName: agent.symbol)
-                                    .foregroundStyle(agent.color)
+                                .frame(width: 106, alignment: .leading)
+                            ForEach(agents) { agent in
+                                AgentProductIcon(agent: agent, size: 15)
                                     .frame(width: 26)
                                     .help(agent.name)
                             }
@@ -76,21 +90,22 @@ struct McpMatrixRow: View {
 
     var body: some View {
         let entries = store.mcpEntries(for: name)
-        let ownerIDs = Set(entries.map(\.agentID))
-        HStack(spacing: 6) {
-            Text(name)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-            if let first = entries.first {
-                Text(first.isRemote ? L("remote") : L("local"))
-                    .font(.system(size: 8, weight: .bold))
-                    .padding(.horizontal, 4).padding(.vertical, 1)
-                    .background((first.isRemote ? Color.purple : Color.teal).opacity(0.15))
-                    .foregroundStyle(first.isRemote ? Color.purple : Color.teal)
-                    .clipShape(Capsule())
+        let ownerIDs = Set(entries.map { mcpAgentFamilyID($0.agentID) })
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name)
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                if let first = entries.first {
+                    Text(first.isRemote ? L("remote") : L("local"))
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
             }
-            Spacer(minLength: 8)
+            .frame(width: 106, alignment: .leading)
             ForEach(agents) { agent in
-                let has = ownerIDs.contains(agent.id)
+                let has = ownerIDs.contains(mcpAgentFamilyID(agent.id))
                 Image(systemName: has ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 11))
                     .foregroundStyle(has ? agent.color : Color.secondary.opacity(0.25))
@@ -110,6 +125,12 @@ struct McpDetailView: View {
         store.mcpEntries(for: store.selectedMcpName ?? "")
     }
 
+    private var agents: [Agent] { mcpMatrixAgents(store.agents) }
+
+    private var configuredAgentCount: Int {
+        Set(entries.map { mcpAgentFamilyID($0.agentID) }).count
+    }
+
     var body: some View {
         if let name = store.selectedMcpName, !entries.isEmpty {
             ScrollView {
@@ -121,7 +142,7 @@ struct McpDetailView: View {
                         Text(name)
                             .font(.system(size: 16, weight: .semibold, design: .monospaced))
                         Spacer()
-                        Text(L("%d of %d agents", entries.count, store.agents.count))
+                        Text(L("%d of %d agents", configuredAgentCount, agents.count))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -144,11 +165,16 @@ struct McpDetailView: View {
                         .padding(.vertical, 6)
                     }
 
-                    ForEach(store.agents) { agent in
-                        if let entry = entries.first(where: { $0.agentID == agent.id }) {
-                            McpAgentCard(agent: agent, entry: entry)
-                        } else {
+                    ForEach(agents) { agent in
+                        let familyEntries = entries.filter {
+                            mcpAgentFamilyID($0.agentID) == mcpAgentFamilyID(agent.id)
+                        }
+                        if familyEntries.isEmpty {
                             McpMissingCard(agent: agent, source: entries.first)
+                        } else {
+                            ForEach(familyEntries) { entry in
+                                McpAgentCard(agent: agent, entry: entry)
+                            }
                         }
                     }
                 }
@@ -173,7 +199,7 @@ struct McpAgentCard: View {
         Card {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
-                    Image(systemName: agent.symbol).foregroundStyle(agent.color)
+                    AgentProductIcon(agent: agent, size: 16)
                     Text(agent.name).font(.system(size: 13, weight: .semibold))
                     if let en = entry.enabled {
                         Text(en ? L("enabled") : L("disabled"))
@@ -226,8 +252,8 @@ struct McpMissingCard: View {
     var body: some View {
         Card {
             HStack(spacing: 8) {
-                Image(systemName: agent.symbol)
-                    .foregroundStyle(.secondary)
+                AgentProductIcon(agent: agent, size: 16)
+                    .opacity(0.55)
                 Text(agent.name)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
