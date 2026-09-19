@@ -13,3 +13,11 @@ surfaces and are used only to identify the related configuration source.
 
 The marks remain property of their respective owners; see the relevant brand
 guidelines before reusing them outside this identification UI.
+
+On 2026-09-19 the project owner confirmed that retaining and redistributing
+these four marks inside this repository is authorized **only** as nominative
+identification of the corresponding products and subject to each owner's
+official brand guidelines. This authorization does not grant, and this project
+does not claim, any broader trademark rights. The application icon artwork
+(`Resources/icon.png`, generated via `scripts/make_icon.swift`) is a
+separate owner-selected asset documented in `docs/icon.md`.

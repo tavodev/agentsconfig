@@ -1,3 +1,6 @@
+# Local-check recipe. Per owner decision (2026-09-19) this repository is private
+# and GitHub Actions is disabled at repository level — this workflow is kept as
+# documentation of the required checks and is not expected to execute.
 name: CI
 
 on:

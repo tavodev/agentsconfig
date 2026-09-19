@@ -13,7 +13,7 @@ Preparation does not authorize publication, tags, pushes, repository visibility 
 
 ## Source publication
 
-After authorization, commit the reviewed candidate, run hosted CI on that exact commit, and require successful checks before creating the version tag and release. Configure default-branch protections and private vulnerability reporting where available. Confirm the security email is monitored. Do not claim hosted CI passed from local results.
+Owner decision (2026-09-19): publication target is a **private** GitHub repository under the `tavodev` account with **GitHub Actions disabled at repository level** — no hosted CI. Validation on the exact candidate is local-only (steps above). Sequence authorized by the owner: create the private repository without pushing, disable Actions at repository level, verify the setting, then add `origin` and push. If the repository already exists or Actions disablement cannot be verified, escalate instead of improvising. The security email is confirmed monitored (2026-09-19). Tags, releases and any public visibility change remain separate owner-only actions; do not claim CI results that were not produced.
 
 ## Optional binary distribution
 
