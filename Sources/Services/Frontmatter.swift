@@ -64,4 +64,3 @@ enum KnowledgeGlob {
         return path.range(of: regex + "$", options: .regularExpression) != nil
     }
 }
-

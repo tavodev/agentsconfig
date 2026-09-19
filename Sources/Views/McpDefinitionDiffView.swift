@@ -28,4 +28,3 @@ struct McpDefinitionDiffView: View {
         }.padding(16)
     }
 }
-

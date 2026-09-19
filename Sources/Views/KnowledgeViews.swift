@@ -96,4 +96,3 @@ private struct ResourcePreviewView: View {
         }
     }
 }
-

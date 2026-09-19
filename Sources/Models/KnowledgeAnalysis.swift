@@ -35,4 +35,3 @@ struct KnowledgeAnalysis {
     var skills: [SkillPackage] = []
     var notices: [String] = []
 }
-

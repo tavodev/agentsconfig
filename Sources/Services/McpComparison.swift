@@ -74,4 +74,3 @@ struct McpComparedSource: Identifiable {
         DiffEngine.diff(oldText: "", newText: "", oldTree: normalized(a), newTree: normalized(b))
     }
 }
-

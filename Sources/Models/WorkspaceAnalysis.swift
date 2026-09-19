@@ -40,4 +40,3 @@ struct ConfigurationAnalysis {
     var observedAt = Date()
     var context: AnalysisContext
 }
-

@@ -87,4 +87,3 @@ struct PortableReport: Codable {
         return markdown ? "# AgentsConfig diagnostic report\n\nThis is an on-disk estimate; session state is not verified.\n\n```json\n" + json + "\n```\n" : json + "\n"
     }
 }
-

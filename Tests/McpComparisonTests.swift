@@ -49,4 +49,3 @@ struct McpComparisonTests {
     }
 }
 }
-

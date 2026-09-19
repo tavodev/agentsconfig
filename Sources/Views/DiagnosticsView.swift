@@ -115,4 +115,3 @@ struct CatalogSearchHit: Identifiable {
     let path: String
     let excerpt: String
 }
-

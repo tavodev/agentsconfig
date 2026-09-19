@@ -123,4 +123,3 @@ import Foundation
         return values.values.map(\.setting).sorted { $0.id < $1.id }
     }
 }
-

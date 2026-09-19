@@ -141,4 +141,3 @@ struct WorkspaceAnalysisView: View {
         }.listStyle(.inset)
     }
 }
-
