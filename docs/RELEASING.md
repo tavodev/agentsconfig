@@ -5,7 +5,7 @@ Preparation does not authorize publication, tags, pushes, repository visibility 
 ## Candidate verification
 
 1. Review all tracked and new files. Run `python3 scripts/audit-publication.py` as a baseline credential-pattern check, then perform a broader private secret/provenance review against the working tree and all Git history intended for publication. Investigate findings privately; never paste secret values into logs. Review screenshots and asset provenance separately.
-2. From a clean source copy, resolve only Package.resolved versions, regenerate with XcodeGen 2.45.4, check generated-file drift, build Release and run hostless tests.
+2. From a clean source copy, resolve only Package.resolved versions, regenerate with XcodeGen 2.45.4, check generated-file drift, run `git diff --check` (worktree and `git diff --check <base>..HEAD` for the candidate range), build Release and run hostless tests.
 3. Run `python3 scripts/verify-history-processes.py`.
 4. Compile and execute `AgentsConfigUI` on an unlocked macOS desktop. Complete the live matrix in repair-plan/VERIFICATION.md using fictional data. Preserve failures and limitations.
 5. Reconcile README, CHANGELOG, draft release notes, version/build in project.yml and generated Info.plist, and third-party notices. Record results in RELEASE_READINESS.md.
