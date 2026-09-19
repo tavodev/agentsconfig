@@ -21,7 +21,7 @@ struct McpMatrixView: View {
     @State private var showDetail = false
 
     private var names: [String] {
-        let all = store.mcpNames
+        let all = Array(Set(store.contextualMcpIndex.map(\.name))).sorted()
         guard !query.isEmpty else { return all }
         return all.filter { $0.localizedCaseInsensitiveContains(query) }
     }
@@ -35,6 +35,14 @@ struct McpMatrixView: View {
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L("MCP servers")).font(.title2.weight(.semibold))
+                    HStack {
+                        Picker(L("Project context"), selection: $store.mcpProjectFilter) {
+                            Text(L("All sources")).tag("__all__")
+                            Text(L("Global only")).tag("")
+                            ForEach(store.mcpContextPaths, id: \.self) { Text($0).tag($0) }
+                        }.accessibilityIdentifier("mcp-project-filter")
+                        TextField(L("Codex profile (optional)"), text: $store.mcpProfileFilter).frame(maxWidth: 240)
+                    }
                     Text(L("Compare configured servers across agents. Select a server to inspect its sources."))
                         .font(.callout).foregroundStyle(.secondary)
                 }
@@ -51,7 +59,7 @@ struct McpMatrixView: View {
                         ForEach(agents) { agent in
                             VStack(spacing: 4) {
                                 AgentProductIcon(agent: agent, size: 22)
-                                Text(mcpAgentFamilyID(agent.id) == "antigravity" ? "Gemini" : agent.name.components(separatedBy: " (").first ?? agent.name)
+                                Text(agent.name.components(separatedBy: " (").first ?? agent.name)
                                     .font(.callout).lineLimit(1).truncationMode(.tail)
                             }
                             .frame(width: columnWidth)
@@ -117,7 +125,7 @@ struct McpMatrixRow: View {
     @Environment(ConfigStore.self) private var store
 
     var body: some View {
-        let entries = store.mcpEntries(for: name)
+        let entries = store.contextualMcpIndex.filter { $0.name == name }
         let ownerIDs = Set(entries.map { mcpAgentFamilyID($0.agentID) })
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
@@ -129,11 +137,13 @@ struct McpMatrixRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(agents) { agent in
                 let has = ownerIDs.contains(mcpAgentFamilyID(agent.id))
-                Image(systemName: has ? "checkmark.circle" : "minus")
+                let states = Set(store.comparedMcpSources.filter { $0.entry.name == name && mcpAgentFamilyID($0.entry.agentID) == mcpAgentFamilyID(agent.id) && !["Outside context", "Shadowed"].contains($0.state) }.map(\.state))
+                Image(systemName: states.contains("Ambiguous") ? "exclamationmark.triangle" : states == ["Disabled"] ? "pause.circle" : has ? "checkmark.circle" : "minus")
                     .font(.body)
                     .foregroundStyle(has ? Color.primary : Color.secondary)
                     .frame(width: columnWidth)
-                    .accessibilityLabel(agent.name + ": " + L(has ? "configured" : "not configured"))
+                    .accessibilityLabel(agent.name + ": " + (states.isEmpty ? L("not configured") : states.sorted().map { L($0) }.joined(separator: ", ")))
+                    .help(states.sorted().map { L($0) }.joined(separator: ", "))
             }
         }
         .padding(.vertical, 8)
@@ -146,7 +156,7 @@ struct McpDetailView: View {
     @Environment(ConfigStore.self) private var store
 
     private var entries: [McpServerEntry] {
-        store.mcpEntries(for: store.selectedMcpName ?? "")
+        store.contextualMcpIndex.filter { $0.name == store.selectedMcpName }
     }
 
     private var agents: [Agent] { mcpMatrixAgents(store.agents) }
@@ -189,6 +199,7 @@ struct McpDetailView: View {
                         .padding(.vertical, 6)
                     }
 
+                    if entries.count > 1 { McpDefinitionDiffView(entries: entries) }
                     ForEach(agents) { agent in
                         let familyEntries = entries.filter {
                             mcpAgentFamilyID($0.agentID) == mcpAgentFamilyID(agent.id)
@@ -225,6 +236,10 @@ struct McpAgentCard: View {
                 HStack(spacing: 8) {
                     AgentProductIcon(agent: agent, size: 16)
                     Text(agent.name).font(.system(size: 13, weight: .semibold))
+                    Text(L(entry.scope)).font(.caption).foregroundStyle(.secondary)
+                    if let compared = store.comparedMcpSources.first(where: { $0.id == entry.id }) {
+                        Text(L(compared.state)).font(.caption).foregroundStyle(.secondary).help(L(compared.reason))
+                    }
                     if let en = entry.enabled {
                         Text(en ? L("enabled") : L("disabled"))
                             .font(.callout)

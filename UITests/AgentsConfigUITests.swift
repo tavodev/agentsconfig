@@ -45,6 +45,19 @@ final class AgentsConfigUITests: XCTestCase {
         return (app, canonical, suite)
     }
 
+    @MainActor func testFirstDiagnosticExportShowsReviewContent() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        click("destination-analysis", in: app)
+        let diagnostics = app.radioButtons["Diagnostics"]
+        XCTAssertTrue(diagnostics.waitForExistence(timeout: 5))
+        diagnostics.click()
+        click("review-diagnostic-export", in: app)
+        XCTAssertTrue(app.staticTexts["Review diagnostic export"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["save-diagnostic-report"].exists)
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertFalse(app.buttons["save-diagnostic-report"].exists)
+    }
+
     @MainActor private func cleanup(_ app: XCUIApplication, _ home: URL, _ suite: String) {
         app.terminate()
         UserDefaults().removePersistentDomain(forName: suite)

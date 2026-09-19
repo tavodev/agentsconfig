@@ -17,10 +17,14 @@ struct CodeEditor: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSScrollView()
+        scroll.wantsLayer = true
+        scroll.clipsToBounds = true
+        scroll.contentView.clipsToBounds = true
         scroll.hasVerticalScroller = true
         scroll.hasHorizontalScroller = false
         scroll.borderType = .noBorder
-        scroll.drawsBackground = false
+        scroll.drawsBackground = true
+        scroll.backgroundColor = .textBackgroundColor
 
         let textStorage = NSTextStorage()
         let layout = NSLayoutManager()
@@ -31,9 +35,12 @@ struct CodeEditor: NSViewRepresentable {
         textStorage.addLayoutManager(layout)
 
         let tv = CodeTextView(frame: .zero, textContainer: container)
+        tv.wantsLayer = true
+        tv.clipsToBounds = true
         tv.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         tv.textColor = .labelColor
-        tv.backgroundColor = .clear
+        tv.drawsBackground = false
+        tv.insertionPointColor = .textColor
         tv.isEditable = !readOnly
         tv.isSelectable = true
         tv.isRichText = false
@@ -56,6 +63,8 @@ struct CodeEditor: NSViewRepresentable {
         tv.minSize = NSSize(width: 0, height: scroll.contentSize.height)
 
         let ruler = LineNumberRulerView(textView: tv)
+        ruler.wantsLayer = true
+        ruler.clipsToBounds = true
         scroll.verticalRulerView = ruler
         scroll.rulersVisible = true
         scroll.documentView = tv
@@ -155,6 +164,9 @@ struct CodeEditor: NSViewRepresentable {
 
 /// NSTextView subclass: Cmd+S posts to a handler the app can hook.
 final class CodeTextView: NSTextView {
+    // Source text needs an opaque editing surface, not sidebar vibrancy.
+    override var allowsVibrancy: Bool { false }
+
     override func doCommand(by selector: Selector) {
         if selector == #selector(NSResponder.insertTab(_:)) {
             insertText("  ", replacementRange: selectedRange())  // 2 spaces for tabs
@@ -178,7 +190,7 @@ final class LineNumberRulerView: NSRulerView {
 
     override func drawHashMarksAndLabels(in rect: NSRect) {
         guard let tv = textView, let lm = tv.layoutManager, let tc = tv.textContainer else { return }
-        let bg = NSColor.controlBackgroundColor.withAlphaComponent(0.5)
+        let bg = NSColor.textBackgroundColor
         bg.setFill()
         rect.fill()
 
@@ -191,7 +203,7 @@ final class LineNumberRulerView: NSRulerView {
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular),
-            .foregroundColor: NSColor.tertiaryLabelColor
+            .foregroundColor: NSColor.secondaryLabelColor
         ]
 
         var index = charRange.location
@@ -217,7 +229,7 @@ enum Highlighter {
     private static let stringColor = NSColor.systemRed
     private static let numberColor = NSColor.systemBlue
     private static let literalColor = NSColor.systemPurple
-    private static let commentColor = NSColor.tertiaryLabelColor
+    private static let commentColor = NSColor.secondaryLabelColor
     private static let sectionColor = NSColor.systemTeal
     private static let headingColor = NSColor.systemPurple
 
@@ -228,7 +240,7 @@ enum Highlighter {
         storage.beginEditing()
         storage.setAttributes([
             .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
-            .foregroundColor: NSColor.labelColor
+            .foregroundColor: NSColor.textColor
         ], range: full)
 
         switch format {

@@ -2,7 +2,8 @@
 
 A native macOS app (SwiftUI) to inspect, edit and audit the global
 configuration of your AI coding agents — Claude Code, Codex,
-Antigravity/Gemini and OpenCode — from one place.
+Gemini CLI, Antigravity and OpenCode — from one place, with read-only
+inventory adapters for Cursor and GitHub Copilot CLI.
 
 > **Status: experimental.** The app is usable, but treat its editing
 > features with care: always review diffs and keep your own backups of
@@ -54,6 +55,33 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   extra, inspector panel, light/dark mode, English/Spanish UI switchable
   live. Settings are reachable both as a native macOS window (⌘,) and as
   an in-app sidebar destination.
+
+## Configuration analysis
+
+The **Configuration** destination explains the on-disk configuration for a
+selected agent, project, working folder and optional Codex profile. Each value
+shows its source, superseded values, trust conditions and supported managed
+restrictions. Version and trust controls are analysis assumptions; they never
+change client settings or grant permissions. Unobserved CLI/environment,
+remote policies and unsupported field-specific rules remain explicit.
+
+The **Instructions** and **Skills** tabs show instruction candidates and overrides,
+YAML metadata, shared consumers, resources, import cycles and traversal limits.
+Resource previews are read-only and never execute scripts. Candidate status does
+not confirm that a session loaded the content. Custom roots can be selected in
+Settings; terminal environment variables are not inferred from another process.
+
+The **MCP** comparator filters by project or profile and explains shadowed,
+disabled and ambiguous definitions. Its semantic comparison keeps argument order
+and redacts credentials. It does not connect to servers or validate login state.
+
+**Diagnostics** exports a reviewed, fixed snapshot as JSON or Markdown. Default
+exports anonymize sources and omit setting values/free-form diagnostic details.
+Nothing is uploaded. **Search** searches redacted loaded content across agents and
+projects, up to 2 MB per file and 100 results.
+
+See [implementation and verification](docs/audits/ALL-PRIORITIES.md) for the current
+scope, tested behaviors and verification evidence.
 
 ## Privacy & data handling
 

@@ -122,7 +122,8 @@ struct EditorView: View {
     private var modePicker: some View {
         Picker(L("Editor mode"), selection: $tab) {
             ForEach(EditorTab.allCases, id: \.self) { t in
-                Text(L(t.rawValue)).tag(t)
+                Text(L(t == .structured && path.map { store.format(for: $0) == .markdown } == true
+                       ? "Preview" : t.rawValue)).tag(t)
             }
         }
         .pickerStyle(.segmented).labelsHidden()
@@ -146,10 +147,11 @@ struct EditorView: View {
 
     private func fileContext(_ path: String) -> String {
         // Resolve ownership from the file, never from the sidebar's current filter.
-        guard let agent = store.agents.first(where: { $0.files.contains { $0.path == path } }) else {
+        let owners = store.agents.filter { $0.files.contains { $0.path == path } }
+        guard let agent = owners.first else {
             return path.replacingOccurrences(of: AppPaths.home, with: "~")
         }
-        let name = agent.name.components(separatedBy: " (").first ?? agent.name
+        let name = owners.map { $0.name.components(separatedBy: " (").first ?? $0.name }.joined(separator: " / ")
         guard let project = agent.projectRoot else { return name + " · " + L("Global") }
         return [name, L("Project") + " " + URL(fileURLWithPath: project).lastPathComponent,
                 agent.submodulePath ?? L("Project root")].joined(separator: " · ")
@@ -199,7 +201,8 @@ struct EditorView: View {
                 }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if format == .markdown {
                 MarkdownPreview(text: Secrets.maskText(store.text(for: path), format: .markdown, masking: maskSecrets),
-                                fileExists: fileInfo(path)?.exists ?? FileManager.default.fileExists(atPath: path))
+                                fileExists: fileInfo(path)?.exists ?? FileManager.default.fileExists(atPath: path),
+                                editSource: { tab = .source })
             } else if format != .json && format != .jsonc && format != .toml {
                 NonStructuredHint(format: format) { tab = .source }
             } else {
@@ -350,197 +353,6 @@ struct FileDocButton: View {
 }
 
 // MARK: - Structured-tab fallbacks
-
-/// Rendered markdown for instruction files (CLAUDE.md, AGENTS.md…). Parses
-/// full block structure (headings, lists, block quotes, code blocks, rules)
-/// via `PresentationIntent`, not just inline emphasis — plain `Text` doesn't
-/// style intents on its own, so each block is walked and styled by hand.
-struct MarkdownPreview: View {
-    let text: String
-    var fileExists: Bool = true
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Card {
-                        Label(fileExists ? L("Empty file — edit it in the Source tab.")
-                                         : L("This file doesn't exist on disk yet."),
-                              systemImage: fileExists ? "doc" : "doc.badge.ellipsis")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
-                } else {
-                    ForEach(MarkdownBlock.parse(text)) { block in
-                        MarkdownBlockView(block: block)
-                    }
-                    Label(L("Rendered preview — edit in the Source tab."),
-                          systemImage: "eye")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 10)
-                }
-            }
-            .padding(18)
-            .frame(maxWidth: 760, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
-/// One markdown block (paragraph, heading, list item, quote, code, rule…),
-/// with its `PresentationIntent` kinds (self + ancestors, e.g. a list item
-/// nested two levels deep carries both `.listItem` and both enclosing
-/// `.unorderedList`/`.orderedList` kinds).
-private struct MarkdownBlock: Identifiable {
-    let id: Int
-    let kinds: [PresentationIntent.Kind]
-    let content: AttributedString
-
-    var headerLevel: Int? {
-        for k in kinds { if case .header(let level) = k { return level } }
-        return nil
-    }
-    var isCodeBlock: Bool {
-        kinds.contains { if case .codeBlock = $0 { return true }; return false }
-    }
-    var isBlockQuote: Bool {
-        kinds.contains { if case .blockQuote = $0 { return true }; return false }
-    }
-    var isThematicBreak: Bool {
-        kinds.contains { if case .thematicBreak = $0 { return true }; return false }
-    }
-    var listDepth: Int {
-        kinds.filter {
-            if case .unorderedList = $0 { return true }
-            if case .orderedList = $0 { return true }
-            return false
-        }.count
-    }
-    var listOrdinal: Int? {
-        for k in kinds { if case .listItem(let ordinal) = k { return ordinal } }
-        return nil
-    }
-    var isOrderedListItem: Bool {
-        listOrdinal != nil && kinds.contains { if case .orderedList = $0 { return true }; return false }
-    }
-
-    /// Splits a full parse into blocks: runs sharing the same (Equatable)
-    /// `presentationIntent` — including `nil` for plain inline text outside
-    /// any block — belong to the same block.
-    static func parse(_ text: String) -> [MarkdownBlock] {
-        guard let attributed = try? AttributedString(markdown: text, options: .init(
-            allowsExtendedAttributes: true,
-            interpretedSyntax: .full,
-            failurePolicy: .returnPartiallyParsedIfPossible
-        )) else {
-            return [MarkdownBlock(id: 0, kinds: [], content: AttributedString(text))]
-        }
-        var result: [MarkdownBlock] = []
-        var currentIntent: PresentationIntent??  // double optional: "not started yet" vs "no intent"
-        var currentSlice = AttributedString()
-        for run in attributed.runs {
-            let intent = run.presentationIntent
-            if let started = currentIntent, started != intent {
-                result.append(MarkdownBlock(id: result.count, kinds: started?.components.map(\.kind) ?? [], content: currentSlice))
-                currentSlice = AttributedString()
-            }
-            currentIntent = intent
-            currentSlice += attributed[run.range]
-        }
-        if let started = currentIntent {
-            result.append(MarkdownBlock(id: result.count, kinds: started?.components.map(\.kind) ?? [], content: currentSlice))
-        }
-        return result
-    }
-}
-
-private struct MarkdownBlockView: View {
-    let block: MarkdownBlock
-
-    var body: some View {
-        if block.isThematicBreak {
-            Divider().padding(.vertical, 8)
-        } else if block.isCodeBlock {
-            codeBlock
-        } else if let level = block.headerLevel {
-            heading(level: level)
-        } else if block.listDepth > 0 {
-            listItem
-        } else if block.isBlockQuote {
-            blockQuote
-        } else {
-            paragraph
-        }
-    }
-
-    private func heading(level: Int) -> some View {
-        Text(block.content)
-            .font(headingFont(level))
-            .padding(.top, level <= 2 ? 16 : 10)
-            .padding(.bottom, 4)
-    }
-
-    private func headingFont(_ level: Int) -> Font {
-        switch level {
-        case 1: return .system(size: 22, weight: .bold)
-        case 2: return .system(size: 17, weight: .bold)
-        case 3: return .system(size: 15, weight: .semibold)
-        default: return .system(size: 13, weight: .semibold)
-        }
-    }
-
-    private var paragraph: some View {
-        Text(block.content)
-            .font(.system(size: 13))
-            .lineSpacing(4)
-            .textSelection(.enabled)
-            .padding(.vertical, 3)
-    }
-
-    private var listItem: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 7) {
-            Text(block.isOrderedListItem ? "\(block.listOrdinal ?? 1)." : "•")
-                .font(.system(size: 13, weight: block.isOrderedListItem ? .regular : .bold))
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 18, alignment: .trailing)
-            Text(block.content)
-                .font(.system(size: 13))
-                .lineSpacing(3)
-                .textSelection(.enabled)
-        }
-        .padding(.leading, CGFloat(max(0, block.listDepth - 1)) * 18)
-        .padding(.vertical, 2)
-    }
-
-    private var blockQuote: some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 1.5).fill(.tertiary).frame(width: 3)
-            Text(block.content)
-                .font(.system(size: 13))
-                .italic()
-                .foregroundStyle(.secondary)
-                .textSelection(.enabled)
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var codeBlock: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            Text(block.content)
-                .font(.system(size: 13, design: .monospaced))
-                .textSelection(.enabled)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(.quaternary, lineWidth: 0.5)
-        )
-        .padding(.vertical, 5)
-    }
-}
 
 /// Dead-end card for formats without a structured view.
 struct NonStructuredHint: View {

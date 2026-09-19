@@ -51,6 +51,20 @@ struct AppSettingsView: View {
                 Stepper(L("History per file: %d versions", historyLimit),
                         value: $historyLimit, in: 10...1000, step: 10)
             }
+            Section(L("Configuration folders")) {
+                Text(L("Choose inspection roots when a client uses a custom configuration folder. Terminal environment overrides are not inferred."))
+                    .font(.callout).foregroundStyle(.secondary)
+                ForEach(AgentRegistry.definitions.filter { AgentCatalog.defaultRoots[$0.id] != nil }, id: \.id) { agent in
+                    VStack(alignment: .leading) {
+                        Text(agent.name).font(.headline)
+                        Text(AgentCatalog.root(for: agent.id)).font(.caption.monospaced()).textSelection(.enabled)
+                        HStack {
+                            Button(L("Choose folder…")) { store.pickConfigurationRoot(agentID: agent.id) }
+                            Button(L("Use default")) { store.setConfigurationRoot(agentID: agent.id, path: nil) }
+                        }
+                    }
+                }
+            }
             Section(L("Privacy")) {
                 Toggle(L("Mask secrets (API keys, tokens…)"), isOn: $maskSecrets)
                     .accessibilityIdentifier("mask-secrets")

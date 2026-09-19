@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var columns: NavigationSplitViewVisibility = .all
 
     private var wideDestination: Bool {
-        store.selectedAgentID == ConfigStore.settingsID || store.selectedAgentID == ConfigStore.mcpID
+        [ConfigStore.settingsID, ConfigStore.mcpID, ConfigStore.analysisID, ConfigStore.searchID].contains(store.selectedAgentID ?? "")
     }
 
     var body: some View {
@@ -23,6 +23,10 @@ struct ContentView: View {
                                 .frame(maxWidth: 760)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 .navigationTitle(L("Settings"))
+                        } else if store.selectedAgentID == ConfigStore.searchID {
+                            CatalogSearchView()
+                        } else if store.selectedAgentID == ConfigStore.analysisID {
+                            WorkspaceAnalysisView()
                         } else {
                             McpMatrixView()
                         }
@@ -122,23 +126,6 @@ struct SidebarView: View {
         projectAgents.filter { $0.submodulePath == activeSubmodule }
     }
 
-    private var activeProjectName: String {
-        guard let activeProject else { return "" }
-        return URL(fileURLWithPath: activeProject).lastPathComponent
-    }
-
-    private var activeScopeTitle: String { activeSubmodule ?? L("Project root") }
-
-    private var activeScopeDetail: String {
-        activeSubmodule == nil
-            ? (scopedAgents.count == 1 ? L("1 agent with configuration") : L("%d agents with configuration", scopedAgents.count))
-            : L("Git submodule")
-    }
-
-    private var activeScopeSymbol: String {
-        activeSubmodule == nil ? "folder.fill" : "shippingbox.fill"
-    }
-
     private func syncActiveProject() {
         if activeProject == nil || !store.projectRoots.contains(activeProject!) {
             activeProject = store.projectRoots.first
@@ -176,6 +163,11 @@ struct SidebarView: View {
         selectVisibleAgent()
     }
 
+    private func selectScope(_ submodule: String?) {
+        activeSubmodule = submodule
+        selectVisibleAgent()
+    }
+
     private func selectVisibleAgent() {
         let visible = scope == "global" ? store.agents.filter { $0.projectRoot == nil } : scopedAgents
         guard !visible.contains(where: { $0.id == store.selectedAgentID }) else { return }
@@ -197,6 +189,12 @@ struct SidebarView: View {
                          color: .teal)
                     .tag(ConfigStore.mcpID)
                     .accessibilityIdentifier("destination-mcp")
+                PanelRow(icon: "slider.horizontal.3", title: L("Configuration"), subtitle: L("sources and precedence"), count: 0, color: .blue)
+                    .tag(ConfigStore.analysisID)
+                    .accessibilityIdentifier("destination-analysis")
+                PanelRow(icon: "magnifyingglass", title: L("Search"), subtitle: L("all inspected files"), count: 0, color: .blue)
+                    .tag(ConfigStore.searchID)
+                    .accessibilityIdentifier("destination-search")
                 PanelRow(icon: "gearshape", title: L("Settings"),
                          subtitle: L("appearance, privacy"), count: 0,
                          color: .gray)
@@ -274,8 +272,23 @@ struct SidebarView: View {
                     .foregroundStyle(.secondary)
             } else {
                 projectPicker
+                if let activeProject, let notices = store.projectDiscoveryNotices[activeProject], !notices.isEmpty {
+                    DisclosureGroup {
+                        ForEach(notices, id: \.self) { notice in
+                            Text(notice.message)
+                                .font(.callout)
+                                .lineLimit(nil)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .help(notice.message)
+                        }
+                    } label: {
+                        Label(L("Some submodules were skipped"), systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                    }
+                    .accessibilityIdentifier("project-discovery-notices")
+                }
                 if !submodulePaths.isEmpty {
-                    scopeSelector
+                    scopeList
                 }
                 ForEach(scopedAgents) { agent in AgentGroupRow(agent: agent) }
                 if scopedAgents.isEmpty {
@@ -293,29 +306,22 @@ struct SidebarView: View {
     }
 
     private var projectPicker: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Text(L("Project"))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                projectActions
-            }
-            Menu {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(L("Project"), selection: Binding(
+                get: { activeProject ?? "" },
+                set: { selectProject($0) }
+            )) {
                 ForEach(store.projectRoots, id: \.self) { root in
-                    Button { selectProject(root) } label: {
-                        Label(URL(fileURLWithPath: root).lastPathComponent,
-                              systemImage: root == activeProject ? "checkmark" : "folder")
-                    }
-                    .help(root.replacingOccurrences(of: AppPaths.home, with: "~"))
+                    Text(store.projectLabel(root))
+                        .tag(root)
                 }
-            } label: {
-                ContextSelectorLabel(icon: "folder.fill", title: activeProjectName,
-                    detail: activeProject?.replacingOccurrences(of: AppPaths.home, with: "~") ?? "")
             }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden)
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .frame(maxWidth: .infinity)
             .accessibilityLabel(L("Select project"))
             .accessibilityIdentifier("project-selector")
+            projectActions
         }
     }
 
@@ -333,76 +339,68 @@ struct SidebarView: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis.circle")
+            Text(L("Project actions"))
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .controlSize(.small)
+        .accessibilityLabel(L("Project actions"))
         .help(L("Project actions"))
     }
 
-    private var scopeSelector: some View {
+    private var scopeList: some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(L("Scope"))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            Menu {
-                Button {
-                    activeSubmodule = nil
-                    selectVisibleAgent()
-                } label: {
-                    Label(L("Project root"), systemImage: activeSubmodule == nil ? "checkmark" : "folder")
-                }
-                ForEach(submodulePaths, id: \.self) { sub in
-                    Button {
-                        activeSubmodule = sub
-                        selectVisibleAgent()
-                    } label: {
-                        Label(sub, systemImage: activeSubmodule == sub ? "checkmark" : "shippingbox")
-                    }
-                }
-            } label: {
-                ContextSelectorLabel(icon: activeScopeSymbol, title: activeScopeTitle, detail: activeScopeDetail)
+            ScopeRow(
+                title: L("Project root"),
+                systemImage: "folder",
+                isSelected: activeSubmodule == nil,
+                action: { selectScope(nil) }
+            )
+            ForEach(submodulePaths, id: \.self) { sub in
+                ScopeRow(
+                    title: sub,
+                    systemImage: "shippingbox",
+                    isSelected: activeSubmodule == sub,
+                    action: { selectScope(sub) }
+                )
             }
-            .menuStyle(.borderlessButton).menuIndicator(.hidden)
-            .accessibilityLabel(L("Select scope"))
-            .accessibilityIdentifier("scope-selector")
         }
     }
 }
 
-/// A context selector makes project and scope visible without turning a
-/// sidebar into a horizontally scrolling navigation strip.
-private struct ContextSelectorLabel: View {
-    let icon: String
+/// A scope is a navigation level, so it appears as a compact sidebar row
+/// instead of a menu that obscures the agents beneath it.
+private struct ScopeRow: View {
     let title: String
-    let detail: String
+    let systemImage: String
+    let isSelected: Bool
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 9) {
-            Image(systemName: icon)
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(Color.accentColor)
-                .font(.system(size: 15, weight: .semibold))
-                .frame(width: 30, height: 30)
-                .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Text(detail)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            Spacer(minLength: 6)
-            Image(systemName: "chevron.up.chevron.down")
-                .font(.caption2.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .frame(width: 20)
+                Text(title)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tint)
+                        .accessibilityHidden(true)
+                }
+            }
+            .contentShape(Rectangle())
         }
-        .contentShape(Rectangle())
-        .padding(.vertical, 3)
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(isSelected ? L("Selected") : "")
     }
 }
 

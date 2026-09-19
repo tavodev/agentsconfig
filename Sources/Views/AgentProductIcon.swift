@@ -10,7 +10,7 @@ struct AgentProductIcon: View {
         switch agent.id.split(separator: ":", maxSplits: 1).first {
         case "claude-code": "AgentClaude"
         case "codex": "AgentCodex"
-        case "antigravity": "AgentGemini"
+        case "gemini-cli": "AgentGemini"
         case "opencode": "AgentOpenCode"
         default: nil
         }
