@@ -30,6 +30,9 @@ final class AgentsConfigUITests: XCTestCase {
         app.launch()
         let window = app.windows.firstMatch
         XCTAssertTrue(window.waitForExistence(timeout: 5))
+        // The window can be left behind another app on a shared desktop even
+        // when launch reports success; raise it before any synthesized input.
+        app.activate()
         // Resize our own test window explicitly: Zoom is not an unzoom
         // operation when macOS restores the same frame as the standard frame.
         if window.frame.width >= 1300 {
@@ -67,6 +70,10 @@ final class AgentsConfigUITests: XCTestCase {
     @MainActor private func click(_ identifier: String, in app: XCUIApplication) {
         let element = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == %@", identifier)).firstMatch
         XCTAssertTrue(element.waitForExistence(timeout: 5), "\(identifier)\n\(app.debugDescription)")
+        // Covered elements are never hittable: raise the fixture app so its
+        // windows sit in front before measuring hit points or scrolling.
+        app.activate()
+        reveal(element, identifier: identifier, in: app)
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: element)
         let result = XCTWaiter.wait(for: [ready], timeout: 5)
         if result != .completed {
@@ -75,6 +82,43 @@ final class AgentsConfigUITests: XCTestCase {
         }
         XCTAssertEqual(result, .completed, "\(identifier)\n\(app.debugDescription)")
         element.click()
+    }
+
+    /// Scrolls the innermost scroll view containing `element` until the
+    /// element's frame enters the viewport. The native Settings scene keeps
+    /// part of the Form below the fold: off-screen controls exist in the
+    /// accessibility tree but are never hittable, so they must be revealed
+    /// before `click` can reach them. The scroll direction comes from the
+    /// frame gap and is flipped whenever a scroll moves the element away or
+    /// stalls against an edge, so it makes no sign assumption about
+    /// `scroll(byDeltaX:deltaY:)`.
+    @MainActor private func reveal(_ element: XCUIElement, identifier: String, in app: XCUIApplication) {
+        guard element.exists, !element.isHittable else { return }
+        guard let scrollView = app.scrollViews
+            .containing(.any, identifier: identifier)
+            .allElementsBoundByIndex.last else { return }
+        var direction: CGFloat = 1
+        var stalled = false
+        for _ in 0..<8 {
+            guard element.exists, !element.isHittable else { return }
+            let viewport = scrollView.frame
+            let frame = element.frame
+            if viewport.contains(frame) { return }
+            scrollView.scroll(byDeltaX: 0, deltaY: direction * (frame.midY - viewport.midY))
+            let moved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                element.frame != frame
+            }, object: nil)
+            if XCTWaiter.wait(for: [moved], timeout: 1) != .completed {
+                guard !stalled else { return }
+                stalled = true
+                direction = -direction
+                continue
+            }
+            stalled = false
+            if abs(element.frame.midY - viewport.midY) > abs(frame.midY - viewport.midY) {
+                direction = -direction
+            }
+        }
     }
 
     @MainActor private func open(_ relative: String, agent: String = "claude-code", home: URL, app: XCUIApplication) {
