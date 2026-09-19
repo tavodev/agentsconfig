@@ -3,6 +3,9 @@ options:
   bundleIdPrefix: com.tavodev
   createIntermediateGroups: true
 packages:
+  Yams:
+    url: https://github.com/jpsim/Yams
+    exactVersion: 6.2.2
   TOMLKit:
     url: https://github.com/LebJe/TOMLKit
     from: 0.6.0
@@ -49,6 +52,8 @@ targets:
     dependencies:
       - package: TOMLKit
         product: TOMLKit
+      - package: Yams
+        product: Yams
   # Hostless logic tests: the app sources are compiled into the test bundle
   # (minus the @main entry point), so `xcodebuild test` never launches the app
   # — no real-home scan, no watchers on personal paths, no notifications.
@@ -71,6 +76,8 @@ targets:
     dependencies:
       - package: TOMLKit
         product: TOMLKit
+      - package: Yams
+        product: Yams
   # Separate bundle identity prevents UI tests from terminating a user's app.
   AgentsConfigUITestHost:
     type: application
@@ -98,6 +105,8 @@ targets:
     dependencies:
       - package: TOMLKit
         product: TOMLKit
+      - package: Yams
+        product: Yams
   AgentsConfigUITests:
     type: bundle.ui-testing
     platform: macOS

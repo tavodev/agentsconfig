@@ -59,13 +59,13 @@ struct McpTests {
         }
     }
 
-    @Test(arguments: ["claude-code", "codex", "antigravity", "opencode"], [false, true])
+    @Test(arguments: ["claude-code", "codex", "gemini-cli", "opencode"], [false, true])
     func firstServerUsesExplicitDestination(agentID: String, missing: Bool) throws {
         let env = try TestEnvironment()
         defer { env.teardown() }
         try env.installAllAgents()
         let paths = ["claude-code": ".claude.json", "codex": ".codex/config.toml",
-                     "antigravity": ".gemini/settings.json", "opencode": ".config/opencode/opencode.json"]
+                     "gemini-cli": ".gemini/settings.json", "opencode": ".config/opencode/opencode.json"]
         let relative = try #require(paths[agentID])
         if missing { try FileManager.default.removeItem(atPath: env.path(relative)) }
         else { try env.write(relative, agentID == "codex" ? "model = 'fixture'\n" : "{}") }

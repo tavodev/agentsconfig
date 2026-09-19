@@ -118,6 +118,7 @@ final class TestEnvironment {
     }
 
     func installGemini() throws {
+        try FileManager.default.createDirectory(atPath: path(".gemini/skills"), withIntermediateDirectories: true)
         try write(".gemini/settings.json", "{\"theme\":\"Default\"}")
         try write(".gemini/GEMINI.md", "# gemini\n")
         try write(".gemini/config/mcp_config.json", "{\"mcpServers\":{}}")

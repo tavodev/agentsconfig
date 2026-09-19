@@ -5,7 +5,7 @@ import SwiftUI
 /// Sources can be single files or directories enumerated with a glob.
 enum AgentRegistry {
 
-    static let definitions: [AgentDefinition] = [
+    private static let baseDefinitions: [AgentDefinition] = [
 
         AgentDefinition(
             id: "claude-code",
@@ -39,11 +39,12 @@ enum AgentRegistry {
                 .init(path: ".mcp.json", role: .mcp, note: "Project MCP servers"),
                 .init(path: "CLAUDE.md", role: .instructions, note: "Project instructions (memory)"),
                 .init(path: ".claude/agents", isDirectory: true, role: .agents),
+                .init(path: ".claude/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills),
                 .init(path: ".claude/commands", isDirectory: true, role: .other,
                       note: "Custom commands"),
             ],
             mcpDestinationPaths: ["~/.claude.json"],
-            notes: "Precedence: managed > local > project > user. Global MCP servers live in ~/.claude.json → mcpServers."
+            notes: "Precedence: managed > CLI > local > project > user; lists have specific merge rules. Global MCP servers live in ~/.claude.json → mcpServers."
         ),
 
         AgentDefinition(
@@ -69,6 +70,14 @@ enum AgentRegistry {
             localSources: [
                 .init(path: ".codex/config.toml", role: .settings,
                       note: "Project override — loaded only if the project is trusted"),
+                .init(path: ".codex/agents", isDirectory: true, glob: "*.toml", role: .agents),
+                .init(path: ".agents/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills,
+                      note: "Discovered project skill — session loading not verified"),
+                .init(path: ".codex/hooks", isDirectory: true, role: .hooks,
+                      note: "Project hook script — inspected, never executed"),
+                .init(path: ".codex", isDirectory: true, glob: "activity-*.jsonl", role: .state,
+                      volatile: true, excludeFromHistory: true, readOnly: true,
+                      note: "Project activity log — read-only, no history"),
                 .init(path: "AGENTS.md", role: .instructions, note: "Project instructions"),
             ],
             mcpDestinationPaths: ["~/.codex/config.toml"],
@@ -131,6 +140,8 @@ enum AgentRegistry {
         ),
     ]
 
+    static var definitions: [AgentDefinition] { AgentCatalog.expanding(baseDefinitions) }
+
     /// Detect installed agents and resolve their file lists.
     static func detect() -> [Agent] {
         let fm = FileManager.default
@@ -153,11 +164,27 @@ enum AgentRegistry {
     private static func localizedDefinition(_ def: AgentDefinition, projectRoot: String) -> AgentDefinition {
         var localized = def
         localized.id = "\(def.id)::\(projectRoot)"
-        localized.sources = def.localSources.map { src in
+        var discoveryNotes = ["Project files found on disk; effective settings and session loading are not verified."]
+        localized.sources = def.localSources.compactMap { src -> ConfigSource? in
             var s = src
             s.path = (projectRoot as NSString).appendingPathComponent(src.path)
+            if src.isDirectory {
+                guard let root = AppPaths.canonicalPath(projectRoot),
+                      let target = AppPaths.canonicalPath(s.path),
+                      target.hasPrefix(root + "/") else {
+                    discoveryNotes.append((src.role == .skills ? "Skipped skill folder outside project: " : "Skipped folder outside project: ") + src.path)
+                    return nil
+                }
+                if target != (root as NSString).appendingPathComponent(src.path) {
+                    s.note = "Shared skills → " + String(target.dropFirst(root.count + 1))
+                }
+                // Shared skills must use one document/buffer/history identity.
+                s.path = target
+            }
             return s
         }
+        localized.mcpDestinationPaths = []
+        localized.notes = discoveryNotes.joined(separator: "\n")
         return localized
     }
 
@@ -175,22 +202,35 @@ enum AgentRegistry {
     /// detection path. Returns, per detected agent, the synthetic
     /// `AgentDefinition` (already-absolute sources) `ConfigStore` needs to
     /// register alongside the resolved `Agent`.
-    static func detectLocal(projectRoot: String) -> [(def: AgentDefinition, agent: Agent)] {
+    static func detectLocal(projectRoot: String, submodules: SubmoduleDiscovery.Result? = nil) -> [(def: AgentDefinition, agent: Agent)] {
         var scanRoots: [(submodulePath: String?, absRoot: String, label: String)] =
             [(nil, projectRoot, URL(fileURLWithPath: projectRoot).lastPathComponent)]
-        for rel in submodulePaths(root: projectRoot) {
+        for rel in (submodules ?? SubmoduleDiscovery.scan(root: projectRoot)).paths {
             scanRoots.append((rel, (projectRoot as NSString).appendingPathComponent(rel), rel))
         }
         var out: [(AgentDefinition, Agent)] = []
         for (submodulePath, absRoot, label) in scanRoots {
+            let nested = DiscoveryTree.projectFolders(root: absRoot)
             for def in definitions where !def.localSources.isEmpty {
-                let localizedDef = localizedDefinition(def, projectRoot: absRoot)
-                let files = resolveFiles(localizedDef)
+                var expanded = def
+                for folder in nested.directories where folder != absRoot {
+                    let rel = String(folder.dropFirst(absRoot.count + 1))
+                    for source in def.localSources {
+                        guard FileManager.default.fileExists(atPath: (folder as NSString).appendingPathComponent(source.path)) else { continue }
+                        var nestedSource = source
+                        nestedSource.path = rel + "/" + source.path
+                        nestedSource.note = "Nested project source — session loading not verified"
+                        expanded.localSources.append(nestedSource)
+                    }
+                }
+                var localizedDef = localizedDefinition(expanded, projectRoot: absRoot)
+                if nested.truncated { localizedDef.notes = (localizedDef.notes ?? "") + "\nProject discovery reached its folder limit." }
+                let files = resolveFiles(localizedDef).filter { $0.exists || $0.note != "Nested project source — session loading not verified" }
                 guard files.contains(where: { $0.exists }) else { continue }
                 let agent = Agent(
                     id: localizedDef.id, name: "\(def.name) (\(label))", symbol: def.symbol,
                     color: def.color, files: files, detectionPath: absRoot,
-                    notes: def.notes, projectRoot: projectRoot, submodulePath: submodulePath
+                    notes: localizedDef.notes, projectRoot: projectRoot, submodulePath: submodulePath
                 )
                 out.append((localizedDef, agent))
             }
@@ -203,36 +243,12 @@ enum AgentRegistry {
     /// initialized/checked out — an uninitialized one simply resolves no
     /// local files later and is skipped by `detectLocal`.
     static func directSubmodulePaths(at root: String) -> [String] {
-        let gitmodulesPath = (root as NSString).appendingPathComponent(".gitmodules")
-        guard let content = try? String(contentsOfFile: gitmodulesPath, encoding: .utf8) else { return [] }
-        var paths: [String] = []
-        for rawLine in content.split(separator: "\n", omittingEmptySubsequences: false) {
-            let line = rawLine.trimmingCharacters(in: .whitespaces)
-            guard let eq = line.firstIndex(of: "=") else { continue }
-            let key = line[line.startIndex..<eq].trimmingCharacters(in: .whitespaces)
-            guard key == "path" else { continue }
-            let value = line[line.index(after: eq)...].trimmingCharacters(in: .whitespaces)
-            if !value.isEmpty { paths.append(value) }
-        }
-        return paths
+        SubmoduleDiscovery.directPaths(at: root)
     }
 
-    /// All submodule paths under `root`, recursing into submodules-of-
-    /// submodules up to `maxDepth` levels / `maxCount` entries — the same
-    /// bounded-scan shape as `skillTree`.
+    /// Safe, bounded submodule paths; the store also publishes scan notices.
     static func submodulePaths(root: String, maxDepth: Int = 4, maxCount: Int = 200) -> [String] {
-        var result: [String] = []
-        var pending = directSubmodulePaths(at: root).map { (rel: $0, depth: 1) }
-        while !pending.isEmpty, result.count < maxCount {
-            let (rel, depth) = pending.removeFirst()
-            result.append(rel)
-            guard depth < maxDepth else { continue }
-            let absRoot = (root as NSString).appendingPathComponent(rel)
-            for sub in directSubmodulePaths(at: absRoot) {
-                pending.append((rel: (rel as NSString).appendingPathComponent(sub), depth: depth + 1))
-            }
-        }
-        return result
+        SubmoduleDiscovery.scan(root: root, maxDepth: maxDepth, maxCount: maxCount).paths
     }
 
     /// Expand a definition's sources into concrete tracked files.
@@ -246,17 +262,26 @@ enum AgentRegistry {
 
             if src.isDirectory {
                 guard exists, isDir.boolValue else { continue }
-                for child in enumerateDirectory(path: path, glob: src.glob) {
+                for child in enumerateDirectory(path: path, glob: src.glob, recursive: src.recursive) {
                     files.append(makeTracked(path: child, src: src, exists: true))
                 }
             } else {
                 files.append(makeTracked(path: path, src: src, exists: exists))
             }
         }
-        return files.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+        var unique: [String: TrackedFile] = [:]
+        for file in files {
+            if var previous = unique[file.path] {
+                previous.readOnly = previous.readOnly || file.readOnly
+                previous.excludeFromHistory = previous.excludeFromHistory || file.excludeFromHistory
+                unique[file.path] = previous
+            } else { unique[file.path] = file }
+        }
+        return unique.values.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
     }
 
     private static func makeTracked(path: String, src: ConfigSource, exists: Bool) -> TrackedFile {
+        let path = src.role == .skills ? (AppPaths.canonicalPath(path) ?? path) : path
         var size: Int64 = 0
         var mtime: Date? = nil
         var realExists = exists
@@ -280,7 +305,8 @@ enum AgentRegistry {
     }
 
     /// Enumerate a directory; glob patterns like "*.json" or "*/SKILL.md".
-    private static func enumerateDirectory(path: String, glob: String?) -> [String] {
+    private static func enumerateDirectory(path: String, glob: String?, recursive: Bool = false) -> [String] {
+        if recursive { return DiscoveryTree.scan(root: path).files.filter { DiscoveryTree.matches(URL(fileURLWithPath: $0).lastPathComponent, glob ?? "*") } }
         let fm = FileManager.default
         guard let entries = try? fm.contentsOfDirectory(atPath: path) else { return [] }
         var out: [String] = []
@@ -288,6 +314,12 @@ enum AgentRegistry {
 
         func match(_ name: String, _ pat: String) -> Bool {
             if pat == "*" { return true }
+            if let star = pat.firstIndex(of: "*"), !pat[pat.index(after: star)...].contains("*") {
+                let prefix = String(pat[..<star])
+                let suffix = String(pat[pat.index(after: star)...])
+                return name.count >= prefix.count + suffix.count
+                    && name.hasPrefix(prefix) && name.hasSuffix(suffix)
+            }
             if pat.hasPrefix("*."), let ext = pat.split(separator: ".").last {
                 return name.hasSuffix(".\(ext)")
             }
@@ -344,6 +376,7 @@ enum AgentRegistry {
 
     static func watchDirectories(for source: ConfigSource) -> [String] {
         guard source.isDirectory else { return [] }
+        if source.recursive { return DiscoveryTree.scan(root: source.expandedPath).directories }
         return source.role == .skills ? skillTree(at: source.expandedPath).directories : [source.expandedPath]
     }
 
@@ -353,7 +386,7 @@ enum AgentRegistry {
         case "json": return .json
         case "jsonc": return .jsonc
         case "toml": return .toml
-        case "md", "markdown": return .markdown
+        case "md", "markdown", "mdc": return .markdown
         case "sh", "bash", "zsh": return .shell
         case "rules": return .dsl
         case "plist": return .plist

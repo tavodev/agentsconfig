@@ -50,6 +50,24 @@ struct DocsCatalogTests {
         }
     }
 
+    @Test func instructionDocsDistinguishUserAndProjectScope() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        for (folder, filename) in [(".claude", "CLAUDE.md"), (".gemini", "GEMINI.md")] {
+            let global = try #require(DocsCatalog.fileDoc(for: env.path(folder + "/" + filename)))
+            let local = try #require(DocsCatalog.fileDoc(for: env.path("repo/" + filename)))
+            #expect(global.title.localizedCaseInsensitiveContains("global"))
+            #expect(!local.title.localizedCaseInsensitiveContains("global"))
+            #expect(!local.body.contains("every project"))
+            #expect(global.docsURL != nil && local.docsURL != nil)
+        }
+    }
+
+    @Test func fileDocsRequireAWholePathComponent() {
+        #expect(DocsCatalog.fileDoc(for: "/fixture/notopencode.json") == nil)
+        #expect(DocsCatalog.keyDoc(filePath: "/fixture/notopencode.json", keyPath: ["model"]) == nil)
+    }
+
     @Test func unrelatedFilesGetNoDoc() throws {
         #expect(DocsCatalog.fileDoc(for: "/Users/fixture/repo/README.md") == nil)
         #expect(DocsCatalog.keyDoc(filePath: "/Users/fixture/repo/.codex/config.toml", keyPath: ["totally_unknown_key"]) == nil)

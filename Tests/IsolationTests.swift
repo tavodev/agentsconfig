@@ -37,7 +37,7 @@ struct IsolationTests {
 
         let store = env.makeStore()
         #expect(Set(store.agents.map(\.id))
-                == ["claude-code", "codex", "antigravity", "opencode"])
+                == ["claude-code", "codex", "gemini-cli", "antigravity", "opencode"])
         for agent in store.agents {
             for f in agent.files {
                 #expect(f.path.hasPrefix(env.home.path))

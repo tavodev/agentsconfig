@@ -27,7 +27,7 @@ import Foundation
         case "claude-code": .claude
         case "codex": .codex
         case "opencode": .opencode
-        case "antigravity": path == AppPaths.expand("~/.gemini/settings.json") ? .gemini : nil
+        case "gemini-cli": .gemini
         default: nil
         }
     }

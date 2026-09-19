@@ -71,6 +71,7 @@ struct ConfigSource: Hashable {
     var excludeFromHistory = false   // may hold secrets: never snapshot to disk
     var readOnly = false
     var note: String? = nil
+    var recursive = false
 
     var expandedPath: String { AppPaths.expand(path) }
 }
@@ -108,7 +109,11 @@ struct TrackedFile: Identifiable, Hashable {
     var issues: [FileIssue] = []
     var managedBlocks: [ManagedBlock] = []
 
-    var displayName: String { URL(fileURLWithPath: path).lastPathComponent }
+    var displayName: String {
+        let url = URL(fileURLWithPath: path)
+        return role == .skills && url.lastPathComponent == "SKILL.md"
+            ? url.deletingLastPathComponent().lastPathComponent : url.lastPathComponent
+    }
     var shortPath: String { path.replacingOccurrences(of: AppPaths.home, with: "~") }
 }
 
@@ -201,7 +206,7 @@ struct RestoreRequest: Identifiable, Equatable {
 
 /// A normalized MCP server definition extracted from any agent config.
 struct McpServerEntry: Identifiable {
-    var id: String { "\(agentID)|\(sourcePath)|\(name)" }
+    var id: String { "\(agentID)|\(sourcePath)|\(sourceKeyPath.joined(separator: "/"))|\(name)" }
     let name: String
     let agentID: String
     let agentName: String
@@ -214,6 +219,10 @@ struct McpServerEntry: Identifiable {
     let envKeys: [String]
     let enabled: Bool?
     let raw: [String: Any]         // original spec (env values kept for copy)
+    var projectPath: String? = nil
+    var sourceKeyPath: [String] = []
+    var scope: String = "User"
+    var profileName: String? = nil
 
     var endpoint: String {
         if let url { return url }
@@ -252,6 +261,38 @@ enum AppPaths {
         if path == "~" { return home }
         if path.hasPrefix("~/") { return home + path.dropFirst(1) }
         return path
+    }
+
+    /// Canonicalize an existing prefix, then append absent components without
+    /// losing /var aliases. Unresolved symlinks are rejected, not treated as dirs.
+    static func canonicalPath(_ path: String) -> String? {
+        var candidate = path
+        var missing: [String] = []
+        while !candidate.isEmpty {
+            if let resolved = realpath(candidate, nil) {
+                defer { free(resolved) }
+                return missing.reversed().reduce(String(cString: resolved)) {
+                    ($0 as NSString).appendingPathComponent($1)
+                }
+            }
+            if (try? FileManager.default.attributesOfItem(atPath: candidate)) != nil {
+                // An existing object that realpath cannot resolve is unsafe.
+                return nil
+            }
+            let parent = (candidate as NSString).deletingLastPathComponent
+            guard parent != candidate else { return nil }
+            missing.append((candidate as NSString).lastPathComponent)
+            candidate = parent
+        }
+        return nil
+    }
+
+    /// System sources are redirected alongside the home in every isolated run.
+    static func systemPath(_ absolute: String) -> String {
+        if overrideHome != nil || ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] != nil {
+            return home + "/.system" + absolute
+        }
+        return absolute
     }
 
     static var applicationSupport: URL {

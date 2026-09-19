@@ -39,8 +39,20 @@ final class ConfigStore {
     /// Registered project/repository roots inspected for local config,
     /// in addition to the global (home-rooted) agents.
     private(set) var projectRoots: [String] = AppSettings.defaults.stringArray(forKey: "projectRoots") ?? []
+    private(set) var projectDiscoveryNotices: [String: [SubmoduleDiscovery.Notice]] = [:]
+    private var projectScanDirectories: Set<String> = []
     var selectedEventID: UUID?
     var selectedMcpName: String?
+    var mcpProjectFilter = "__all__"
+    var mcpProfileFilter = ""
+    var comparedMcpSources: [McpComparedSource] {
+        McpComparison.sources(mcpIndex, project: mcpProjectFilter == "__all__" ? nil : mcpProjectFilter, profile: mcpProfileFilter)
+    }
+    var contextualMcpIndex: [McpServerEntry] {
+        comparedMcpSources.filter { $0.state != "Outside context" }.map(\.entry)
+    }
+    var mcpContextPaths: [String] { Array(Set(projectRoots + mcpIndex.compactMap(\.projectPath))).sorted() }
+
     var requestedTab: EditorTab?
     var findRequest = 0
     var showInspector = false
@@ -48,6 +60,9 @@ final class ConfigStore {
     static let activityID = "__activity__"
     static let mcpID = "__mcp__"
     static let settingsID = "__settings__"
+    static let analysisID = "__analysis__"
+    static let searchID = "__search__"
+    private(set) var analysisRevision = 0
 
     // MARK: internals
     private var snapshots: SnapshotStore
@@ -171,8 +186,10 @@ final class ConfigStore {
     /// Seed the activity feed from persisted snapshot indexes (recent history).
     private func seedActivity() {
         var events: [ActivityEvent] = []
+        var seenPaths = Set<String>()
         for agent in agents {
             for f in agent.files where keepsHistory(f) {
+                guard seenPaths.insert(f.path).inserted else { continue }
                 for v in safeLoadHistory(f.path).prefix(15) {
                     events.append(ActivityEvent(
                         date: v.date, path: f.path, agentID: agent.id,
@@ -197,21 +214,80 @@ final class ConfigStore {
         if activity.count > 300 { activity.removeLast(activity.count - 300) }
     }
 
+    func knowledgeAnalysis(_ context: AnalysisContext, configuration: ConfigurationAnalysis) -> KnowledgeAnalysis {
+        KnowledgeInspector.build(context: context, agents: agents, configuration: configuration) { path in
+            self.documents[path]?.text ?? (try? Parsers.readText(at: path))
+        }
+    }
+
+    func searchCatalog(_ query: String) async -> [CatalogSearchHit] {
+        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        var hits: [CatalogSearchHit] = []
+        var seen = Set<String>()
+        for file in agents.flatMap(\.files) where file.exists && seen.insert(file.path).inserted {
+            guard !Task.isCancelled, hits.count < 100 else { break }
+            let pathMatch = file.path.localizedCaseInsensitiveContains(query)
+            let safe: String
+            if let document = documents[file.path], document.text.utf8.count <= Parsers.maximumFileBytes {
+                safe = Secrets.maskText(document.text, format: file.format, masking: true)
+            } else { safe = "" }
+            if let range = safe.range(of: query, options: .caseInsensitive) {
+                let start = safe.index(range.lowerBound, offsetBy: -80, limitedBy: safe.startIndex) ?? safe.startIndex
+                let end = safe.index(range.upperBound, offsetBy: 120, limitedBy: safe.endIndex) ?? safe.endIndex
+                hits.append(.init(path: file.path, excerpt: String(safe[start..<end])))
+            } else if pathMatch { hits.append(.init(path: file.path, excerpt: L(file.role.label))) }
+            await Task.yield()
+        }
+        return hits
+    }
+
+    var preferredAnalysisProject: String {
+        let saved = AppSettings.defaults.string(forKey: "sidebarProject") ?? ""
+        return projectRoots.contains(saved) ? saved : projectRoots.first ?? ""
+    }
+    func projectLabel(_ path: String) -> String {
+        let name = URL(fileURLWithPath: path).lastPathComponent
+        return projectRoots.filter { URL(fileURLWithPath: $0).lastPathComponent == name }.count > 1
+            ? name + " — " + path.replacingOccurrences(of: AppPaths.home, with: "~") : name
+    }
+
+    func configurationAnalysis(_ context: AnalysisContext) -> ConfigurationAnalysis {
+        ConfigurationResolver.analyze(context) { path in
+            if let document = self.documents[path] { return document }
+            guard let text = try? Parsers.readText(at: path) else { return nil }
+            let parsed = Parsers.parse(text, format: AgentRegistry.inferFormat(path: path))
+            return ConfigDocument(text: text, tree: parsed.tree, parseError: parsed.error,
+                                  loadedAt: Date(), hash: SnapshotStore.sha256(text))
+        }
+    }
+
     // MARK: - scanning
 
     func refresh() {
-        for id in projectDefinitionIDs { definitions.removeValue(forKey: id) }
+        analysisRevision += 1
+        definitions = Dictionary(uniqueKeysWithValues: AgentRegistry.definitions.map { ($0.id, $0) })
         projectDefinitionIDs.removeAll()
         agents = AgentRegistry.detect()
+        projectDiscoveryNotices.removeAll()
+        projectScanDirectories.removeAll()
         for root in projectRoots {
-            for (def, agent) in AgentRegistry.detectLocal(projectRoot: root) {
+            let scan = SubmoduleDiscovery.scan(root: root)
+            projectDiscoveryNotices[root] = Array(Set(scan.notices)).sorted { ($0.manifest, $0.problem.rawValue) < ($1.manifest, $1.problem.rawValue) }
+            projectScanDirectories.formUnion(scan.directories)
+            for directory in scan.directories {
+                projectScanDirectories.formUnion(DiscoveryTree.projectFolders(root: directory).directories)
+            }
+            for (def, agent) in AgentRegistry.detectLocal(projectRoot: root, submodules: scan) {
                 definitions[agent.id] = def
                 projectDefinitionIDs.insert(agent.id)
                 agents.append(agent)
             }
         }
+        for index in agents.indices {
+            agents[index].files = agents[index].files.map(applyingDocumentDiagnostics)
+        }
         fileOwners.removeAll(); dirOwners.removeAll(); fileSource.removeAll()
-        var watchPaths: [String] = []
+        var watchPaths = Array(projectScanDirectories)
 
         for agent in agents {
             guard let def = definitions[agent.id] else { continue }
@@ -222,12 +298,7 @@ final class ConfigStore {
                 }
             }
             for f in agent.files {
-                fileOwners[f.path] = agent.id
-                fileSource[f.path] = ConfigSource(
-                    path: f.path, format: f.format, role: f.role,
-                    volatile: f.volatile, excludeFromHistory: f.excludeFromHistory,
-                    readOnly: f.readOnly, note: f.note
-                )
+                registerFilePolicy(f, agentID: agent.id)
                 watchPaths.append(f.path)
             }
         }
@@ -283,6 +354,23 @@ final class ConfigStore {
         addProject(path: url.path)
     }
 
+    func setConfigurationRoot(agentID: String, path: String?) {
+        guard dirtyPaths.isEmpty, savingPaths.isEmpty else {
+            actionError = L("Save or discard drafts before changing configuration roots."); return
+        }
+        var roots = AppSettings.defaults.dictionary(forKey: "agentConfigRoots") as? [String: String] ?? [:]
+        roots[agentID] = path
+        AppSettings.defaults.set(roots, forKey: "agentConfigRoots")
+        selectedPath = nil
+        refresh()
+    }
+
+    func pickConfigurationRoot(agentID: String) {
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        setConfigurationRoot(agentID: agentID, path: url.path)
+    }
+
     // MARK: - MCP index (cross-agent)
 
     private static let mcpContainerKeys = ["mcpServers", "mcp_servers", "mcp", "servers"]
@@ -309,9 +397,32 @@ final class ConfigStore {
             guard let servers = tree[key] as? [String: Any] else { continue }
             for (name, raw) in servers {
                 guard let spec = raw as? [String: Any] else { continue }
-                out.append(normalizeMcp(name: name, spec: spec,
+                var entry = normalizeMcp(name: name, spec: spec,
                                         agentID: agentID, agentName: agentName,
-                                        sourcePath: sourcePath, container: key))
+                                        sourcePath: sourcePath, container: key)
+                entry.sourceKeyPath = [key]
+                let filename = URL(fileURLWithPath: sourcePath).lastPathComponent
+                if agentID == "codex", filename.hasSuffix(".config.toml") {
+                    entry.profileName = String(filename.dropLast(".config.toml".count)); entry.scope = "Profile"
+                }
+                if let separator = agentID.range(of: "::") {
+                    entry.projectPath = String(agentID[separator.upperBound...]); entry.scope = "Project"
+                } else if sourcePath.contains("/extensions/") || sourcePath.contains("/plugins/") { entry.scope = "Extension" }
+                else if sourcePath.hasPrefix(AppPaths.systemPath("/etc/") ) || sourcePath.hasPrefix(AppPaths.systemPath("/Library/")) { entry.scope = "Managed" }
+                out.append(entry)
+            }
+        }
+        if agentID == "claude-code", let projects = tree["projects"] as? [String: Any] {
+            for (project, value) in projects.sorted(by: { $0.key < $1.key }) {
+                guard let record = value as? [String: Any], let servers = record["mcpServers"] as? [String: Any] else { continue }
+                for (name, raw) in servers {
+                    guard let raw = raw as? [String: Any] else { continue }
+                    var entry = normalizeMcp(name: name, spec: raw, agentID: agentID, agentName: agentName,
+                                             sourcePath: sourcePath, container: "mcpServers")
+                    entry.projectPath = project; entry.scope = "Private project"
+                    entry.sourceKeyPath = ["projects", project, "mcpServers"]
+                    out.append(entry)
+                }
             }
         }
         return out
@@ -546,7 +657,7 @@ final class ConfigStore {
         let oldPaths = Set(agents[idx].files.map(\.path))
         let updated = Agent(
             id: def.id, name: agents[idx].name, symbol: def.symbol, color: def.color,
-            files: AgentRegistry.resolveFiles(def), detectionPath: agents[idx].detectionPath,
+            files: AgentRegistry.resolveFiles(def).map(applyingDocumentDiagnostics), detectionPath: agents[idx].detectionPath,
             notes: def.notes, projectRoot: agents[idx].projectRoot, submodulePath: agents[idx].submodulePath
         )
         agents[idx] = updated
@@ -556,23 +667,43 @@ final class ConfigStore {
         refreshWatchList()
     }
 
+    /// Rebuilding the catalog must not erase diagnostics for cached documents.
+    private func applyingDocumentDiagnostics(_ file: TrackedFile) -> TrackedFile {
+        guard file.exists, let doc = documents[file.path] else { return file }
+        var result = file
+        let lint = Linter.lint(path: file.path, text: doc.text, tree: doc.tree,
+                               parseError: doc.parseError, format: file.format)
+        result.issues = lint.issues
+        result.managedBlocks = lint.managed
+        return result
+    }
+
+    private func registerFilePolicy(_ file: TrackedFile, agentID: String) {
+        var source = ConfigSource(path: file.path, format: file.format, role: file.role,
+            volatile: file.volatile, excludeFromHistory: file.excludeFromHistory, readOnly: file.readOnly, note: file.note)
+        if let previous = fileSource[file.path] {
+            let protected = previous.role == .state || file.role == .state ||
+                previous.note?.hasPrefix("Managed system source") == true || file.note?.hasPrefix("Managed system source") == true
+            source.readOnly = protected ? (previous.readOnly || file.readOnly) : previous.readOnly && file.readOnly
+            source.volatile = previous.volatile || file.volatile
+            source.excludeFromHistory = previous.excludeFromHistory || file.excludeFromHistory
+            if previous.readOnly && !file.readOnly && !protected { fileOwners[file.path] = agentID }
+        } else { fileOwners[file.path] = agentID }
+        fileSource[file.path] = source
+    }
+
     private func refreshWatchList() {
-        dirOwners.removeAll()
+        dirOwners.removeAll(); fileOwners.removeAll(); fileSource.removeAll()
         for agent in agents {
             for source in definitions[agent.id]?.sources ?? [] {
                 for path in AgentRegistry.watchDirectories(for: source) { dirOwners[path] = agent.id }
             }
         }
-        var paths = Array(dirOwners.keys)
+        var paths = Array(dirOwners.keys) + Array(projectScanDirectories)
         for agent in agents {
             paths.append(contentsOf: agent.files.map(\.path))
             for f in agent.files {
-                fileOwners[f.path] = agent.id
-                fileSource[f.path] = ConfigSource(
-                    path: f.path, format: f.format, role: f.role,
-                    volatile: f.volatile, excludeFromHistory: f.excludeFromHistory,
-                    readOnly: f.readOnly, note: f.note
-                )
+                registerFilePolicy(f, agentID: agent.id)
             }
         }
         watcher.watch(paths)
@@ -695,6 +826,7 @@ final class ConfigStore {
             loadedAt: Date(), hash: SnapshotStore.sha256(text)
         )
         documents[path] = doc
+        analysisRevision += 1
 
         // lint + managed blocks onto the TrackedFile
         let lint = Linter.lint(path: path, text: text, tree: parsed.tree,
@@ -1085,6 +1217,10 @@ final class ConfigStore {
     func handleWatchEvent(_ path: String) {
         lastEventAt = Date()
 
+        if projectScanDirectories.contains(path) {
+            refresh()
+            return
+        }
         if let agentID = dirOwners[path] {
             rescan(agentID: agentID)
             // files inside may have changed too — reload any open docs under it

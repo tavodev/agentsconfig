@@ -66,17 +66,14 @@ enum DocsCatalog {
         // Matched by relative suffix, so the same doc applies whether the
         // file lives under the global agent home or a registered project
         // root (Codex/Claude/Gemini/OpenCode local config).
-        if let doc = pathSuffixDocs.first(where: { path.hasSuffix($0.0) })?.1 {
+        if let doc = pathSuffixDocs.first(where: { ConfigFileContext.matches(path, suffix: $0.0) })?.1 {
             return doc
         }
         // Patterns by file name
         switch name {
         case "CLAUDE.md":
-            return .init(title: "Claude global memory",
-                         body: "Instructions Claude Code reads at the start of every session, in every project. Use it for persistent preferences: style, conventions, favorite tools.",
-                         docsURL: nil,
-                         titleES: "Memoria global de Claude",
-                         bodyES: "Instrucciones que Claude Code lee al inicio de cada sesión, en todos los proyectos. Úsalo para preferencias persistentes: estilo, convenciones, herramientas favoritas.")
+            return instructionDoc(path: path, product: "Claude", userPath: ".claude/CLAUDE.md",
+                                  url: "https://code.claude.com/docs/en/memory")
         case "AGENTS.md":
             return .init(title: "Agent instructions",
                          body: "Conventions read by compatible agents (Codex, OpenCode, Devin…) when working. The cross-agent equivalent of CLAUDE.md.",
@@ -84,11 +81,8 @@ enum DocsCatalog {
                          titleES: "Instrucciones para agentes",
                          bodyES: "Convenciones leídas por agentes compatibles (Codex, OpenCode, Devin…) al trabajar. Es el equivalente de CLAUDE.md pero cross-agente.")
         case "GEMINI.md":
-            return .init(title: "Gemini global memory",
-                         body: "Context and instructions Gemini CLI loads on every session.",
-                         docsURL: nil,
-                         titleES: "Memoria global de Gemini",
-                         bodyES: "Contexto e instrucciones que Gemini CLI carga en cada sesión.")
+            return instructionDoc(path: path, product: "Gemini", userPath: ".gemini/GEMINI.md",
+                                  url: "https://geminicli.com/docs/cli/gemini-md/")
         case "SKILL.md":
             return .init(title: "Agent skill",
                          body: "A skill packages instructions + resources the agent invokes when its name/trigger matches. The YAML frontmatter defines when it applies.",
@@ -125,6 +119,21 @@ enum DocsCatalog {
         }
     }
 
+    private static func instructionDoc(path: String, product: String, userPath: String, url: String) -> FileDoc {
+        if ConfigFileContext.isUserFile(path, relativePath: userPath) {
+            return .init(title: product + " global instructions",
+                         body: "User-level instructions shared across projects. Project instructions can contribute additional context; actual loading depends on the client and session.",
+                         docsURL: URL(string: url),
+                         titleES: "Instrucciones globales de " + product,
+                         bodyES: "Instrucciones de usuario compartidas entre proyectos. Las instrucciones del proyecto pueden aportar contexto adicional; la carga real depende del cliente y de la sesión.")
+        }
+        return .init(title: product + " project instructions",
+                     body: "Instructions for this project or folder. Their scope depends on directory hierarchy and the client's discovery rules; finding this file does not confirm that a session loaded it.",
+                     docsURL: URL(string: url),
+                     titleES: "Instrucciones de proyecto de " + product,
+                     bodyES: "Instrucciones para este proyecto o carpeta. Su alcance depende de la jerarquía de directorios y de las reglas del cliente; encontrar este archivo no confirma que una sesión lo haya cargado.")
+    }
+
     /// (relative suffix, doc) pairs — matched against the end of an absolute
     /// path, so the same entry covers both `~/.codex/config.toml` and any
     /// registered project's `.codex/config.toml`. Order matters only where
@@ -132,10 +141,10 @@ enum DocsCatalog {
     private static let pathSuffixDocs: [(String, FileDoc)] = [
         (".claude/settings.json", .init(
             title: "Claude Code settings",
-            body: "Configuration applied to Claude Code sessions: default model, tool permissions, hooks, enabled plugins and environment variables.\n\nPrecedence: managed > local > project > user.",
+            body: "Configuration applied to Claude Code sessions: default model, tool permissions, hooks, enabled plugins and environment variables.\n\nPrecedence: managed > CLI > local > project > user. Lists and certain keys have specific merge rules.",
             docsURL: URL(string: "https://code.claude.com/docs/en/settings"),
             titleES: "Ajustes de Claude Code",
-            bodyES: "Configuración aplicada a las sesiones de Claude Code: modelo por defecto, permisos de herramientas, hooks, plugins activados y variables de entorno.\n\nPrecedencia: sistema gestionado > local > proyecto > usuario."
+            bodyES: "Configuración aplicada a las sesiones de Claude Code: modelo por defecto, permisos de herramientas, hooks, plugins activados y variables de entorno.\n\nPrecedencia: sistema gestionado > CLI > local > proyecto > usuario. Las listas y ciertas claves tienen reglas de combinación específicas."
         )),
         (".claude/settings.local.json", .init(
             title: "Claude Code local overrides",
@@ -212,7 +221,7 @@ enum DocsCatalog {
     // MARK: - Key docs
 
     static func keyDoc(filePath: String, keyPath: [String]) -> KeyDoc? {
-        guard let table = keyTableSuffixes.first(where: { filePath.hasSuffix($0.0) })?.1 else { return nil }
+        guard let table = keyTableSuffixes.first(where: { ConfigFileContext.matches(filePath, suffix: $0.0) })?.1 else { return nil }
         let dotted = keyPath.joined(separator: ".")
         return table[dotted] ?? keyPath.last.flatMap { table[$0] }
     }
@@ -356,8 +365,8 @@ enum DocsCatalog {
         "hooks.UserPromptSubmit": .init("Runs when the user submits a prompt.", es: "Se ejecuta cuando el usuario envía un prompt."),
         "hooks.Stop": .init("Runs when the main agent stops responding.", es: "Se ejecuta cuando el agente principal deja de responder."),
         "hooks.Interrupt": .init("Runs when a running agent is interrupted.", es: "Se ejecuta cuando se interrumpe un agente en curso."),
-        "profiles": .init("Named config profiles — activated with --profile or CODEX_PROFILE.",
-                          es: "Perfiles nombrados de configuración — activables con --profile o CODEX_PROFILE."),
+        "profiles": .init("Legacy inline profiles. Codex 0.134.0 and later selects separate <name>.config.toml files with --profile; it no longer reads this table.",
+                          es: "Perfiles inline antiguos. Codex 0.134.0 y posteriores seleccionan archivos <nombre>.config.toml mediante --profile; ya no leen esta tabla."),
         "personality": .init("Tone/style of the agent's answers.",
                              es: "Tono/estilo de las respuestas del agente.",
                              values: ["friendly": "Warm", "pragmatic": "Direct", "none": "Neutral"],
@@ -416,6 +425,13 @@ enum DocsCatalog {
     ]
 
     private static let geminiKeys: [String: KeyDoc] = [
+        "general": .init("General Gemini CLI preferences, including editor and session behavior.", es: "Preferencias generales de Gemini CLI, incluido el editor y el comportamiento de sesión."),
+        "ui": .init("Terminal interface preferences such as theme and visibility.", es: "Preferencias de interfaz de terminal, como tema y visibilidad."),
+        "context": .init("Instruction discovery and file filtering settings.", es: "Ajustes de descubrimiento de instrucciones y filtrado de archivos."),
+        "context.fileName": .init("Instruction filename or list of filenames used for context discovery.", es: "Nombre o lista de nombres de archivos usados para descubrir instrucciones."),
+        "tools": .init("Tool behavior and execution settings.", es: "Ajustes de comportamiento y ejecución de herramientas."),
+        "hooks": .init("Lifecycle hooks configured for this scope. Finding a hook does not confirm it runs in a session.", es: "Hooks del ciclo de vida configurados para este alcance. Encontrarlos no confirma su ejecución en una sesión."),
+        "model.name": .init("Model selected in the model settings object.", es: "Modelo seleccionado dentro del objeto de ajustes de modelo."),
         "selectedAuthType": .init("How you authenticate with Gemini.",
                                   es: "Cómo te autenticas con Gemini.",
                                   values: ["oauth-personal": "Personal Google account", "gemini-api-key": "API key", "vertex-ai": "Vertex AI (GCP)"],
