@@ -67,9 +67,12 @@ remote policies and unsupported field-specific rules remain explicit.
 
 The **Instructions** and **Skills** tabs show instruction candidates and overrides,
 YAML metadata, shared consumers, resources, import cycles and traversal limits.
-Resource previews are read-only and never execute scripts. Candidate status does
-not confirm that a session loaded the content. Custom roots can be selected in
-Settings; terminal environment variables are not inferred from another process.
+Skills are grouped by origin (personal, project, plugins, system) and, when an
+origin has more than one owner, by skills folder or plugin package — the same
+rule as the Files list. Resource previews are read-only and never execute scripts.
+Candidate status does not confirm that a session loaded the content. Custom roots
+can be selected in Settings; terminal environment variables are not inferred from
+another process.
 
 The **MCP** comparator filters by project or profile and explains shadowed,
 disabled and ambiguous definitions. Its semantic comparison keeps argument order

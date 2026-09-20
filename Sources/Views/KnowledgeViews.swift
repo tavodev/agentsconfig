@@ -28,50 +28,94 @@ struct InstructionListView: View {
 }
 
 struct SkillPackagesView: View {
+    @Environment(ConfigStore.self) private var store
     let packages: [SkillPackage]
+    /// Registered project root for the selected context; `nil`/empty means a
+    /// global context, so project-local skills are never invented.
+    var projectRoot: String? = nil
     @State private var preview: ResourceSelection?
     struct ResourceSelection: Identifiable {
         var id: String { resource.path }
         let resource: KnowledgeResource
         let root: String
     }
+    private var groups: [SkillGrouping.Group<SkillPackage>] {
+        SkillGrouping.group(packages, path: \.path, readOnly: \.readOnly,
+                            projectRoot: projectRoot)
+    }
     var body: some View {
         List {
             if packages.isEmpty { Text(L("No skills found for this context.")) }
-            ForEach(packages) { package in
-                DisclosureGroup {
-                    Text(package.path).font(.caption.monospaced()).textSelection(.enabled)
-                    Text(L("Consumers") + ": " + package.consumers.joined(separator: ", ")).font(.callout)
-                    Text("\(package.bytes) bytes").font(.caption.monospaced())
-                    ForEach(package.metadata.keys.sorted(), id: \.self) { key in
-                        LabeledContent(L(key), value: package.metadata[key] ?? "")
-                    }
-                    ForEach(package.issues, id: \.self) { Label(L($0), systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange) }
-                    DisclosureGroup(L("Instructions preview")) { Text(package.body).font(.body.monospaced()).textSelection(.enabled) }
-                    DisclosureGroup(L("Package resources")) {
-                        ForEach(package.resources) { resource in
-                            HStack {
-                                Text(resource.name).font(.caption.monospaced())
-                                Spacer()
-                                Text(L(resource.state)).font(.caption).foregroundStyle(.secondary)
-                                Button(L("Preview")) { preview = .init(resource: resource, root: (package.path as NSString).deletingLastPathComponent) }
-                                    .disabled(resource.state != "Available")
+            ForEach(groups) { group in
+                DisclosureGroup(isExpanded: Binding(
+                    get: { store.skillExpansion.isExpanded(group.origin, count: group.items.count) },
+                    set: { store.setSkillExpanded(group.origin, $0) }
+                )) {
+                    // Single-owner origins flatten: the rows render directly
+                    // under the origin, without the lone owner disclosure.
+                    if group.nestsOwners {
+                        ForEach(group.owners) { ownerGroup in
+                            DisclosureGroup(isExpanded: Binding(
+                                get: {
+                                    store.skillExpansion.isExpanded(group.origin, owner: ownerGroup.owner,
+                                                                    count: ownerGroup.items.count)
+                                },
+                                set: { store.setSkillExpanded(group.origin, owner: ownerGroup.owner, $0) }
+                            )) {
+                                ForEach(ownerGroup.items) { package in packageRow(package) }
+                            } label: {
+                                Label(ownerGroup.owner,
+                                      systemImage: group.origin == .plugins ? "shippingbox" : "folder")
+                                    .font(.callout)
                             }
+                            .accessibilityIdentifier(
+                                "skill-owner:" + group.origin.rawValue + ":" +
+                                SkillGrouping.sanitizedOwnerID(ownerGroup.owner))
                         }
+                    } else {
+                        ForEach(group.items) { package in packageRow(package) }
                     }
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(package.name).font(.headline)
-                            Spacer()
-                            Text(L(package.state)).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Text(package.description).font(.callout).lineLimit(3)
-                    }
-                }.accessibilityIdentifier("skill-package:" + package.name)
+                    Label(L(group.origin.label), systemImage: group.origin.icon)
+                }
+                .accessibilityIdentifier("skill-group:" + group.origin.rawValue)
             }
         }.listStyle(.inset)
         .sheet(item: $preview) { selection in ResourcePreviewView(selection: selection) }
+    }
+
+    @ViewBuilder
+    private func packageRow(_ package: SkillPackage) -> some View {
+        DisclosureGroup {
+            Text(package.path).font(.caption.monospaced()).textSelection(.enabled)
+            Text(L("Consumers") + ": " + package.consumers.joined(separator: ", ")).font(.callout)
+            Text("\(package.bytes) bytes").font(.caption.monospaced())
+            ForEach(package.metadata.keys.sorted(), id: \.self) { key in
+                LabeledContent(L(key), value: package.metadata[key] ?? "")
+            }
+            ForEach(package.issues, id: \.self) { Label(L($0), systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.orange) }
+            DisclosureGroup(L("Instructions preview")) { Text(package.body).font(.body.monospaced()).textSelection(.enabled) }
+            DisclosureGroup(L("Package resources")) {
+                ForEach(package.resources) { resource in
+                    HStack {
+                        Text(resource.name).font(.caption.monospaced())
+                        Spacer()
+                        Text(L(resource.state)).font(.caption).foregroundStyle(.secondary)
+                        Button(L("Preview")) { preview = .init(resource: resource, root: (package.path as NSString).deletingLastPathComponent) }
+                            .disabled(resource.state != "Available")
+                    }
+                }
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(package.name).font(.headline)
+                    Spacer()
+                    Text(L(package.state)).font(.caption).foregroundStyle(.secondary)
+                }
+                Text(package.description).font(.callout).lineLimit(3)
+            }
+        }.accessibilityIdentifier("skill-package:" + package.name)
     }
 }
 

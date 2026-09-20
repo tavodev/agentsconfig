@@ -14,6 +14,7 @@ struct SkillPackage: Identifiable {
     var metadata: [String: String]
     var consumers: [String]
     var state: String
+    var readOnly: Bool
     var issues: [String]
     var resources: [KnowledgeResource]
     var bytes: Int

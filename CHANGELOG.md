@@ -4,6 +4,7 @@
 
 Initial experimental release candidate. No release has been published by this preparation.
 
+- Skills in the file list and Configuration → Skills are grouped by origin (personal, project, plugins, system) and nested by owner when more than one is present; skill rows omit the long cache path.
 - Native macOS interface for Claude Code, Codex, Gemini/Antigravity and OpenCode configuration inspection.
 - Per-repository (project) config inspection, including git submodules, with the same watching, diffing, history and masking as global files; local MCP servers appear read-only in the cross-agent comparator.
 - Sidebar Global/Projects switcher with a project picker and root/submodule scope chips, replacing nested disclosure trees.

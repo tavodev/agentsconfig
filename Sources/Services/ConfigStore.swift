@@ -57,6 +57,24 @@ final class ConfigStore {
     var findRequest = 0
     var showInspector = false
 
+    /// Session disclosure state for skill origin/owner groups, shared by the
+    /// file list and Configuration → Skills so toggles survive switching
+    /// agents or leaving Files. Session-only: never persisted.
+    var skillExpansion = SkillGroupExpansion()
+
+    /// Reassigns `skillExpansion` so `@Observable` publishes the change —
+    /// `SkillGroupExpansion` is a value type with mutating setters.
+    func setSkillExpanded(_ origin: SkillOrigin, _ value: Bool) {
+        var expansion = skillExpansion
+        expansion.set(origin, value)
+        skillExpansion = expansion
+    }
+    func setSkillExpanded(_ origin: SkillOrigin, owner: String, _ value: Bool) {
+        var expansion = skillExpansion
+        expansion.set(origin, owner: owner, value)
+        skillExpansion = expansion
+    }
+
     static let activityID = "__activity__"
     static let mcpID = "__mcp__"
     static let settingsID = "__settings__"

@@ -64,7 +64,7 @@ import Foundation
             output.skills.append(.init(path: file.path, name: Secrets.displayText(name, masking: true),
                 description: Secrets.displayText(header?.description ?? "", masking: true), metadata: metadata, consumers: consumers,
                 state: plugin ? "Activation not verified" : header?.disableModelInvocation == true ? "Manual invocation" : "Discovered",
-                issues: issues, resources: resources, bytes: text.utf8.count,
+                readOnly: file.readOnly, issues: issues, resources: resources, bytes: text.utf8.count,
                 body: Secrets.maskText(String(parsed.body.prefix(20_000)), format: .markdown, masking: true),
                 rank: rank + (file.path.contains("/.agents/skills/") && context.agentID == "gemini-cli" ? 1 : 0)))
         }

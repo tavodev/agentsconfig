@@ -115,6 +115,10 @@ struct TrackedFile: Identifiable, Hashable {
             ? url.deletingLastPathComponent().lastPathComponent : url.lastPathComponent
     }
     var shortPath: String { path.replacingOccurrences(of: AppPaths.home, with: "~") }
+    /// Second line under `displayName` in the file list. Skill rows already
+    /// lead with their folder name and sit under an owner group that names
+    /// the package/root, so repeating the full path is just noise.
+    var rowSubtitle: String? { role == .skills ? nil : shortPath }
 }
 
 struct Agent: Identifiable {

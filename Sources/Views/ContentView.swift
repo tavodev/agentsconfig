@@ -508,15 +508,12 @@ struct FileListView: View {
                     }
                     ForEach(groupedRoles(agent), id: \.self) { role in
                         Section {
-                            ForEach(files(agent, role: role).filter {
-                                query.isEmpty || $0.path.localizedCaseInsensitiveContains(query)
-                            }) { file in
-                                FileRow(file: file,
-                                        pending: store.externalChanges[file.path] != nil,
-                                        dirty: store.dirtyPaths.contains(file.path))
-                                    .tag(file.path)
-                                    .accessibilityIdentifier("file-row:\(file.path)")
-                                    .contextMenu { fileMenu(file) }
+                            if role == .skills {
+                                skillGroups(agent)
+                            } else {
+                                ForEach(filteredFiles(agent, role: role)) { file in
+                                    fileRow(file)
+                                }
                             }
                         } header: {
                             Label(L(role.label), systemImage: role.icon)
@@ -546,6 +543,68 @@ struct FileListView: View {
 
     private func files(_ agent: Agent, role: TrackedRole) -> [TrackedFile] {
         agent.files.filter { $0.role == role }
+    }
+
+    private func filteredFiles(_ agent: Agent, role: TrackedRole) -> [TrackedFile] {
+        files(agent, role: role).filter {
+            query.isEmpty || $0.path.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    @ViewBuilder
+    private func fileRow(_ file: TrackedFile) -> some View {
+        FileRow(file: file,
+                pending: store.externalChanges[file.path] != nil,
+                dirty: store.dirtyPaths.contains(file.path))
+            .tag(file.path)
+            .accessibilityIdentifier("file-row:\(file.path)")
+            .contextMenu { fileMenu(file) }
+    }
+
+    /// Skills are grouped by origin (personal, project, plugins, system)
+    /// and inside each origin by owner (skills root, project folder, plugin
+    /// package). `DisclosureGroup`s keep the macOS `List` reliable where
+    /// nested sections are not. Owner labels are paths/ids, not localized.
+    /// A single-owner origin renders its rows directly — the lone owner
+    /// label would only repeat the origin. Expansion lives on the store so
+    /// it survives leaving this view or switching agents.
+    @ViewBuilder
+    private func skillGroups(_ agent: Agent) -> some View {
+        let groups = SkillGrouping.group(filteredFiles(agent, role: .skills),
+                                         path: \.path, readOnly: \.readOnly,
+                                         projectRoot: agent.projectRoot)
+        ForEach(groups) { group in
+            DisclosureGroup(isExpanded: Binding(
+                get: { store.skillExpansion.isExpanded(group.origin, count: group.items.count) },
+                set: { store.setSkillExpanded(group.origin, $0) }
+            )) {
+                if group.nestsOwners {
+                    ForEach(group.owners) { ownerGroup in
+                        DisclosureGroup(isExpanded: Binding(
+                            get: {
+                                store.skillExpansion.isExpanded(group.origin, owner: ownerGroup.owner,
+                                                                count: ownerGroup.items.count)
+                            },
+                            set: { store.setSkillExpanded(group.origin, owner: ownerGroup.owner, $0) }
+                        )) {
+                            ForEach(ownerGroup.items) { file in fileRow(file) }
+                        } label: {
+                            Label(ownerGroup.owner,
+                                  systemImage: group.origin == .plugins ? "shippingbox" : "folder")
+                                .font(.callout)
+                        }
+                        .accessibilityIdentifier(
+                            "skill-owner:\(group.origin.rawValue):" +
+                            SkillGrouping.sanitizedOwnerID(ownerGroup.owner))
+                    }
+                } else {
+                    ForEach(group.items) { file in fileRow(file) }
+                }
+            } label: {
+                Label(L(group.origin.label), systemImage: group.origin.icon)
+            }
+            .accessibilityIdentifier("skill-group:\(group.origin.rawValue)")
+        }
     }
 
     @ViewBuilder
@@ -584,11 +643,13 @@ struct FileRow: View {
                             .help(L("State file — changes frequently"))
                     }
                 }
-                Text(file.shortPath)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                if let subtitle = file.rowSubtitle {
+                    Text(subtitle)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
                 if let note = file.note {
                     Text(L(note))
                         .font(.callout)

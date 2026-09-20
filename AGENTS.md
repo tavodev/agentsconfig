@@ -64,7 +64,16 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   añade a `agents`/`definitions` junto a los globales. Sus servidores MCP
   aparecen en el comparador cross-agent en modo solo lectura: no son
   destino válido de copiar/añadir (`mcpDestinationPaths` no se hereda a
-  las rutas locales).
+  las rutas locales). `skillExpansion` guarda, solo en sesión, qué grupos
+  de skills (origen y dueño) están abiertos; `setSkillExpanded` reasigna el
+  struct para que `@Observable` publique el cambio.
+- `Sources/Models/SkillOrigin.swift` — clasificación pura de skills por
+  origen (personal/proyecto/plugins/sistema) y dueño (carpeta o paquete),
+  a partir de ruta + `readOnly` + raíz de proyecto opcional. La lista de
+  archivos y Configuración → Skills usan la misma regla; los tests no
+  necesitan home, watchers ni UI. Plugins ganan sobre proyecto; un origen
+  con un solo dueño se aplana en la vista. Las filas se ordenan por nombre
+  de carpeta (`localizedStandardCompare`).
 - `Sources/Services/FileWatcher.swift` — DispatchSource vnode por archivo/dir,
   debounce configurable, reconexión con backoff (150 ms → 15 s) tras
   rename/delete o fichero ausente; `onAttachedCount` reporta watchers reales.
@@ -107,6 +116,9 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   compacto o lista lateral según el ancho disponible.
   `MarkdownPreview` parsea bloques `PresentationIntent` completos y distingue
   archivos ausentes de archivos vacíos.
+  Las skills de la lista de archivos y de Configuración → Skills se agrupan
+  por origen y, si hay más de un dueño, por carpeta o paquete; la fila de
+  skill no repite el path largo (el dueño ya lo nombra).
 - `Sources/Views/SettingsView.swift` — `AppSettingsView`, en archivo propio
   (no en `AgentsConfigApp.swift`) porque el target de tests excluye ese
   archivo por el `@main`; se reusa tal cual desde la escena `Settings`

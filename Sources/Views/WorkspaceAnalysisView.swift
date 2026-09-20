@@ -71,7 +71,8 @@ struct WorkspaceAnalysisView: View {
             else if selectedTab == "Instructions" {
                 InstructionListView(items: knowledge.instructions.filter { query.isEmpty || $0.path.localizedCaseInsensitiveContains(query) || $0.text.localizedCaseInsensitiveContains(query) }, notices: knowledge.notices)
             } else if selectedTab == "Skills" {
-                SkillPackagesView(packages: knowledge.skills.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.description.localizedCaseInsensitiveContains(query) })
+                SkillPackagesView(packages: knowledge.skills.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.description.localizedCaseInsensitiveContains(query) },
+                                  projectRoot: context.projectRoot.isEmpty ? nil : context.projectRoot)
             } else if selectedTab == "Diagnostics" {
                 DiagnosticsView(configuration: analysis, diagnostics: DiagnosticReportBuilder.diagnostics(configuration: analysis, knowledge: knowledge,
                     files: store.agents.filter { $0.id.components(separatedBy: "::").first == context.agentID && ($0.projectRoot == nil || $0.projectRoot == context.projectRoot) }.flatMap(\.files),
