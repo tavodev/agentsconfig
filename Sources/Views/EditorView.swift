@@ -220,7 +220,7 @@ struct EditorView: View {
                         ? Secrets.maskedValue : Secrets.maskText(doc?.text ?? "", format: format, masking: maskSecrets)),
                     format: format,
                     readOnly: true,
-                    refreshToken: doc.map { $0.hash.hashValue } ?? 0,
+                    refreshToken: doc.map { $0.hash.hashValue ^ $0.loadedAt.hashValue } ?? 0,
                     findToken: store.findRequest
                 )
             } else {
@@ -234,7 +234,7 @@ struct EditorView: View {
                     ),
                     format: format,
                     readOnly: store.savingPaths.contains(path),
-                    refreshToken: doc.map { $0.hash.hashValue } ?? 0,
+                    refreshToken: doc.map { $0.hash.hashValue ^ $0.loadedAt.hashValue } ?? 0,
                     findToken: store.findRequest
                 )
             }

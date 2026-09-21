@@ -58,7 +58,8 @@ struct LargeSourceEditor: View {
                     set: { limitExceeded = false; store.updateEdit(path: path, text: Self.replacingPage(in: source, page: page, with: $0)) }
                 ), format: store.format(for: path),
                    readOnly: readOnly || store.savingPaths.contains(path) || store.loadingPaths.contains(path),
-                   refreshToken: store.documents[path]?.hash.hashValue ?? 0, findToken: store.findRequest,
+                   refreshToken: (store.documents[path].map { $0.hash.hashValue ^ $0.loadedAt.hashValue }) ?? 0,
+                   findToken: store.findRequest,
                    maximumEditableLength: Self.pageSize * 2, onLimitExceeded: { limitExceeded = true })
             }
         }

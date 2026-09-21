@@ -362,6 +362,14 @@ final class Loc {
         "Source": "Fuente",
         "History": "Historial",
 
+        // Markdown preview (second delivery)
+        "Completed task": "Tarea completada",
+        "Pending task": "Tarea pendiente",
+        "+%d more keys": "+%d claves más",
+        "Empty frontmatter.": "Frontmatter vacío.",
+        "Invalid YAML frontmatter.": "YAML de frontmatter inválido.",
+        "Frontmatter exceeds 64 KiB.": "El frontmatter supera los 64 KiB.",
+
         // Empty states & hints
         "Select a file": "Selecciona un archivo",
         "Pick an agent and a config file to inspect it.": "Elige un agente y un archivo de configuración para inspeccionarlo.",
