@@ -140,6 +140,15 @@ final class ConfigStore {
             && !(tf.map { excludedHistoryPaths.contains($0.path) } ?? false)
     }
 
+    /// File-list membership. Missing declared paths stay out of the list
+    /// unless the user still has work or an error attached to them.
+    func listsFile(_ file: TrackedFile) -> Bool {
+        file.appearsInFileList(
+            dirty: dirtyPaths.contains(file.path),
+            pendingExternal: externalChanges[file.path] != nil,
+            hasSaveError: saveErrors[file.path] != nil)
+    }
+
     func historyPolicyAllowsRecording(_ path: String) -> Bool {
         guard let file = trackedFile(for: path) else { return false }
         return !file.volatile && !file.excludeFromHistory

@@ -119,6 +119,13 @@ struct TrackedFile: Identifiable, Hashable {
     /// lead with their folder name and sit under an owner group that names
     /// the package/root, so repeating the full path is just noise.
     var rowSubtitle: String? { role == .skills ? nil : shortPath }
+
+    /// The file list shows what is on disk. A missing declared file stays
+    /// visible only while the user still has unsaved edits, an external-change
+    /// banner, or a save error tied to that path.
+    func appearsInFileList(dirty: Bool, pendingExternal: Bool, hasSaveError: Bool) -> Bool {
+        exists || dirty || pendingExternal || hasSaveError
+    }
 }
 
 struct Agent: Identifiable {

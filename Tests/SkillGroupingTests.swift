@@ -150,6 +150,21 @@ struct SkillGroupingTests {
         #expect(settings.rowSubtitle == settings.shortPath)
     }
 
+    @Test func missingFilesStayOutOfTheFileListUnlessWorkIsAttached() {
+        let missing = TrackedFile(path: "/proj/.codex/hooks.json", format: .json, role: .hooks,
+                                  volatile: false, excludeFromHistory: false, readOnly: false,
+                                  note: nil, exists: false, size: 0, mtime: nil)
+        #expect(missing.appearsInFileList(dirty: false, pendingExternal: false, hasSaveError: false) == false)
+        #expect(missing.appearsInFileList(dirty: true, pendingExternal: false, hasSaveError: false))
+        #expect(missing.appearsInFileList(dirty: false, pendingExternal: true, hasSaveError: false))
+        #expect(missing.appearsInFileList(dirty: false, pendingExternal: false, hasSaveError: true))
+
+        let present = TrackedFile(path: "/proj/AGENTS.md", format: .markdown, role: .instructions,
+                                  volatile: false, excludeFromHistory: false, readOnly: false,
+                                  note: nil, exists: true, size: 12, mtime: nil)
+        #expect(present.appearsInFileList(dirty: false, pendingExternal: false, hasSaveError: false))
+    }
+
     /// Expansion state lives on the store (session-only) so it survives the
     /// file list being rebuilt; the value type must be reassigned through
     /// the setters for `@Observable` to publish.

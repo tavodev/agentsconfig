@@ -432,8 +432,13 @@ struct PanelRow: View {
 }
 
 struct AgentRow: View {
+    @Environment(ConfigStore.self) private var store
     let agent: Agent
     var displayName: String? = nil
+
+    private var listedFileCount: Int {
+        agent.files.filter { store.listsFile($0) }.count
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -441,7 +446,7 @@ struct AgentRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(displayName ?? agent.name)
                     .font(.system(size: 13, weight: .medium))
-                Text(L("%d files", agent.files.count))
+                Text(L("%d files", listedFileCount))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -538,11 +543,13 @@ struct FileListView: View {
     ]
 
     private func groupedRoles(_ agent: Agent) -> [TrackedRole] {
-        Self.roleOrder.filter { r in agent.files.contains { $0.role == r } }
+        Self.roleOrder.filter { role in
+            agent.files.contains { $0.role == role && store.listsFile($0) }
+        }
     }
 
     private func files(_ agent: Agent, role: TrackedRole) -> [TrackedFile] {
-        agent.files.filter { $0.role == role }
+        agent.files.filter { $0.role == role && store.listsFile($0) }
     }
 
     private func filteredFiles(_ agent: Agent, role: TrackedRole) -> [TrackedFile] {
