@@ -88,6 +88,30 @@ struct FileWatcherTests {
         func get() -> Int { lock.lock(); defer { lock.unlock() }; return v }
     }
 
+    /// Repro: thousands of project folders each took a descriptor until the
+    /// process hit RLIMIT_NOFILE and NSApplication aborted at launch. The
+    /// budget caps attached sources and honours the caller's priority order.
+    @Test func descriptorBudgetKeepsPriorityOrder() async throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let names = (0..<5).map { "budget\($0).json" }
+        for name in names { try env.write(name, "{}") }
+        let paths = names.map(env.path)
+        let counts = LockedBox()
+        let w = FileWatcher(maxSources: 2) { _ in }
+        w.onAttachedCount = { n in counts.set(n) }
+        defer { w.unwatchAll() }
+        w.watch(paths)
+        await w.synchronize()
+        #expect(counts.get() == 2)
+
+        // Dropping a prioritized path frees its slot for the next one.
+        w.watch(Array(paths.dropFirst()))
+        await w.synchronize()
+        #expect(counts.get() == 2)
+        #expect(FileWatcher.defaultMaxSources() >= 64)
+    }
+
     /// Repro: a file missing at watch() time was never picked up — its later
     /// creation went unobserved until a full refresh.
     @Test func lateCreatedFileIsPickedUp() async throws {

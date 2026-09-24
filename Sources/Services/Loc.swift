@@ -290,6 +290,7 @@ final class Loc {
         "Restore previous version": "Restaurar versión anterior",
         "Dismiss change banner": "Descartar banner de cambios",
         "Re-scan": "Re-escanear",
+        "Scanning configurations…": "Escaneando configuraciones…",
         "Save": "Guardar",
         "Discard": "Descartar",
         "Cancel": "Cancelar",

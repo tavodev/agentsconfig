@@ -64,9 +64,14 @@ struct ContentView: View {
         .toolbar {
             if store.selectedAgentID != ConfigStore.settingsID {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { store.refresh() } label: {
-                        Label(L("Re-scan"), systemImage: "arrow.clockwise")
+                    Button { store.scheduleRefresh() } label: {
+                        if store.isScanning {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Label(L("Re-scan"), systemImage: "arrow.clockwise")
+                        }
                     }
+                    .disabled(store.isScanning)
                     .help(L("Re-scan"))
                     .accessibilityIdentifier("rescan")
                 }
@@ -214,6 +219,13 @@ struct SidebarView: View {
 
             if scope == "global" {
                 Section(L("Detected agents")) {
+                    if store.isScanning && store.agents.isEmpty {
+                        HStack(spacing: 8) {
+                            ProgressView().controlSize(.small)
+                            Text(L("Scanning configurations…")).foregroundStyle(.secondary)
+                        }
+                        .accessibilityIdentifier("initial-scan")
+                    }
                     ForEach(store.agents.filter { $0.projectRoot == nil }) { agent in
                         AgentGroupRow(agent: agent)
                     }
@@ -333,7 +345,7 @@ struct SidebarView: View {
                 }
                 Divider()
                 Button(L("Remove project"), role: .destructive) {
-                    store.removeProject(path: activeProject)
+                    store.removeProject(path: activeProject, background: true)
                     syncActiveProject()
                     selectVisibleAgent()
                 }
@@ -478,7 +490,7 @@ struct AgentGroupRow: View {
                 Button(L("Open folder in Finder")) {
                     store.revealInFinder(AppPaths.expand(agent.detectionPath))
                 }
-                Button(L("Re-scan")) { store.refresh() }
+                Button(L("Re-scan")) { store.scheduleRefresh() }
             }
     }
 

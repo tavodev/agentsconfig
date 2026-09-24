@@ -202,7 +202,10 @@ enum AgentRegistry {
     /// detection path. Returns, per detected agent, the synthetic
     /// `AgentDefinition` (already-absolute sources) `ConfigStore` needs to
     /// register alongside the resolved `Agent`.
-    static func detectLocal(projectRoot: String, submodules: SubmoduleDiscovery.Result? = nil) -> [(def: AgentDefinition, agent: Agent)] {
+    /// `folders` reuses `DiscoveryTree.projectFolders` results already
+    /// computed by the caller, keyed by scan root.
+    static func detectLocal(projectRoot: String, submodules: SubmoduleDiscovery.Result? = nil,
+                            folders: [String: DiscoveryTree.Result] = [:]) -> [(def: AgentDefinition, agent: Agent)] {
         var scanRoots: [(submodulePath: String?, absRoot: String, label: String)] =
             [(nil, projectRoot, URL(fileURLWithPath: projectRoot).lastPathComponent)]
         for rel in (submodules ?? SubmoduleDiscovery.scan(root: projectRoot)).paths {
@@ -210,13 +213,18 @@ enum AgentRegistry {
         }
         var out: [(AgentDefinition, Agent)] = []
         for (submodulePath, absRoot, label) in scanRoots {
-            let nested = DiscoveryTree.projectFolders(root: absRoot)
+            let nested = folders[absRoot] ?? DiscoveryTree.projectFolders(root: absRoot, collectFiles: false)
             for def in definitions where !def.localSources.isEmpty {
                 var expanded = def
+                let firstComponents = def.localSources.map { $0.path.split(separator: "/").first.map(String.init) ?? $0.path }
                 for folder in nested.directories where folder != absRoot {
-                    let rel = String(folder.dropFirst(absRoot.count + 1))
-                    for source in def.localSources {
-                        guard FileManager.default.fileExists(atPath: (folder as NSString).appendingPathComponent(source.path)) else { continue }
+                    let names = nested.childNames[folder]
+                    for (index, source) in def.localSources.enumerated() {
+                        // The scan already listed this folder: skip the stat
+                        // unless the source's first component is present.
+                        if let names, !names.contains(firstComponents[index]) { continue }
+                        guard FileManager.default.fileExists(atPath: DiscoveryTree.join(folder, source.path)) else { continue }
+                        let rel = String(decoding: folder.utf8.dropFirst(absRoot.utf8.count + 1), as: UTF8.self)
                         var nestedSource = source
                         nestedSource.path = rel + "/" + source.path
                         nestedSource.note = "Nested project source — session loading not verified"
@@ -285,9 +293,12 @@ enum AgentRegistry {
         var size: Int64 = 0
         var mtime: Date? = nil
         var realExists = exists
-        if let attrs = try? FileManager.default.attributesOfItem(atPath: path) {
-            size = (attrs[.size] as? NSNumber)?.int64Value ?? 0
-            mtime = attrs[.modificationDate] as? Date
+        // lstat: attributesOfItem's no-follow metadata without reading xattrs.
+        var info = stat()
+        if lstat(path, &info) == 0 {
+            size = Int64(info.st_size)
+            mtime = Date(timeIntervalSince1970: TimeInterval(info.st_mtimespec.tv_sec)
+                         + TimeInterval(info.st_mtimespec.tv_nsec) / 1_000_000_000)
             realExists = true
         }
         return TrackedFile(
@@ -356,27 +367,28 @@ enum AgentRegistry {
     /// Bounded recursive skill discovery. Directory symlinks and .git are
     /// not traversed; at most 8 levels / 1,000 directories are monitored.
     static func skillTree(at root: String) -> (files: [String], directories: [String]) {
-        let fm = FileManager.default
-        var files: [String] = []
-        var directories: [String] = []
-        var pending = [(root, 0)]
-        while let (directory, depth) = pending.popLast(), directories.count < 1_000 {
-            directories.append(directory)
-            guard let names = try? fm.contentsOfDirectory(atPath: directory) else { continue }
-            for name in names.sorted().prefix(10_000) where name != ".git" {
-                let path = (directory as NSString).appendingPathComponent(name)
-                guard let attrs = try? fm.attributesOfItem(atPath: path),
-                      let type = attrs[.type] as? FileAttributeType else { continue }
-                if type == .typeDirectory, depth < 8 { pending.append((path, depth + 1)) }
-                else if type == .typeRegular, name == "SKILL.md" { files.append(path) }
+        let make = {
+            var files: [String] = []
+            var directories: [String] = []
+            var pending = [(root, 0)]
+            while let (directory, depth) = pending.popLast(), directories.count < 1_000 {
+                directories.append(directory)
+                guard var listed = DiscoveryTree.entries(of: directory) else { continue }
+                listed.sort { DiscoveryTree.byteOrder($0.name, $1.name) }
+                for (name, type) in listed.prefix(10_000) where name != ".git" {
+                    let path = DiscoveryTree.join(directory, name)
+                    if type == .directory, depth < 8 { pending.append((path, depth + 1)) }
+                    else if type == .regular, name == "SKILL.md" { files.append(path) }
+                }
             }
+            return (files, directories)
         }
-        return (files, directories)
+        return DiscoveryTree.cache?.skillTree(root, make) ?? make()
     }
 
     static func watchDirectories(for source: ConfigSource) -> [String] {
         guard source.isDirectory else { return [] }
-        if source.recursive { return DiscoveryTree.scan(root: source.expandedPath).directories }
+        if source.recursive { return DiscoveryTree.scan(root: source.expandedPath).directories }  // shares resolveFiles' scan
         return source.role == .skills ? skillTree(at: source.expandedPath).directories : [source.expandedPath]
     }
 

@@ -1,6 +1,12 @@
 import Foundation
 import SwiftUI
 import AppKit
+import os
+
+/// Scan timings: `log stream --info --predicate 'subsystem == "com.tavodev.agentsconfig"'`,
+/// or the "Points of Interest" track in Instruments.
+private let scanLog = Logger(subsystem: "com.tavodev.agentsconfig", category: "scan")
+private let scanSignposts = OSSignposter(subsystem: "com.tavodev.agentsconfig", category: .pointsOfInterest)
 
 @Observable
 @MainActor
@@ -104,10 +110,15 @@ final class ConfigStore {
     private var projectDefinitionIDs: Set<String> = []
 
     @ObservationIgnored private let watcher = FileWatcher(onChange: { _ in })
+    /// Directory trees (project folders, skill/plugin folders) via FSEvents;
+    /// `watcher` keeps one vnode source per tracked file.
+    @ObservationIgnored private let treeWatcher = TreeWatcher()
 
     /// `notifier: nil` disables UserNotifications entirely — tests pass nil so
     /// constructing a store never touches the real notification center.
-    init(notifier: Notifier? = .shared) {
+    /// `backgroundScan` (the app) returns before the first scan: the window
+    /// appears at once and state is published when the scan lands.
+    init(notifier: Notifier? = .shared, backgroundScan: Bool = false) {
         self.notifier = notifier
         var tracked = Set<String>()
         for def in AgentRegistry.definitions {
@@ -119,6 +130,9 @@ final class ConfigStore {
         watcher.onChange = { [weak self] path in
             Task { @MainActor in self?.handleWatchEvent(path) }
         }
+        treeWatcher.onEvents = { [weak self] events in
+            Task { @MainActor in self?.handleTreeEvents(events) }
+        }
         // the real number of attached watchers (missing files don't count)
         watcher.onAttachedCount = { [weak self] n in
             Task { @MainActor in self?.watchedCount = n }
@@ -128,9 +142,21 @@ final class ConfigStore {
         notifier?.onSelect = { [weak self] path in self?.openFile(path) }
         // One-time audit: tighten permissions on history written by older
         // versions; failures surface as warnings (no content is deleted).
-        permissionWarnings = snapshots.secureExistingPermissions()
-        refresh()
-        seedActivity()
+        guard backgroundScan else {
+            permissionWarnings = snapshots.secureExistingPermissions()
+            refresh()
+            seedActivity()
+            return
+        }
+        scheduleRefresh()
+        let audit = UncheckedSendable(snapshots)
+        Task { [weak self] in
+            let warnings = await Task.detached(priority: .utility) { audit.value.secureExistingPermissions() }.value
+            guard let self else { return }
+            self.permissionWarnings = warnings
+            await self.waitForRefresh()
+            self.seedActivity()
+        }
     }
 
     /// Files that get on-disk history. Volatile state files and sources
@@ -217,7 +243,8 @@ final class ConfigStore {
         for agent in agents {
             for f in agent.files where keepsHistory(f) {
                 guard seenPaths.insert(f.path).inserted else { continue }
-                for v in safeLoadHistory(f.path).prefix(15) {
+                // The scan just loaded most histories; don't read them again.
+                for v in (histories[f.path] ?? safeLoadHistory(f.path)).prefix(15) {
                     events.append(ActivityEvent(
                         date: v.date, path: f.path, agentID: agent.id,
                         agentName: agent.name, origin: v.origin,
@@ -290,57 +317,230 @@ final class ConfigStore {
 
     // MARK: - scanning
 
+    /// Main-actor state a scan depends on, captured so the disk work can run
+    /// off the main thread.
+    struct ScanInput: Sendable {
+        var generation: Int
+        var projectRoots: [String]
+        var selectedPath: String?
+        /// Texts already in `documents`: not re-read, reused for volatile MCP.
+        var knownTexts: [String: String]
+        /// Histories already in memory are not re-read.
+        var knownHistories: Set<String>
+        var snapshots: UncheckedSendable<SnapshotStore>
+    }
+
+    /// A tracked file read and parsed off the main actor.
+    struct PreloadedDocument: @unchecked Sendable {
+        var text: String
+        var tree: Any?
+        var parseError: String?   // unlocalized, as `parseInBackground` returns it
+        var hash: String
+        /// Loaded under the index lock off the main actor; nil when the
+        /// history was already in memory at scan time.
+        var history: Result<[FileVersion], HistoryReadError>?
+    }
+
+    struct HistoryReadError: Error { var message: String }
+
+    /// Everything `refresh()` learns from disk. Built by `scan(_:)` without
+    /// touching store state; `apply(_:)` publishes it on the main actor.
+    struct ScanResult: @unchecked Sendable {
+        var generation: Int
+        var definitions: [String: AgentDefinition] = [:]
+        var projectDefinitionIDs: Set<String> = []
+        var agents: [Agent] = []
+        var projectDiscoveryNotices: [String: [SubmoduleDiscovery.Notice]] = [:]
+        var projectScanDirectories: Set<String> = []
+        /// Directories of each agent's directory sources, in source order.
+        var sourceDirectories: [String: [String]] = [:]
+        var preloaded: [String: PreloadedDocument] = [:]
+        var readErrors: [String: String] = [:]
+        var volatileMcpEntries: [McpServerEntry] = []
+        /// Watch plan, computed here so `apply` does no filesystem checks.
+        var treeRoots: [String] = []
+        var missingSourceDirectories: Set<String> = []
+    }
+
+    /// True while a background scan is in flight (drives the sidebar spinner).
+    private(set) var isScanning = false
+    @ObservationIgnored private var refreshGeneration = 0
+    @ObservationIgnored private var refreshTask: Task<Void, Never>?
+    @ObservationIgnored private var refreshQueued = false
+
+    private func scanInput() -> ScanInput {
+        refreshGeneration += 1
+        return ScanInput(generation: refreshGeneration, projectRoots: projectRoots,
+                         selectedPath: selectedPath, knownTexts: documents.mapValues(\.text),
+                         knownHistories: Set(histories.keys), snapshots: UncheckedSendable(snapshots))
+    }
+
+    /// Synchronous scan: tests and model-level callers rely on the state
+    /// being current when it returns. UI and watcher paths use `scheduleRefresh()`.
     func refresh() {
-        analysisRevision += 1
-        definitions = Dictionary(uniqueKeysWithValues: AgentRegistry.definitions.map { ($0.id, $0) })
-        projectDefinitionIDs.removeAll()
-        agents = AgentRegistry.detect()
-        projectDiscoveryNotices.removeAll()
-        projectScanDirectories.removeAll()
-        for root in projectRoots {
-            let scan = SubmoduleDiscovery.scan(root: root)
-            projectDiscoveryNotices[root] = Array(Set(scan.notices)).sorted { ($0.manifest, $0.problem.rawValue) < ($1.manifest, $1.problem.rawValue) }
-            projectScanDirectories.formUnion(scan.directories)
-            for directory in scan.directories {
-                projectScanDirectories.formUnion(DiscoveryTree.projectFolders(root: directory).directories)
+        let result = Self.scan(scanInput())
+        measured("apply") { apply(result) }
+    }
+
+    private func measured(_ phase: StaticString, _ body: () -> Void) {
+        let state = scanSignposts.beginInterval(phase)
+        let start = ContinuousClock.now
+        body()
+        scanSignposts.endInterval(phase, state)
+        scanLog.info("\(phase, privacy: .public) \((ContinuousClock.now - start).formatted(.units(allowed: [.milliseconds])), privacy: .public)")
+    }
+
+    /// Scans on a background thread and publishes on the main actor. Requests
+    /// arriving mid-scan coalesce into one follow-up pass; a result is dropped
+    /// if a synchronous `refresh()` published newer state meanwhile.
+    func scheduleRefresh() {
+        guard refreshTask == nil else { refreshQueued = true; return }
+        isScanning = true
+        refreshTask = Task { [weak self] in
+            while let self {
+                self.refreshQueued = false
+                let input = self.scanInput()
+                let result = await Task.detached(priority: .userInitiated) { Self.scan(input) }.value
+                if result.generation == self.refreshGeneration { self.measured("apply") { self.apply(result) } }
+                guard self.refreshQueued else { break }
             }
-            for (def, agent) in AgentRegistry.detectLocal(projectRoot: root, submodules: scan) {
-                definitions[agent.id] = def
-                projectDefinitionIDs.insert(agent.id)
-                agents.append(agent)
-            }
+            self?.refreshTask = nil
+            self?.isScanning = false
         }
+    }
+
+    /// Awaits any scheduled scan (test and startup seam).
+    func waitForRefresh() async {
+        while let task = refreshTask { await task.value }
+    }
+
+    nonisolated static func scan(_ input: ScanInput) -> ScanResult {
+        let state = scanSignposts.beginInterval("scan")
+        let start = ContinuousClock.now
+        defer {
+            scanSignposts.endInterval("scan", state)
+            scanLog.info("scan \((ContinuousClock.now - start).formatted(.units(allowed: [.milliseconds])), privacy: .public)")
+        }
+        return DiscoveryTree.withCache {
+            var result = ScanResult(generation: input.generation)
+            result.definitions = Dictionary(uniqueKeysWithValues: AgentRegistry.definitions.map { ($0.id, $0) })
+            result.agents = AgentRegistry.detect()
+            for root in input.projectRoots {
+                let scan = SubmoduleDiscovery.scan(root: root)
+                result.projectDiscoveryNotices[root] = Array(Set(scan.notices)).sorted { ($0.manifest, $0.problem.rawValue) < ($1.manifest, $1.problem.rawValue) }
+                result.projectScanDirectories.formUnion(scan.directories)
+                var folders: [String: DiscoveryTree.Result] = [:]
+                for directory in scan.directories {
+                    let tree = DiscoveryTree.projectFolders(root: directory, collectFiles: false)
+                    folders[directory] = tree
+                    result.projectScanDirectories.formUnion(tree.directories)
+                }
+                for (def, agent) in AgentRegistry.detectLocal(projectRoot: root, submodules: scan, folders: folders) {
+                    result.definitions[agent.id] = def
+                    result.projectDefinitionIDs.insert(agent.id)
+                    result.agents.append(agent)
+                }
+            }
+            var existingDirectories: [String] = []
+            for agent in result.agents {
+                guard let def = result.definitions[agent.id] else { continue }
+                let directories = def.sources.flatMap(AgentRegistry.watchDirectories(for:))
+                result.sourceDirectories[agent.id] = directories
+                for directory in directories {
+                    var isDir: ObjCBool = false
+                    if FileManager.default.fileExists(atPath: directory, isDirectory: &isDir), isDir.boolValue {
+                        existingDirectories.append(directory)
+                    } else { result.missingSourceDirectories.insert(directory) }
+                }
+            }
+            result.treeRoots = TreeWatcher.minimalRoots(existingDirectories + Array(result.projectScanDirectories))
+            // Preload all tracked files so external changes can be diffed even
+            // before the user opens them. Skip anything over ~2MB. The first
+            // agent listing a path decides its format, as `format(for:)` does.
+            var seen = Set<String>()
+            for agent in result.agents {
+                for f in agent.files where f.exists && f.size < 2_000_000
+                    && input.knownTexts[f.path] == nil && seen.insert(f.path).inserted {
+                    do {
+                        let text = try Parsers.readText(at: f.path)
+                        // Same throttle as handleFileChanged: skip parsing huge
+                        // volatile files unless the user is looking at them.
+                        let heavyVolatile = f.volatile && text.utf8.count > 300_000 && f.path != input.selectedPath
+                        let parsed = heavyVolatile ? (tree: Any?.none, error: String?.none)
+                                                   : Parsers.parseInBackground(text, format: f.format)
+                        var history: Result<[FileVersion], HistoryReadError>?
+                        if !input.knownHistories.contains(f.path) {
+                            do { history = .success(try input.snapshots.value.loadHistory(for: f.path)) }
+                            catch { history = .failure(HistoryReadError(message: error.localizedDescription)) }
+                        }
+                        result.preloaded[f.path] = PreloadedDocument(text: text, tree: parsed.tree,
+                                                                     parseError: parsed.error, hash: SnapshotStore.sha256(text),
+                                                                     history: history)
+                    } catch {
+                        if FileManager.default.fileExists(atPath: f.path) { result.readErrors[f.path] = error.localizedDescription }
+                    }
+                }
+            }
+            // Parse volatile files once per scan so their MCP entries appear in
+            // the index (we skip per-event reparsing of these heavy files).
+            for agent in result.agents {
+                for f in agent.files where f.exists && f.volatile {
+                    guard let text = input.knownTexts[f.path] ?? result.preloaded[f.path]?.text
+                            ?? (try? Parsers.readText(at: f.path)),
+                          text.utf8.count <= Parsers.maximumFileBytes else { continue }
+                    let reused = input.knownTexts[f.path] == nil ? result.preloaded[f.path]?.tree : nil
+                    guard let tree = (reused ?? Parsers.parseInBackground(text, format: f.format).tree) as? [String: Any]
+                    else { continue }
+                    result.volatileMcpEntries += mcpEntries(in: tree, agentID: agent.id,
+                                                            agentName: agent.name, sourcePath: f.path)
+                }
+            }
+            return result
+        }
+    }
+
+    private func apply(_ result: ScanResult) {
+        analysisRevision += 1
+        definitions = result.definitions
+        projectDefinitionIDs = result.projectDefinitionIDs
+        projectDiscoveryNotices = result.projectDiscoveryNotices
+        projectScanDirectories = result.projectScanDirectories
+        agents = result.agents
+        rebuildFileIndex()
         for index in agents.indices {
             agents[index].files = agents[index].files.map(applyingDocumentDiagnostics)
         }
         fileOwners.removeAll(); dirOwners.removeAll(); fileSource.removeAll()
-        var watchPaths = Array(projectScanDirectories)
-
+        // Priority order for the watcher's descriptor budget: tracked files,
+        // then source directories. Project folders go to the tree watcher.
+        var watchPaths: [String] = []
+        var sourceDirectories: [String] = []
         for agent in agents {
-            guard let def = definitions[agent.id] else { continue }
-            for src in def.sources {
-                for p in AgentRegistry.watchDirectories(for: src) {
-                    dirOwners[p] = agent.id
-                    watchPaths.append(p)
-                }
+            for p in result.sourceDirectories[agent.id] ?? [] {
+                dirOwners[p] = agent.id
+                sourceDirectories.append(p)
             }
             for f in agent.files {
                 registerFilePolicy(f, agentID: agent.id)
                 watchPaths.append(f.path)
             }
         }
-        watcher.watch(watchPaths)
+        watcher.watch(watchPaths + sourceDirectories.filter(result.missingSourceDirectories.contains))
+        treeWatcher.watch(result.treeRoots)
         if selectedAgentID == nil { selectedAgentID = agents.first?.id }
-        // Preload all tracked files so external changes can be diffed even
-        // before the user opens them. Skip anything over ~2MB.
         for agent in agents {
             for f in agent.files where f.exists && f.size < 2_000_000 && documents[f.path] == nil {
-                _ = load(f.path)
+                if let pre = result.preloaded[f.path] {
+                    installDocument(f.path, preloaded: pre)
+                } else if let error = result.readErrors[f.path] {
+                    saveErrors[f.path] = L(error)
+                } else {
+                    // Known when the scan started but dropped since.
+                    _ = load(f.path)
+                }
             }
         }
-        // Parse volatile files once per scan so their MCP entries appear in
-        // the index (we skip per-event reparsing of these heavy files).
-        volatileMcpEntries = extractVolatileMcp()
+        volatileMcpEntries = result.volatileMcpEntries
         rebuildMcpIndex()
     }
 
@@ -349,24 +549,27 @@ final class ConfigStore {
     /// Registers a project root for local-config inspection (idempotent) and
     /// rescans. History for its files is content-addressed by absolute path,
     /// so nothing special is needed to start/resume tracking it.
-    func addProject(path: String) {
+    func addProject(path: String, background: Bool = false) {
         // No `standardizingPath`/realpath normalization: kept exactly as
         // given so it matches the resolved `TrackedFile` paths built from it
         // (which are plain string concatenations, like the global sources).
         guard !projectRoots.contains(path) else { return }
         projectRoots.append(path)
         AppSettings.defaults.set(projectRoots, forKey: "projectRoots")
-        refresh()
+        if background { scheduleRefresh() } else { refresh() }
     }
 
     /// Unregisters a project: stops watching/showing it. Its on-disk history
     /// is retained (same policy as elsewhere — purging is always manual) and
     /// resumes automatically if the same root is re-added later.
-    func removeProject(path: String) {
+    func removeProject(path: String, background: Bool = false) {
         guard let idx = projectRoots.firstIndex(of: path) else { return }
         projectRoots.remove(at: idx)
         AppSettings.defaults.set(projectRoots, forKey: "projectRoots")
-        refresh()
+        guard background else { refresh(); return }
+        // Hide it right away; the scan then rebuilds owners and watch lists.
+        agents.removeAll { $0.projectRoot == path }
+        scheduleRefresh()
     }
 
     /// Presents a folder picker and registers the chosen directory as a
@@ -378,6 +581,8 @@ final class ConfigStore {
         panel.allowsMultipleSelection = false
         panel.prompt = L("Add")
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        // Synchronous on purpose: the sidebar selects the new project's
+        // first agent right after this returns.
         addProject(path: url.path)
     }
 
@@ -400,7 +605,7 @@ final class ConfigStore {
 
     // MARK: - MCP index (cross-agent)
 
-    private static let mcpContainerKeys = ["mcpServers", "mcp_servers", "mcp", "servers"]
+    private nonisolated static let mcpContainerKeys = ["mcpServers", "mcp_servers", "mcp", "servers"]
 
     private var volatileMcpEntries: [McpServerEntry] = []
 
@@ -417,7 +622,7 @@ final class ConfigStore {
     }
 
     /// Extract MCP entries from a parsed tree.
-    private static func mcpEntries(in tree: [String: Any], agentID: String,
+    private nonisolated static func mcpEntries(in tree: [String: Any], agentID: String,
                                    agentName: String, sourcePath: String) -> [McpServerEntry] {
         var out: [McpServerEntry] = []
         for key in mcpContainerKeys {
@@ -455,22 +660,6 @@ final class ConfigStore {
         return out
     }
 
-    /// Parse volatile (heavy, throttled) files once at scan time for MCP keys.
-    private func extractVolatileMcp() -> [McpServerEntry] {
-        var out: [McpServerEntry] = []
-        for agent in agents {
-            for f in agent.files where f.exists && f.volatile {
-                guard let text = documents[f.path]?.text
-                    ?? (try? Parsers.readText(at: f.path)),
-                    let tree = Parsers.parse(text, format: f.format).tree as? [String: Any]
-                else { continue }
-                out += Self.mcpEntries(in: tree, agentID: agent.id,
-                                       agentName: agent.name, sourcePath: f.path)
-            }
-        }
-        return out
-    }
-
     /// Re-extract a volatile file's MCP entries after it changed on disk or
     /// was written by us — otherwise the index would keep stale servers until
     /// the next full scan.
@@ -486,7 +675,7 @@ final class ConfigStore {
                                               sourcePath: path)
     }
 
-    private static func normalizeMcp(name: String, spec: [String: Any],
+    private nonisolated static func normalizeMcp(name: String, spec: [String: Any],
                                      agentID: String, agentName: String,
                                      sourcePath: String, container: String) -> McpServerEntry {
         var command: String? = spec["command"] as? String
@@ -726,15 +915,84 @@ final class ConfigStore {
                 for path in AgentRegistry.watchDirectories(for: source) { dirOwners[path] = agent.id }
             }
         }
-        var paths = Array(dirOwners.keys) + Array(projectScanDirectories)
+        var files: [String] = []
         for agent in agents {
-            paths.append(contentsOf: agent.files.map(\.path))
+            files.append(contentsOf: agent.files.map(\.path))
             for f in agent.files {
                 registerFilePolicy(f, agentID: agent.id)
             }
         }
-        watcher.watch(paths)
+        applyWatchLists(files: files, directories: Array(dirOwners.keys))
         rebuildMcpIndex()
+    }
+
+    /// Tracked files get vnode sources (listed first: they matter most under
+    /// the descriptor budget). Existing directories are covered by one
+    /// FSEvents stream; a directory that does not exist yet stays on the
+    /// vnode watcher, whose retry picks up its creation without holding an fd.
+    private func applyWatchLists(files: [String], directories: [String]) {
+        var existing: [String] = []
+        var missing: [String] = []
+        for directory in directories {
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: directory, isDirectory: &isDir), isDir.boolValue {
+                existing.append(directory)
+            } else { missing.append(directory) }
+        }
+        watcher.watch(files + missing)
+        treeWatcher.watch(TreeWatcher.minimalRoots(existing + Array(projectScanDirectories)))
+    }
+
+    /// First path components of every project-local source (`.claude`,
+    /// `AGENTS.md`, `.mcp.json`…) plus `.gitmodules`: the only entry names
+    /// whose appearance inside a project folder can change discovery.
+    private static let projectMarkerNames: Set<String> = {
+        var names: Set<String> = [".gitmodules"]
+        for def in AgentRegistry.definitions {
+            for source in def.localSources {
+                if let first = source.path.split(separator: "/").first { names.insert(String(first)) }
+            }
+        }
+        return names
+    }()
+
+    /// FSEvents batch → the same reactions vnode directory events had, but
+    /// only for structural changes that matter: a project rescan when its
+    /// folder structure or a config marker changes (edits, builds and
+    /// dependency folders no longer trigger one), a per-agent rescan when a
+    /// watched source directory gains or loses entries.
+    func handleTreeEvents(_ events: [TreeWatcher.Event]) {
+        var projectChanged = false
+        var sourceDirectories: [String] = []
+        for event in events {
+            if event.mustRescan { projectChanged = true; break }
+            guard event.structural else { continue }
+            let parent = (event.path as NSString).deletingLastPathComponent
+            for directory in [event.path, parent] where dirOwners[directory] != nil && !sourceDirectories.contains(directory) {
+                sourceDirectories.append(directory)
+            }
+            if projectScanDirectories.contains(event.path) { projectChanged = true; continue }
+            // Walk up to the nearest scanned folder: a new subfolder there, or
+            // anything under a marker entry (e.g. `.claude/settings.json`
+            // inside an already existing, unscanned `.claude`), counts.
+            var child = event.path, directory = parent
+            for depth in 0..<4 {
+                if projectScanDirectories.contains(directory) {
+                    let name = (child as NSString).lastPathComponent
+                    // A new folder counts unless discovery skips it anyway
+                    // (node_modules, build, .git…); config markers always count.
+                    if (depth == 0 && event.isDirectory && !DiscoveryTree.projectSkipNames.contains(name))
+                        || Self.projectMarkerNames.contains(name) { projectChanged = true }
+                    break
+                }
+                child = directory
+                directory = (directory as NSString).deletingLastPathComponent
+            }
+        }
+        guard projectChanged || !sourceDirectories.isEmpty else { return }
+        lastEventAt = Date()
+        if projectChanged { scheduleRefresh(); return }
+        for directory in sourceDirectories { handleWatchEvent(directory) }
     }
 
     func usesBackgroundProcessing(_ path: String) -> Bool {
@@ -820,7 +1078,31 @@ final class ConfigStore {
     }
 
     private func trackedFile(for path: String) -> TrackedFile? {
-        for agent in agents { if let f = agent.files.first(where: { $0.path == path }) { return f } }
+        fileLocation(path).map { agents[$0.agent].files[$0.file] }
+    }
+
+    /// First (agent, file) position of each tracked path. Validated on every
+    /// lookup and rebuilt when `agents` changed shape, so it never returns a
+    /// stale entry; turns per-file lookups during preload from O(n) into O(1).
+    @ObservationIgnored private var fileIndex: [String: (agent: Int, file: Int)] = [:]
+
+    private func rebuildFileIndex() {
+        fileIndex.removeAll(keepingCapacity: true)
+        for (ai, agent) in agents.enumerated() {
+            for (fi, file) in agent.files.enumerated() where fileIndex[file.path] == nil {
+                fileIndex[file.path] = (ai, fi)
+            }
+        }
+    }
+
+    private func fileLocation(_ path: String) -> (agent: Int, file: Int)? {
+        func valid(_ l: (agent: Int, file: Int)) -> Bool {
+            agents.indices.contains(l.agent) && agents[l.agent].files.indices.contains(l.file)
+                && agents[l.agent].files[l.file].path == path
+        }
+        if let l = fileIndex[path], valid(l) { return l }
+        rebuildFileIndex()
+        if let l = fileIndex[path], valid(l) { return l }
         return nil
     }
 
@@ -848,16 +1130,37 @@ final class ConfigStore {
             && text.utf8.count > 300_000 && path != selectedPath
         let parsed = heavyVolatile ? (tree: Any?.none, error: String?.none)
                                    : Parsers.parse(text, format: format)
+        return installParsed(path, text: text, tree: parsed.tree, parseError: parsed.error,
+                             hash: SnapshotStore.sha256(text), format: format)
+    }
+
+    /// Installs a document read and parsed by a background scan; only the
+    /// error localization, lint and history bookkeeping run here.
+    @discardableResult
+    private func installDocument(_ path: String, preloaded: PreloadedDocument) -> ConfigDocument {
+        if histories[path] == nil, let history = preloaded.history {
+            switch history {
+            case .success(let versions): histories[path] = versions; historyErrors.removeValue(forKey: path)
+            case .failure(let error): histories[path] = []; historyErrors[path] = error.message
+            }
+        }
+        return installParsed(path, text: preloaded.text, tree: preloaded.tree,
+                      parseError: Parsers.localizedError(preloaded.parseError),
+                      hash: preloaded.hash, format: format(for: path))
+    }
+
+    private func installParsed(_ path: String, text: String, tree: Any?, parseError: String?,
+                               hash: String, format: ConfigFormat) -> ConfigDocument {
         let doc = ConfigDocument(
-            text: text, tree: parsed.tree, parseError: parsed.error,
-            loadedAt: Date(), hash: SnapshotStore.sha256(text)
+            text: text, tree: tree, parseError: parseError,
+            loadedAt: Date(), hash: hash
         )
         documents[path] = doc
         analysisRevision += 1
 
         // lint + managed blocks onto the TrackedFile
-        let lint = Linter.lint(path: path, text: text, tree: parsed.tree,
-                               parseError: parsed.error, format: format)
+        let lint = Linter.lint(path: path, text: text, tree: tree,
+                               parseError: parseError, format: format)
         updateFileMeta(path: path) { f in
             f.issues = lint.issues
             f.managedBlocks = lint.managed
@@ -884,12 +1187,8 @@ final class ConfigStore {
     }
 
     private func updateFileMeta(path: String, _ mutate: (inout TrackedFile) -> Void) {
-        for ai in agents.indices {
-            if let fi = agents[ai].files.firstIndex(where: { $0.path == path }) {
-                mutate(&agents[ai].files[fi])
-                return
-            }
-        }
+        guard let l = fileLocation(path) else { return }
+        mutate(&agents[l.agent].files[l.file])
     }
 
     // MARK: - editing
@@ -1717,4 +2016,11 @@ final class ConfigStore {
     func requestFind() { findRequest += 1 }
 
     func setWatchDebounce(_ interval: TimeInterval) { watcher.setDebounce(interval) }
+}
+
+/// Hands a value to a detached task when the caller knows it is only read
+/// there (e.g. a `SnapshotStore` copy for the permission audit).
+struct UncheckedSendable<Value>: @unchecked Sendable {
+    let value: Value
+    init(_ value: Value) { self.value = value }
 }

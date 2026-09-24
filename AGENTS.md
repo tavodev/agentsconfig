@@ -77,6 +77,26 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `Sources/Services/FileWatcher.swift` — DispatchSource vnode por archivo/dir,
   debounce configurable, reconexión con backoff (150 ms → 15 s) tras
   rename/delete o fichero ausente; `onAttachedCount` reporta watchers reales.
+  Solo vigila **archivos** (y directorios fuente aún inexistentes). Presupuesto
+  de fds (`maxSources`, ¾ del `RLIMIT_NOFILE` blando que la app sube a 10 240
+  al arrancar), en el orden dado; agotar fds aborta `NSApplication.init`.
+- `Sources/Services/TreeWatcher.swift` — un único stream FSEvents para los
+  árboles (carpetas de proyecto, skills/plugins) sobre `minimalRoots`.
+  `ConfigStore.handleTreeEvents` solo reacciona a cambios estructurales:
+  carpeta nueva no excluida (`DiscoveryTree.projectSkipNames`) o marcador de
+  config (`projectMarkerNames`: primeros componentes de `localSources` +
+  `.gitmodules`) → `scheduleRefresh()`; entradas en un dir fuente → rescan
+  del agente. Editar código, builds y `node_modules` no re-escanean.
+- Escaneo: `refresh()` = `apply(scan(input))`. `scan` es `nonisolated` (detección,
+  proyectos, watch plan, lectura+parse+hash+historial de precargas, MCP
+  volátil); `apply` solo muta estado en MainActor. `refresh()` sigue síncrono
+  (tests/modelo); UI, arranque (`ConfigStore(backgroundScan: true)`) y
+  eventos usan `scheduleRefresh()` (coalesce + descarte por generación;
+  `waitForRefresh()` para tests). Añadir proyecto es síncrono a propósito.
+  `DiscoveryTree` usa `readdir`/`d_type`, rutas `String` nativas (no
+  `NSString`: forzaba copias en cada comparación), orden por bytes y caché
+  por pasada (`withCache`). Tiempos: `log stream --info --predicate
+  'subsystem == "com.tavodev.agentsconfig"'` o Points of Interest.
 - `Sources/Services/Parsers.swift` — JSON/JSONC via JSONSerialization,
   TOML via TOMLKit (`TOMLTable.convert(to: .json)` → árbol Foundation).
 - `Sources/Services/DiffEngine.swift` — diff semántico por key-path;

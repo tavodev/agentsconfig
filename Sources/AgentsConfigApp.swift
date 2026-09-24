@@ -10,7 +10,20 @@ struct AgentsConfigApp: App {
         // even if launched manually without XCTest's fixture environment.
         precondition(Bundle.main.bundleIdentifier != "com.tavodev.agentsconfig.ui-fixture" || AppSettings.isIsolatedRun,
                      "The UI test host requires an isolated home and defaults suite.")
-        return ConfigStore(notifier: AppSettings.isIsolatedRun ? nil : .shared)
+        raiseDescriptorLimit()
+        return ConfigStore(notifier: AppSettings.isIsolatedRun ? nil : .shared, backgroundScan: true)
+    }
+
+    /// launchd starts apps with a low soft `RLIMIT_NOFILE`; the watcher
+    /// sizes its budget from it, so raise it (up to OPEN_MAX) before the
+    /// store creates the watcher.
+    private static func raiseDescriptorLimit() {
+        var limit = rlimit()
+        guard getrlimit(RLIMIT_NOFILE, &limit) == 0 else { return }
+        let target = min(limit.rlim_max, rlim_t(10_240))
+        guard limit.rlim_cur < target else { return }
+        limit.rlim_cur = target
+        _ = setrlimit(RLIMIT_NOFILE, &limit)
     }
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @AppStorage("menuBarExtra", store: AppSettings.defaults) private var menuBarExtra = true

@@ -99,30 +99,36 @@ enum SkillGrouping {
         return SkillOrigin.allCases.compactMap { origin in
             guard let items = buckets[origin], !items.isEmpty else { return nil }
             let owners = (ownerOrder[origin] ?? []).map {
-                OwnerGroup(owner: $0,
-                           items: (ownerBuckets[origin]?[$0] ?? []).sorted {
-                               comesFirst($0, $1, path: path)
-                           })
+                OwnerGroup(owner: $0, items: sortedByFolder(ownerBuckets[origin]?[$0] ?? [], path: path))
             }
-            return Group(origin: origin,
-                         items: items.sorted { comesFirst($0, $1, path: path) },
-                         owners: owners)
+            return Group(origin: origin, items: sortedByFolder(items, path: path), owners: owners)
         }
     }
 
     /// Skill rows sort by the folder holding `SKILL.md`, Finder-style
-    /// (`localizedStandardCompare`), with the full path as tiebreaker.
-    private static func comesFirst<T>(_ lhs: T, _ rhs: T, path: (T) -> String) -> Bool {
-        let a = skillFolderName(path(lhs)), b = skillFolderName(path(rhs))
-        return a == b ? path(lhs) < path(rhs)
-                      : a.localizedStandardCompare(b) == .orderedAscending
+    /// (`localizedStandardCompare`), with the full path as tiebreaker. Keys
+    /// are derived once per item, not per comparison (this runs in view bodies).
+    private struct FolderKey<T> { var item: T; var path: String; var folder: String }
+
+    private static func sortedByFolder<T>(_ items: [T], path: (T) -> String) -> [T] {
+        var keyed: [FolderKey<T>] = []
+        keyed.reserveCapacity(items.count)
+        for item in items {
+            let p = path(item)
+            keyed.append(FolderKey(item: item, path: p, folder: skillFolderName(p)))
+        }
+        keyed.sort { (lhs: FolderKey<T>, rhs: FolderKey<T>) -> Bool in
+            if lhs.folder == rhs.folder { return lhs.path < rhs.path }
+            return lhs.folder.localizedStandardCompare(rhs.folder) == .orderedAscending
+        }
+        return keyed.map { $0.item }
     }
 
     /// Sort/display key for a skill row: the folder holding `SKILL.md`.
     /// Works for `TrackedFile` and `SkillPackage` alike because both point
     /// `path` at the SKILL.md file.
     static func skillFolderName(_ path: String) -> String {
-        URL(fileURLWithPath: path).deletingLastPathComponent().lastPathComponent
+        ((path as NSString).deletingLastPathComponent as NSString).lastPathComponent
     }
 
     // MARK: - Owner labels

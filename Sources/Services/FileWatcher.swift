@@ -10,6 +10,13 @@ import Foundation
 /// retried again. `onAttachedCount` reports the *real* number of attached
 /// sources.
 ///
+/// Descriptor budget: every source holds one fd, and the process shares its
+/// `RLIMIT_NOFILE` with AppKit. Exhausting it aborts `NSApplication` startup
+/// (HIServices cannot read the system version), so at most `maxSources` are
+/// attached, in the order given to `watch(_:)` — callers list the paths that
+/// matter most first. Paths beyond the budget are left unattached and are not
+/// retried until a later `watch(_:)` frees room.
+///
 /// Thread-safe: all state is touched only on the serial `queue`; the
 /// `onChange` callback hops to main.
 final class FileWatcher: @unchecked Sendable {
@@ -18,6 +25,8 @@ final class FileWatcher: @unchecked Sendable {
     private var retryWork: [String: DispatchWorkItem] = [:]
     private var retryAttempts: [String: Int] = [:]
     private var wanted: Set<String> = []
+    private var wantedOrder: [String] = []
+    private let maxSources: Int
     private var observations: [String: UUID] = [:]
     private var gates: [String: DeliveryGate] = [:]
     private var attachments: [String: UUID] = [:]
@@ -28,6 +37,15 @@ final class FileWatcher: @unchecked Sendable {
     var onChange: @Sendable (String) -> Void
     /// Fired on `queue` whenever the set of attached sources changes.
     var onAttachedCount: (@Sendable (Int) -> Void)?
+
+    /// Leaves a quarter of the soft fd limit (at least 256) to the rest of
+    /// the process.
+    static func defaultMaxSources() -> Int {
+        var limit = rlimit()
+        guard getrlimit(RLIMIT_NOFILE, &limit) == 0 else { return 64 }
+        let soft = Int(clamping: limit.rlim_cur)
+        return max(64, soft - max(256, soft / 4))
+    }
 
     /// Cancellation and starting a callback are mutually exclusive. The
     /// barrier waits for a callback already in progress instead of racing it.
@@ -43,8 +61,10 @@ final class FileWatcher: @unchecked Sendable {
 
     init(debounce: TimeInterval = AppSettings.watchDebounce,
          deliver: @escaping @Sendable (@escaping @Sendable () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) },
+         maxSources: Int = FileWatcher.defaultMaxSources(),
          onChange: @escaping @Sendable (String) -> Void) {
         self.debounce = debounce
+        self.maxSources = max(0, maxSources)
         self.deliver = deliver
         self.onChange = onChange
     }
@@ -75,7 +95,9 @@ final class FileWatcher: @unchecked Sendable {
 
     func watch(_ paths: [String]) {
         queue.async {
-            self.wanted = Set(paths)
+            var seen = Set<String>()
+            self.wantedOrder = paths.filter { seen.insert($0).inserted }
+            self.wanted = seen
             for path in self.observations.keys where !self.wanted.contains(path) {
                 self.observations.removeValue(forKey: path)
                 self.gates.removeValue(forKey: path)?.cancel()
@@ -96,7 +118,8 @@ final class FileWatcher: @unchecked Sendable {
                 self.retryWork.removeValue(forKey: path)
                 self.retryAttempts.removeValue(forKey: path)
             }
-            for path in self.wanted where self.sources[path] == nil {
+            for path in self.wantedOrder where self.sources[path] == nil {
+                guard self.sources.count < self.maxSources else { break }
                 self.attach(path, notify: false)
             }
             self.publishCount()
@@ -115,10 +138,12 @@ final class FileWatcher: @unchecked Sendable {
     /// retry path, where the file just appeared/reappeared and its content
     /// may differ from what we last saw.
     private func attach(_ path: String, notify: Bool) {
-        guard wanted.contains(path), sources[path] == nil else { return }
+        guard wanted.contains(path), sources[path] == nil, sources.count < maxSources else { return }
         let fd = open(path, O_EVTONLY)
         guard fd >= 0 else {
-            scheduleRetry(path)
+            // Out of descriptors is not a missing file: retrying would only
+            // keep the process at its limit.
+            if errno != EMFILE && errno != ENFILE { scheduleRetry(path) }
             return
         }
         retryAttempts[path] = 0

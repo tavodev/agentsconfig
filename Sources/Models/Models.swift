@@ -261,10 +261,13 @@ enum AppPaths {
     /// not synchronized — suites that mutate it must run serialized.
     nonisolated(unsafe) static var overrideHome: String?
 
+    /// Read once: `ProcessInfo.environment` rebuilds the whole environment
+    /// dictionary on every access, and `home` is consulted per path.
+    static let environmentHome = ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"]
+    private static let userHome = NSHomeDirectory()
+
     static var home: String {
-        overrideHome
-            ?? ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"]
-            ?? NSHomeDirectory()
+        overrideHome ?? environmentHome ?? userHome
     }
 
     /// Expands a leading "~" against `home`.
@@ -300,15 +303,14 @@ enum AppPaths {
 
     /// System sources are redirected alongside the home in every isolated run.
     static func systemPath(_ absolute: String) -> String {
-        if overrideHome != nil || ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] != nil {
+        if overrideHome != nil || environmentHome != nil {
             return home + "/.system" + absolute
         }
         return absolute
     }
 
     static var applicationSupport: URL {
-        if let custom = overrideHome
-            ?? ProcessInfo.processInfo.environment["AGENTSCONFIG_HOME"] {
+        if let custom = overrideHome ?? environmentHome {
             return URL(fileURLWithPath: custom, isDirectory: true)
                 .appendingPathComponent("Library/Application Support", isDirectory: true)
         }

@@ -109,8 +109,17 @@ struct SnapshotStore {
             ?? { FileManager.default.fileExists(atPath: $0) }
     }
 
+    private static let hexDigits = Array("0123456789abcdef".utf8)
+
+    /// Lowercase hex digest. Formats through a byte table: `String(format:)`
+    /// per byte dominated history reads, which hash every tracked path.
     static func sha256(_ s: String) -> String {
-        SHA256.hash(data: Data(s.utf8)).map { String(format: "%02x", $0) }.joined()
+        let digest = SHA256.hash(data: Data(s.utf8))
+        var out = [UInt8](); out.reserveCapacity(64)
+        for byte in digest {
+            out.append(hexDigits[Int(byte >> 4)]); out.append(hexDigits[Int(byte & 0x0f)])
+        }
+        return String(decoding: out, as: UTF8.self)
     }
 
     /// Canonical document identity: the tracked spelling with `.`/`..`
@@ -168,6 +177,10 @@ struct SnapshotStore {
             targets.append((url, isDir))
         }
         for t in targets {
+            // Already private: skip the metadata write (this runs every launch).
+            var info = stat()
+            if lstat(t.url.path, &info) == 0, info.st_mode & S_IFMT != S_IFLNK,
+               Int(info.st_mode & 0o777) == (t.isDir ? 0o700 : 0o600) { continue }
             do {
                 try fm.setAttributes(
                     [.posixPermissions: NSNumber(value: t.isDir ? 0o700 : 0o600)],
@@ -185,10 +198,14 @@ struct SnapshotStore {
     /// must never be treated as an empty history that may be overwritten.
     func loadHistory(for path: String) throws -> [FileVersion] {
         let dir = dir(for: path)
-        try ensurePrivateTree(dir)
+        // Reads never create or chmod anything unless a legacy migration is
+        // pending: a path without history stays without a history dir.
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            guard hasLegacyDir(for: path) else { return [] }
+            try ensurePrivateTree(dir)
+        }
         let entries = try withIndexLock(dir) {
-            try migrateIfNeeded(for: path)
-            return try loadIndex(for: path)
+            try migrateIfNeeded(for: path) ?? loadIndex(for: path)
         }
         let sorted = entries.enumerated().sorted { lhs, rhs in
             lhs.element.ts == rhs.element.ts
@@ -220,8 +237,9 @@ struct SnapshotStore {
         let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
         defer { try? handle.close() }
         var info = stat()
-        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG,
-              let data = try? handle.readToEnd() else { return nil }
+        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG else { return nil }
+        // readToEnd() returns nil at EOF with no data: an empty blob is "", not unreadable.
+        guard let data = try? handle.readToEnd() ?? Data() else { return nil }
         return String(data: data, encoding: .utf8)
     }
 
@@ -241,8 +259,7 @@ struct SnapshotStore {
         let directory = dir(for: path)
         try ensurePrivateTree(directory)
         try withIndexLock(directory) {
-            try migrateIfNeeded(for: path)
-            let entries = try loadIndex(for: path)
+            let entries = try migrateIfNeeded(for: path) ?? loadIndex(for: path)
             guard Set(entries.map(\.id)) == expectedIDs, ids.isSubset(of: expectedIDs) else {
                 throw HistoryError.changedDuringReview
             }
@@ -258,8 +275,7 @@ struct SnapshotStore {
         let directory = dir(for: path)
         try ensurePrivateTree(directory)
         try withIndexLock(directory) {
-            try migrateIfNeeded(for: path)
-            let entries = try loadIndex(for: path)
+            let entries = try migrateIfNeeded(for: path) ?? loadIndex(for: path)
             try cleanupObjects(in: directory, retained: Set(entries.map(\.file)))
         }
     }
@@ -289,8 +305,7 @@ struct SnapshotStore {
         let dir = dir(for: path)
         try ensurePrivateTree(dir)
         return try withIndexLock(dir) {
-            try migrateIfNeeded(for: path)
-            var entries = try loadIndex(for: path)
+            var entries = try migrateIfNeeded(for: path) ?? loadIndex(for: path)
             let hash = Self.sha256(content)
 
             // write the content blob first — an index entry must never
@@ -367,21 +382,30 @@ struct SnapshotStore {
 
     // MARK: - legacy migration (format 1 → 2)
 
+    private func legacyLocation(for path: String) -> (name: String, url: URL) {
+        let name = path.replacingOccurrences(of: "/", with: "__")
+        return (name, root.appendingPathComponent(name, isDirectory: true))
+    }
+
+    private func hasLegacyDir(for path: String) -> Bool {
+        var isDir: ObjCBool = false
+        return FileManager.default.fileExists(atPath: legacyLocation(for: path).url.path, isDirectory: &isDir) && isDir.boolValue
+    }
+
     /// Migrates a legacy `__`-sanitized dir into the hashed layout if one
-    /// exists and no format-2 dir is present yet.
-    private func migrateIfNeeded(for path: String) throws {
+    /// exists and no format-2 dir is present yet. Returns the index entries
+    /// when a format-2 index already existed (validated once, not twice).
+    private func migrateIfNeeded(for path: String) throws -> [IndexEntry]? {
         let fm = FileManager.default
         var isDir: ObjCBool = false
         let newDir = dir(for: path)
         if fm.fileExists(atPath: indexURL(newDir).path) {
-            _ = try loadIndex(for: path)
-            return
+            return try loadIndex(for: path)
         }
 
-        let legacyName = path.replacingOccurrences(of: "/", with: "__")
-        let legacyDir = root.appendingPathComponent(legacyName, isDirectory: true)
+        let (legacyName, legacyDir) = legacyLocation(for: path)
         guard fm.fileExists(atPath: legacyDir.path, isDirectory: &isDir),
-              isDir.boolValue else { return }
+              isDir.boolValue else { return nil }
 
         // Ambiguity: another existing/tracked spelling may share this dir.
         guard legacyName.components(separatedBy: "__").count <= 13 else {
@@ -429,11 +453,12 @@ struct SnapshotStore {
         try saveIndex(entries, for: path)
 
         // verify the migrated index before touching the legacy tree
-        _ = try loadIndex(for: path)
+        let verified = try loadIndex(for: path)
         try? fm.moveItem(
             at: legacyDir,
             to: root.appendingPathComponent(legacyName + ".migrated",
                                             isDirectory: true))
+        return verified
     }
 
     /// All path spellings that sanitize to the same legacy dir name: each

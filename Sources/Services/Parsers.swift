@@ -21,10 +21,12 @@ import TOMLKit
     /// Bound actual reads too, including a file that grows after stat.
     nonisolated static func readText(at path: String, limit: Int = maximumFileBytes) throws -> String {
         let limitError: InputError = limit > maximumFileBytes ? .backgroundTooLarge : .tooLarge
-        let attrs = try FileManager.default.attributesOfItem(atPath: path)
-        if (attrs[.size] as? NSNumber)?.intValue ?? 0 > limit { throw limitError }
         let handle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
         defer { try? handle.close() }
+        // fstat on the open descriptor: the size of what is actually read
+        // (a symlink's target, not the link), without an xattr lookup.
+        var info = stat()
+        if fstat(handle.fileDescriptor, &info) == 0, Int(info.st_size) > limit { throw limitError }
         let data = try handle.read(upToCount: limit + 1) ?? Data()
         guard data.count <= limit else { throw limitError }
         guard let text = String(data: data, encoding: .utf8) else { throw InputError.unreadable }
