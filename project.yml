@@ -49,6 +49,11 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "2"
         SWIFT_STRICT_CONCURRENCY: minimal
+      # Debug gets its own identity so it never shares TCC grants or
+      # UserDefaults with the installed Developer ID build.
+      configs:
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.tavodev.agentsconfig.debug
     dependencies:
       - package: TOMLKit
         product: TOMLKit

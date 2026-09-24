@@ -974,7 +974,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tavodev.agentsconfig;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tavodev.agentsconfig.debug;
 				SDKROOT = macosx;
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 6.0;

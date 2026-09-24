@@ -155,6 +155,11 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 
 ## Convenciones
 
+- Debug usa bundle id `com.tavodev.agentsconfig.debug`; Release (instalada con
+  Developer ID) usa `com.tavodev.agentsconfig`. Así no comparten permisos TCC
+  (Documents) ni UserDefaults: un build ad hoc guarda el permiso por cdhash y
+  pisaba el de la app instalada.
+
 - Toda resolución de `~` y de Application Support pasa por
   `AppPaths` (Models.swift); `AGENTSCONFIG_HOME` los redirige.
 - `volatile: true` en un `ConfigSource` = se vigila en vivo pero sin historial
@@ -205,6 +210,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 
 ## Reparaciones en curso
 
+- **Tracking vigente: GitHub Issues** de `tavodev/agentsconfig` (cuenta `gh` `tavodev`).
+  Pendientes, decisiones de publicación y limitaciones conocidas (`known-limitation`)
+  se abren y cierran ahí; los docs de `repair-plan/` quedan como registro histórico
+  y de evidencia.
 - Plan de reparación: `docs/repair-plan/FOLLOWUP.md`. Mejoras nuevas autorizadas:
   `docs/repair-plan/IMPROVEMENTS.md`.
 - `AgentsConfigUI` compila `UITests/` con host propio `AgentsConfigUITestHost`
