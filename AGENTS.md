@@ -208,22 +208,44 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - Al salir con buffers dirty, `AppDelegate.applicationShouldTerminate`
   pide confirmación: los edits sin guardar no persisten en disco.
 
-## Reparaciones en curso
+## Tracking de trabajo: GitHub Issues
 
-- **Tracking vigente: GitHub Issues** de `tavodev/agentsconfig` (cuenta `gh` `tavodev`).
-  Pendientes, decisiones de publicación y limitaciones conocidas (`known-limitation`)
-  se abren y cierran ahí; los docs de `repair-plan/` quedan como registro histórico
-  y de evidencia.
-- Plan de reparación: `docs/repair-plan/FOLLOWUP.md`. Mejoras nuevas autorizadas:
-  `docs/repair-plan/IMPROVEMENTS.md`.
+La fuente de verdad de pendientes, decisiones y limitaciones es **GitHub Issues**
+de `tavodev/agentsconfig` (repo privado). Usar `gh` con la cuenta `tavodev`
+(`gh auth status`; si no es la activa: `gh auth switch -u tavodev`).
+
+- **Al empezar:** `gh issue list -R tavodev/agentsconfig` y leer el issue que se
+  vaya a trabajar. No retomar trabajo desde `docs/repair-plan/` salvo como contexto.
+- **Levantar issue nuevo** (sin pedir permiso) cuando aparezca un bug, una
+  limitación, una deuda o una decisión pendiente que no se resuelva en la tarea
+  actual. Antes, buscar duplicados: `gh issue list -R tavodev/agentsconfig --search "<términos>" --state all`.
+  Etiquetas:
+  - `bug`: comportamiento incorrecto reproducible.
+  - `enhancement`: mejora o función nueva.
+  - `known-limitation`: límite deliberado o de una dependencia, documentado.
+  - `release`: publicación, firma, distribución y decisiones del propietario.
+  - `chore`: mantenimiento del repo.
+- **Contenido:** en español; problema, reproducción o evidencia con rutas del
+  repo, y criterio de cierre (checklist). Nunca pegar configuraciones reales,
+  credenciales, historial ni rutas personales fuera del repo; usar datos ficticios.
+- **Durante el trabajo:** comentar en el issue los hallazgos relevantes y la
+  evidencia (tests ejecutados con su recuento; UI solo si se ejecutó de verdad).
+- **Cerrar:** con `Closes #N` en el commit que lo resuelve, o con
+  `gh issue close N -c "<commit + evidencia>"`. No cerrar sin evidencia.
+  Decisiones `release` solo las cierra el propietario.
+- Si se descubre que una limitación documentada en `docs/` ya no aplica, cerrar
+  su issue y actualizar el doc en el mismo commit.
+
+## Plan de reparación (histórico)
+
+- `docs/repair-plan/FOLLOWUP.md`, `PLAN.md`, `IMPROVEMENTS.md` y `VERIFICATION.md`
+  son el registro de evidencia hasta 2026-09-24; el tablero de FOLLOWUP ya no se
+  actualiza. `VERIFICATION.md` y `RELEASE_READINESS.md` sí se amplían con nuevas
+  verificaciones completas (Release, UI, multiproceso, escaneo de publicación).
 - `AgentsConfigUI` compila `UITests/` con host propio `AgentsConfigUITestHost`
   (`com.tavodev.agentsconfig.ui-fixture`), separado de la app real y del esquema hostless.
   El host exige home+defaults aislados para arrancar. Compilar con
   build-for-testing; ejecutar solo con sesión gráfica desbloqueada. Nunca afirmar
   ejecución UI por el hecho de que compile.
-- Antes de retomar reparaciones, leer su punto de reanudación y comprobar el
-  estado/diff de Git: la primera implementación contiene cambios sin commit.
-- Actualizar tablero, evidencia y próxima acción después de cada reproducción,
-  implementación y verificación relevante; no esperar al final de la sesión.
 - El registro de primera ronda en `docs/repair-plan/PLAN.md` no certifica cierre:
   la auditoría reabrió garantías de historial, restauración, máscara y escritura.
