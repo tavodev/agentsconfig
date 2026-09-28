@@ -26,6 +26,12 @@ final class ConfigStore {
     private(set) var conflicts: Set<String> = []            // dirty buffer + disk changed
     private(set) var externalChanges: [String: ExternalChange] = [:]
     private(set) var excludedHistoryPaths = Set(AppSettings.defaults.stringArray(forKey: "excludedHistoryPaths") ?? [])
+    /// Security-audit `LintRule` ids silenced per file (`FileIssuesButton`).
+    /// Persisted as `[path: [ruleID]]` — a rule's core diagnostics (parse
+    /// errors, unknown keys, …) never end up here since they have no `ruleID`.
+    private(set) var mutedLintRules: [String: Set<String>] =
+        (AppSettings.defaults.dictionary(forKey: "mutedLintRules") as? [String: [String]] ?? [:])
+            .mapValues(Set.init)
     private(set) var histories: [String: [FileVersion]] = [:]
     private(set) var saveErrors: [String: String] = [:]
     /// History paths whose index is corrupt or ambiguous (never overwritten).
@@ -184,6 +190,20 @@ final class ConfigStore {
         guard historyPolicyAllowsRecording(path) else { return }
         if enabled { excludedHistoryPaths.remove(path) } else { excludedHistoryPaths.insert(path) }
         AppSettings.defaults.set(excludedHistoryPaths.sorted(), forKey: "excludedHistoryPaths")
+    }
+
+    /// Silences (or restores) one `LintRule` id for a single file. Persisted
+    /// immediately; the file's cached diagnostics are also recomputed so the
+    /// UI updates without waiting for the next edit/watch event.
+    func setLintRuleMuted(_ muted: Bool, ruleID: String, for path: String) {
+        var rules = mutedLintRules[path] ?? []
+        if muted { rules.insert(ruleID) } else { rules.remove(ruleID) }
+        mutedLintRules[path] = rules.isEmpty ? nil : rules
+        AppSettings.defaults.set(mutedLintRules.mapValues { Array($0).sorted() }, forKey: "mutedLintRules")
+        guard let doc = documents[path], let tf = trackedFile(for: path) else { return }
+        let lint = Linter.lint(path: path, text: doc.text, tree: doc.tree, parseError: doc.parseError,
+                               format: tf.format, mutedRuleIDs: mutedLintRules[path] ?? [])
+        updateFileMeta(path: path) { f in f.issues = lint.issues }
     }
 
     struct HistoryRemoval: Identifiable {
@@ -888,7 +908,8 @@ final class ConfigStore {
         guard file.exists, let doc = documents[file.path] else { return file }
         var result = file
         let lint = Linter.lint(path: file.path, text: doc.text, tree: doc.tree,
-                               parseError: doc.parseError, format: file.format)
+                               parseError: doc.parseError, format: file.format,
+                               mutedRuleIDs: mutedLintRules[file.path] ?? [])
         result.issues = lint.issues
         result.managedBlocks = lint.managed
         return result
@@ -1160,7 +1181,8 @@ final class ConfigStore {
 
         // lint + managed blocks onto the TrackedFile
         let lint = Linter.lint(path: path, text: text, tree: tree,
-                               parseError: parseError, format: format)
+                               parseError: parseError, format: format,
+                               mutedRuleIDs: mutedLintRules[path] ?? [])
         updateFileMeta(path: path) { f in
             f.issues = lint.issues
             f.managedBlocks = lint.managed

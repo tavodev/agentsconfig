@@ -643,6 +643,7 @@ struct FileRow: View {
     let file: TrackedFile
     var pending: Bool
     var dirty: Bool
+    @Environment(ConfigStore.self) private var store
 
     var body: some View {
         HStack(spacing: 8) {
@@ -693,8 +694,8 @@ struct FileRow: View {
                 Image(systemName: "exclamationmark.circle")
                     .foregroundStyle(.red)
                     .help(L("File does not exist on disk"))
-            } else if !file.issues.isEmpty {
-                FileIssuesButton(issues: file.issues)
+            } else if !file.issues.isEmpty || !(store.mutedLintRules[file.path] ?? []).isEmpty {
+                FileIssuesButton(file: file)
             }
             if file.readOnly {
                 Image(systemName: "lock.fill")
@@ -707,10 +708,17 @@ struct FileRow: View {
     }
 }
 
-/// Warning icon → tap shows the issue list in a popover.
+/// Warning icon → tap shows the issue list in a popover. Issues from a
+/// silenceable `LintRule` (see `Linter.swift`) get a mute control; rules
+/// already silenced for this file are listed below with a way to unmute —
+/// otherwise there would be no way back once the last visible issue for a
+/// rule is muted.
 struct FileIssuesButton: View {
-    let issues: [FileIssue]
+    let file: TrackedFile
+    @Environment(ConfigStore.self) private var store
     @State private var show = false
+
+    private var mutedRuleIDs: Set<String> { store.mutedLintRules[file.path] ?? [] }
 
     var body: some View {
         Button { show.toggle() } label: {
@@ -719,13 +727,13 @@ struct FileIssuesButton: View {
                 .foregroundStyle(.orange)
         }
         .buttonStyle(.plain)
-        .help(issues.map(\.message).joined(separator: "\n"))
+        .help(file.issues.map(\.message).joined(separator: "\n"))
         .accessibilityLabel(L("Issues detected"))
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L("Issues detected"))
                     .font(.system(size: 12, weight: .semibold))
-                ForEach(Array(issues.enumerated()), id: \.offset) { _, i in
+                ForEach(Array(file.issues.enumerated()), id: \.offset) { _, i in
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: i.severity == .error ? "xmark.octagon.fill" :
                                         i.severity == .warning ? "exclamationmark.triangle.fill" : "info.circle.fill")
@@ -735,11 +743,55 @@ struct FileIssuesButton: View {
                         Text(i.message)
                             .font(.caption)
                             .fixedSize(horizontal: false, vertical: true)
+                        if let ruleID = i.ruleID {
+                            Spacer(minLength: 4)
+                            Button {
+                                store.setLintRuleMuted(true, ruleID: ruleID, for: file.path)
+                            } label: {
+                                Image(systemName: "bell.slash")
+                            }
+                            .buttonStyle(.plain)
+                            .help(L("Silence this rule for this file"))
+                            .accessibilityLabel(L("Silence this rule for this file"))
+                        }
+                    }
+                }
+                if !mutedRuleIDs.isEmpty {
+                    Divider()
+                    Text(L("Silenced for this file"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(mutedRuleIDs.sorted(), id: \.self) { ruleID in
+                        HStack {
+                            Text(lintRuleDisplayName(ruleID))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button(L("Show again")) {
+                                store.setLintRuleMuted(false, ruleID: ruleID, for: file.path)
+                            }
+                            .buttonStyle(.plain)
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                        }
                     }
                 }
             }
             .padding(12)
             .frame(maxWidth: 360)
         }
+    }
+}
+
+@MainActor
+private func lintRuleDisplayName(_ ruleID: String) -> String {
+    switch LintRule(rawValue: ruleID) {
+    case .broadPermissions: L("Overly broad permission")
+    case .dangerousMode: L("Dangerous mode")
+    case .hookOutsideConfig: L("Hook outside the config root")
+    case .hookDownloadExecute: L("Hook downloads and executes")
+    case .unpinnedMcp: L("MCP server without a pinned version")
+    case .literalSecret: L("Literal secret in config")
+    case nil: ruleID
     }
 }

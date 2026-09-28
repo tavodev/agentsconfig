@@ -157,6 +157,11 @@ struct FileIssue: Hashable {
     enum Severity { case warning, error, info }
     var severity: Severity
     var message: String
+    /// Stable identifier for security-audit rules that can be silenced per
+    /// file (`ConfigStore.mutedLintRules`, `LintRule` in Linter.swift). Core
+    /// diagnostics (parse errors, unknown keys, type checks, managed-marker
+    /// notices) leave this `nil` — they aren't silenceable.
+    var ruleID: String? = nil
 }
 
 struct SemanticChange: Identifiable, Hashable, Sendable {

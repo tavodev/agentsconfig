@@ -111,7 +111,22 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   de permisos POSIX, escritura a través de symlinks, temporales `0600`
   exclusivos limpiados en éxito y en fallo.
 - `Sources/Services/Linter.swift` — issues (hooks huérfanos, parse errors) y
-  bloques gestionados por terceros (orca-managed, hooks.state, etc.).
+  bloques gestionados por terceros (orca-managed, hooks.state, etc.). Además,
+  auditoría de seguridad (`LintRule`, issue #18): permisos Bash/`permission.bash`
+  sin acotar (`Bash`, `Bash(*)`, `Bash(:*)`, `permission.bash: allow` o `"*":
+  allow`); modos que saltan la aprobación (`bypassPermissions`,
+  `approval_policy = "never"` / `sandbox_mode = "danger-full-access"` —
+  también dentro de `profiles.*` —, `permission: allow`, `autoAccept`);
+  servidores MCP (`mcpServers`/`mcp_servers`/`mcp`) lanzados con `npx`/`uvx`
+  sin versión fija (incluye `@latest`); hooks que descargan y ejecutan en un
+  paso (`curl … | sh`, comando enmascarado y truncado en el mensaje) o apuntan
+  fuera del repo/home de config (solo `hooks`, no comandos MCP); secretos
+  literales en claves que `Secrets.isSecretKey` marca (excepto referencias
+  `${VAR}`/`env://…` y la clave `apiKeyHelper`, que no es un secreto). Cada
+  regla lleva un `FileIssue.ruleID` (`LintRule`) silenciable por archivo vía
+  `ConfigStore.setLintRuleMuted` (persistido en `UserDefaults["mutedLintRules"]`,
+  igual que `excludedHistoryPaths`); los diagnósticos base (parse errors,
+  claves sin catalogar, tipos) no tienen `ruleID` y no son silenciables.
 - `Sources/Services/DocsCatalog.swift` — doc por archivo (ⓘ junto al nombre)
   y por clave (ⓘ junto a cada fila en "Todas las claves"/tarjetas). Ambas
   búsquedas emparejan por **sufijo relativo** (`pathSuffixDocs`/

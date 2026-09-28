@@ -495,6 +495,45 @@ final class Loc {
         "Unrecognized key: «%@» — typo or new agent key?": "Clave no reconocida: «%@» — ¿typo o key nueva del agente?",
         "Delimited block «%@» — managed by an external tool": "Bloque delimitado «%@» — gestionado por herramienta externa",
         "hooks.state — trust hashes managed by Codex": "hooks.state — hashes de confianza gestionados por Codex",
+
+        // Linter / security audit (issue #18)
+        "«permissions.allow» includes «%@», which lets every shell command run without confirmation. Replace it with scoped rules, e.g. «Bash(git *)» or specific commands.":
+            "«permissions.allow» incluye «%@», que permite ejecutar cualquier comando de shell sin confirmación. Sustitúyelo por reglas acotadas, p. ej. «Bash(git *)» o comandos concretos.",
+        "«permission.bash» is «allow»: every shell command runs without confirmation. Scope it to specific patterns instead, e.g. {\"git *\": \"allow\", \"rm *\": \"deny\"}.":
+            "«permission.bash» es «allow»: cualquier comando de shell se ejecuta sin confirmación. Acótalo a patrones concretos, p. ej. {\"git *\": \"allow\", \"rm *\": \"deny\"}.",
+        "«permission.bash» has a catch-all «*: allow» rule: every shell command runs without confirmation unless a more specific rule overrides it. Replace the wildcard with scoped patterns.":
+            "«permission.bash» tiene una regla comodín «*: allow»: cualquier comando de shell se ejecuta sin confirmación salvo que una regla más específica la sustituya. Reemplaza el comodín por patrones acotados.",
+        "«permissions.defaultMode» is «bypassPermissions»: Claude Code skips every permission prompt entirely. Reserve this for isolated sandboxes (container/VM) and prefer «acceptEdits» or «plan» otherwise.":
+            "«permissions.defaultMode» es «bypassPermissions»: Claude Code omite todo aviso de permisos. Resérvalo para sandboxes aislados (contenedor/VM) y usa «acceptEdits» o «plan» en el resto de casos.",
+        "«%@» is «never»: Codex never stops to ask for approval. Combine it with a restrictive «sandbox_mode» or use a narrower approval policy.":
+            "«%@» es «never»: Codex nunca se detiene a pedir aprobación. Combínalo con un «sandbox_mode» restrictivo o usa una política de aprobación más acotada.",
+        "«%@» is «danger-full-access»: Codex runs without filesystem or network isolation. Use «workspace-write» or «read-only» unless you fully trust this environment.":
+            "«%@» es «danger-full-access»: Codex se ejecuta sin aislamiento de filesystem ni red. Usa «workspace-write» o «read-only» salvo que confíes plenamente en este entorno.",
+        "«permission» is «allow»: every tool runs without confirmation. Scope it per tool instead, e.g. {\"bash\": \"ask\", \"edit\": \"allow\"}.":
+            "«permission» es «allow»: cualquier herramienta se ejecuta sin confirmación. Acótalo por herramienta, p. ej. {\"bash\": \"ask\", \"edit\": \"allow\"}.",
+        "«autoAccept» is enabled: actions run without confirmation. Disable it and approve actions manually.":
+            "«autoAccept» está activado: las acciones se ejecutan sin confirmación. Desactívalo y aprueba las acciones manualmente.",
+        "«general.defaultApprovalMode» is «auto_edit»: file edits are approved automatically without asking. Shell commands still prompt, but review this if the session runs unattended.":
+            "«general.defaultApprovalMode» es «auto_edit»: las ediciones de archivos se aprueban automáticamente sin preguntar. Los comandos de shell siguen pidiendo confirmación, pero revísalo si la sesión corre sin supervisión.",
+        "MCP server at «%@» runs «npx» on «%@» without a pinned version. A registry change or a compromised release could silently alter what runs next time. Pin an exact version, e.g. «%@@1.2.3».":
+            "El servidor MCP en «%@» ejecuta «npx» sobre «%@» sin versión fija. Un cambio en el registro o una versión comprometida podría alterar en silencio lo que se ejecuta la próxima vez. Fija una versión exacta, p. ej. «%@@1.2.3».",
+        "MCP server at «%@» runs «uvx %@» without a pinned version. Pin an exact version, e.g. «uvx %@==1.2.3».":
+            "El servidor MCP en «%@» ejecuta «uvx %@» sin versión fija. Fija una versión exacta, p. ej. «uvx %@==1.2.3».",
+        "Hook downloads and runs a remote script in one step: «%@». A compromised or intercepted server could run arbitrary code. Download it to a file, review it, then execute it separately.":
+            "El hook descarga y ejecuta un script remoto en un solo paso: «%@». Un servidor comprometido o interceptado podría ejecutar código arbitrario. Descárgalo a un archivo, revísalo y ejecútalo por separado.",
+        "Hook references a script outside the repository and outside the configuration home: «%@». Anyone who can write to that path changes what runs. Keep hook scripts inside the repo (or inside ~/.claude, etc.) and reference them with a path under that root.":
+            "El hook referencia un script fuera del repositorio y fuera del home de configuración: «%@». Cualquiera que pueda escribir en esa ruta cambia lo que se ejecuta. Mantén los scripts de hooks dentro del repo (o dentro de ~/.claude, etc.) y referéncialos con una ruta bajo esa raíz.",
+        "«%@» holds a literal secret value instead of a reference. Move it to an environment variable (e.g. «${VAR}») and keep only that reference here.":
+            "«%@» contiene un valor de secreto literal en vez de una referencia. Muévelo a una variable de entorno (p. ej. «${VAR}») y deja aquí solo esa referencia.",
+        "Silence this rule for this file": "Silenciar esta regla en este archivo",
+        "Silenced for this file": "Silenciadas en este archivo",
+        "Show again": "Mostrar de nuevo",
+        "Overly broad permission": "Permiso demasiado amplio",
+        "Dangerous mode": "Modo peligroso",
+        "Hook outside the config root": "Hook fuera de la raíz de configuración",
+        "Hook downloads and executes": "Hook descarga y ejecuta",
+        "MCP server without a pinned version": "Servidor MCP sin versión fija",
+        "Literal secret in config": "Secreto literal en la config",
         "plugins/marketplaces — managed by the Codex app": "plugins/marketplaces — gestionados por la app de Codex",
         "Internal state (projects, surveys) — rewrites itself": "Estado interno (projects, surveys) — se reescribe solo",
         "TOML→JSON empty": "TOML→JSON vacío",

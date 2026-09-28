@@ -90,6 +90,38 @@ struct ConfigStoreTests {
         _ = store.document(for: state)
         #expect(store.history(for: state).isEmpty)
     }
+
+    /// Issue #18: a silenced `LintRule` disappears from `TrackedFile.issues`
+    /// immediately, survives across store instances (persisted in
+    /// `AppSettings.defaults`, same seam as `excludedHistoryPaths`), and can
+    /// be reversed.
+    @Test func mutingALintRulePersistsAcrossStoresAndCanBeReversed() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        try env.installClaude(settingsJSON: #"{"permissions":{"allow":["Bash"]},"model":"opus"}"#)
+
+        let settings = env.path(".claude/settings.json")
+        func hasBroadPermissionIssue(_ store: ConfigStore) -> Bool {
+            store.agents.flatMap(\.files).first { $0.path == settings }?
+                .issues.contains { $0.ruleID == LintRule.broadPermissions.rawValue } == true
+        }
+
+        let store = env.makeStore()
+        #expect(hasBroadPermissionIssue(store))
+
+        store.setLintRuleMuted(true, ruleID: LintRule.broadPermissions.rawValue, for: settings)
+        #expect(!hasBroadPermissionIssue(store))
+        #expect(store.mutedLintRules[settings] == Set([LintRule.broadPermissions.rawValue]))
+
+        // persisted: a fresh store sharing the same defaults suite stays muted
+        let store2 = env.makeStore()
+        #expect(store2.mutedLintRules[settings] == Set([LintRule.broadPermissions.rawValue]))
+        #expect(!hasBroadPermissionIssue(store2))
+
+        store2.setLintRuleMuted(false, ruleID: LintRule.broadPermissions.rawValue, for: settings)
+        #expect(store2.mutedLintRules[settings] == nil)
+        #expect(hasBroadPermissionIssue(store2))
+    }
 }
 
 }
