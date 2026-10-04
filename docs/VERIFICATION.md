@@ -5,15 +5,20 @@ evidence, not an automated claim about every later commit.
 
 ## Recorded results
 
-The full runtime checks ran on 2026-10-04 from a clean source copy of `8a8e98d`,
+The distribution checks ran on 2026-10-04 from a clean source copy of `9536b54`,
 with macOS 26.6.2, Xcode 26.1.1 (17B100), XcodeGen 2.46.0, TOMLKit 0.6.0 and
-Yams 6.2.2. Publication-guard checks used the implementation in `6615fc0`.
+Yams 6.2.2. Later documentation updates do not change the compiled inputs.
 
 | Check | Result |
 | --- | --- |
 | Hostless Swift tests | 254 tests in 26 suites passed |
 | Isolated graphical suite | 29 tests executed and passed, zero failures |
-| Release build | Passed; version 0.1.0 / build 2 |
+| Universal Release archive/export | Passed; version 0.1.0 / build 3; arm64 and x86_64 |
+| Developer ID signing | Valid signature, hardened runtime and secure timestamp; no development debugging entitlement |
+| Apple notarization | App and DMG accepted separately, no reported issues; both tickets stapled and validated |
+| Gatekeeper | App and DMG assessed as Notarized Developer ID |
+| Installation smoke check | Read-only DMG mount, app copied to an isolated installation folder, valid ticket/signature and successful launch with fictitious configurations |
+| Binary path review | Executable contains no personal home paths or temporary build-directory prefixes |
 | Multiprocess history | Four writers; 120 writes plus legacy baseline; 121 unique readable versions |
 | Publication guard | 10 regression tests passed |
 | Generated project | XcodeGen regeneration produced no project or Info.plist drift |
@@ -21,9 +26,17 @@ Yams 6.2.2. Publication-guard checks used the implementation in `6615fc0`.
 
 All runtime fixtures used temporary homes and exclusive preference suites.
 Notifications were disabled; MCP servers and hooks were never executed. The
-Release verification build was locally signed, not a notarized distribution.
+distributed app is signed with Developer ID and notarized. The smoke check
+loaded the expected file inventory without saving configuration. Further UI
+interaction in that installed copy was not exercised because its window could
+not receive focus; the dedicated isolated graphical suite ran separately.
 
-An additional live check verified per-file rule muting: the literal-secret
+The installation check ran on the current Apple Silicon Mac with isolated app
+data. A separate clean macOS user or machine and runtime execution on Intel have
+not been tested. This first release is experimental; the clean-machine check
+remains tracked in [#6](https://github.com/tavodev/agentsconfig/issues/6).
+
+An earlier live check verified per-file rule muting: the literal-secret
 warning disappears while base diagnostics remain, and Show again restores it.
 The README screenshot was captured from the isolated host with fictitious
 configurations and visually reviewed before inclusion.
