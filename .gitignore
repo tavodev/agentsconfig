@@ -16,3 +16,6 @@ build/
 release-artifacts/
 __pycache__/
 *.pyc
+
+# Local agent session state
+/.claude/scheduled_tasks.lock

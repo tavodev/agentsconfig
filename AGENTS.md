@@ -274,6 +274,9 @@ no deben intentar acceder a credenciales del mantenedor.
 - **Contenido:** en español; problema, reproducción o evidencia con rutas del
   repo, y criterio de cierre (checklist). Nunca pegar configuraciones reales,
   credenciales, historial ni rutas personales fuera del repo; usar datos ficticios.
+  Referenciar archivos del repo con rutas relativas, sin la ruta absoluta del
+  checkout ni identificadores de sesiones locales. Los archivos de estado local
+  de los agentes deben quedar excluidos del control de versiones.
 - **Durante el trabajo:** comentar en el issue los hallazgos relevantes y la
   evidencia (tests ejecutados con su recuento; UI solo si se ejecutó de verdad).
 - **Cerrar:** con `Closes #N` en el commit que lo resuelve, o con
