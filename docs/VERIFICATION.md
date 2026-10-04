@@ -27,6 +27,9 @@ An additional live check verified per-file rule muting: the literal-secret
 warning disappears while base diagnostics remain, and Show again restores it.
 The README screenshot was captured from the isolated host with fictitious
 configurations and visually reviewed before inclusion.
+Its color-profile description and device manufacturer/model identifiers were
+anonymized. The captured pixels, colorimetric tables and rendered sRGB values
+remain identical.
 
 Publication review and decisions are tracked in
 [#3](https://github.com/tavodev/agentsconfig/issues/3) and
