@@ -5,9 +5,9 @@ evidence, not an automated claim about every later commit.
 
 ## Recorded results
 
-The full runtime checks ran on 2026-10-04 from a clean source copy of `9c34cf6`,
+The full runtime checks ran on 2026-10-04 from a clean source copy of `8a8e98d`,
 with macOS 26.6.2, Xcode 26.1.1 (17B100), XcodeGen 2.46.0, TOMLKit 0.6.0 and
-Yams 6.2.2. Publication-guard checks used the implementation in `2efad7a`.
+Yams 6.2.2. Publication-guard checks used the implementation in `6615fc0`.
 
 | Check | Result |
 | --- | --- |
