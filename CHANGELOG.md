@@ -1,8 +1,11 @@
 # Changelog
 
-## 0.1.0 — Unreleased
+## 0.1.0 — 2026-10-04
 
-Initial experimental release candidate.
+Initial experimental release, build 3.
+
+- Universal macOS distribution for Apple Silicon and Intel, with Developer ID
+  signing, hardened runtime and notarized app/DMG.
 
 - Security diagnostics for broad permissions, approval bypasses, risky hooks,
   unpinned MCP packages and literal secrets, with per-file rule muting.

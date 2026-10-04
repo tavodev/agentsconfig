@@ -172,6 +172,14 @@ mistake a URL path for an external local script
 - Xcode with Swift 6 toolchain (verified with Xcode 26.1.1)
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (verified with 2.46.0)
 
+## Download
+
+The experimental [0.1.0 release](https://github.com/tavodev/agentsconfig/releases/tag/v0.1.0)
+includes a Developer ID signed and notarized DMG for Apple Silicon and Intel Macs.
+Open the DMG, drag AgentsConfig to Applications, then launch it from Applications.
+Checksums are included with the release. Keep independent backups of important
+agent configurations and review every save.
+
 ## Build & run
 
 ```bash

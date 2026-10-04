@@ -54,3 +54,37 @@ Verify Gatekeeper, installation and first launch on a clean Mac or user. Publish
 checksums with the validated artifact. Never commit private keys, signing
 certificates containing private keys or notarization credentials. Locally signed
 builds must not be described as Developer ID signed or notarized.
+
+### Archive and export
+
+Supply the team ID and certificate fingerprint locally; do not store them in the
+repository. Release enables hardened runtime, disables development base
+entitlements and maps source paths to relative paths. Build both architectures:
+
+```bash
+xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
+  -configuration Release -destination 'generic/platform=macOS' \
+  -onlyUsePackageVersionsFromResolvedFile \
+  -archivePath release-artifacts/AgentsConfig.xcarchive \
+  'ARCHS=arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
+  CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="$RELEASE_TEAM_ID" \
+  CODE_SIGN_IDENTITY="$RELEASE_CERTIFICATE_HASH" archive
+xcodebuild -exportArchive \
+  -archivePath release-artifacts/AgentsConfig.xcarchive \
+  -exportPath release-artifacts/export \
+  -exportOptionsPlist /private/path/to/ExportOptions.plist
+```
+
+The private export plist uses `method=developer-id`, `destination=export`,
+`signingStyle=manual`, `teamID` and `signingCertificate`. Verify that the exported
+app has a secure timestamp and no `com.apple.security.get-task-allow` entitlement.
+
+### Notarize and staple
+
+Use an existing `notarytool` keychain profile. Submit a ZIP made with
+`ditto -c -k --keepParent`, wait for acceptance, inspect the notary log, and staple
+the exported app with `xcrun stapler staple`. Build the signed UDZO DMG from that
+stapled app, then submit the DMG separately and staple it after acceptance.
+Validate both tickets and Gatekeeper before attaching checksums and binaries
+to a GitHub Release. Raw build logs, signing configuration and notarization
+credentials remain outside the repository and published assets.

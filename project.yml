@@ -32,7 +32,7 @@ targets:
         CFBundleIconFile: AppIcon.icns
         CFBundleIconName: AppIcon
         CFBundleShortVersionString: "0.1.0"
-        CFBundleVersion: "2"
+        CFBundleVersion: "3"
         LSMinimumSystemVersion: "15.0"
         NSPrincipalClass: NSApplication
         NSHighResolutionCapable: true
@@ -47,13 +47,25 @@ targets:
         CODE_SIGN_IDENTITY: "-"
         GENERATE_INFOPLIST_FILE: NO
         MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "2"
+        CURRENT_PROJECT_VERSION: "3"
         SWIFT_STRICT_CONCURRENCY: minimal
       # Debug gets its own identity so it never shares TCC grants or
       # UserDefaults with the installed Developer ID build.
       configs:
         Debug:
           PRODUCT_BUNDLE_IDENTIFIER: com.tavodev.agentsconfig.debug
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
+          CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+          OTHER_SWIFT_FLAGS:
+            - "$(inherited)"
+            - "-file-prefix-map"
+            - "$(SRCROOT)=."
+            - "-debug-prefix-map"
+            - "$(SRCROOT)=."
+          OTHER_CFLAGS:
+            - "$(inherited)"
+            - "-ffile-prefix-map=$(SRCROOT)=."
     dependencies:
       - package: TOMLKit
         product: TOMLKit
