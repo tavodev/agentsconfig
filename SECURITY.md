@@ -6,7 +6,7 @@ vulnerability — especially anything involving credential handling,
 file writes outside the documented paths, or snapshot storage — please
 report it through a **private** channel:
 
-- **Email:** hola@tavo.dev (monitored; owner-confirmed 2026-09-19)
+- **Email:** hola@tavo.dev
 
 Please do **not** file public GitHub issues for unpatched
 vulnerabilities, and do not disclose the issue publicly until it has

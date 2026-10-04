@@ -1,23 +1,29 @@
-# Product icon sources
+# Icon sources
 
-The app identifies installed agents with their product marks, not generic
-system symbols. Assets were obtained on 2026-09-12 from these official product
-surfaces and are used only to identify the related configuration source.
+Product marks identify the corresponding configuration sources. Assets were
+obtained on 2026-09-12 from the following official product surfaces.
 
 | Product | Asset source |
 | --- | --- |
 | Claude Code | `https://claude.ai/favicon.svg` |
-| Codex | `ChatGPT.app/Contents/Resources/icon-codex-dark-color.png` (the installed official app asset) |
-| Antigravity / Gemini | `https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg` |
-| OpenCode | `https://opencode.ai/brand` (official brand asset) |
+| Codex | `ChatGPT.app/Contents/Resources/icon-codex-dark-color.png` |
+| Gemini / Antigravity | `https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg` |
+| OpenCode | `https://opencode.ai/brand` |
 
-The marks remain property of their respective owners; see the relevant brand
-guidelines before reusing them outside this identification UI.
+Product marks remain property of their owners and are retained solely for
+nominative identification, subject to their official brand guidelines. This
+project does not claim or grant broader trademark rights.
 
-On 2026-09-19 the project owner confirmed that retaining and redistributing
-these four marks inside this repository is authorized **only** as nominative
-identification of the corresponding products and subject to each owner's
-official brand guidelines. This authorization does not grant, and this project
-does not claim, any broader trademark rights. The application icon artwork
-(`Resources/icon.png`, generated via `scripts/make_icon.swift`) is a
-separate owner-selected asset documented in `docs/icon.md`.
+## Application icon
+
+`Resources/icon.png` is the owner-selected source artwork for the configurable
+AI chip icon. Regenerate the standalone ICNS and the ten macOS asset-catalog
+representations (16–1024 pixels, with alpha) using:
+
+```bash
+swift scripts/make_icon.swift
+```
+
+Xcode compiles `Resources/Assets.xcassets/AppIcon.appiconset`. The raw source PNG
+and standalone ICNS are excluded from resource copying to avoid duplicate output.
+The app declares the catalog icon and assigns it to `NSApplication` at launch.

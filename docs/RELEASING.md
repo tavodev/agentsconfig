@@ -1,59 +1,56 @@
 # Release procedure
 
-The source publication candidate is experimental 0.1.0 (build 2), under MIT.
-Preparation produces a reviewed local commit and verification evidence. Pushes,
-tags, releases, public visibility and signing-service submissions require the
-owner's publication instruction after reviewing that candidate.
+Publication decisions are tracked in [GitHub Issues](https://github.com/tavodev/agentsconfig/issues).
+A release owner authorizes pushes, tags, public visibility changes and signing-service
+submissions after reviewing the candidate. Source publication and signed binary
+distribution are separate operations.
 
-## Candidate verification
+## Verify a candidate
 
-1. Review all tracked and new files. Run `python3 scripts/audit-publication.py` as a baseline credential-pattern check, then perform a broader private secret/provenance review against the working tree and all Git history intended for publication. Investigate findings privately; never paste secret values into logs. Review screenshots and asset provenance separately.
-2. From a clean source copy, resolve only Package.resolved versions, regenerate with a verified XcodeGen version (2.46.0 in the current preparation), check generated-file drift, run `git diff --check` (worktree and `git diff --check <base>..HEAD` for the candidate range), build Release and run hostless tests. Use `-onlyUsePackageVersionsFromResolvedFile` for the first build, then `-disableAutomaticPackageResolution` for subsequent builds using those checkouts.
-3. Run `python3 scripts/verify-history-processes.py`.
-4. Compile and execute `AgentsConfigUI` on an unlocked macOS desktop. Complete the live matrix in repair-plan/VERIFICATION.md using fictional data. Preserve failures and limitations.
-5. Reconcile README, CHANGELOG, draft release notes, version/build in project.yml and generated Info.plist, and third-party notices. Record results in RELEASE_READINESS.md.
-6. Review the complete diff and prepare focused commits using English gitmoji summaries and descriptive bodies. Obtain explicit publication authorization before pushing or tagging.
+1. Start from a clean source copy. Resolve the committed `Package.resolved`,
+   regenerate with a verified XcodeGen version, and check generated-file drift.
+   Use `-onlyUsePackageVersionsFromResolvedFile` for the first build and
+   `-disableAutomaticPackageResolution` for subsequent builds using those checkouts.
+2. Run the hostless suite, build Release and run the multiprocess history probe.
+   Execute `AgentsConfigUI` on an unlocked desktop with the dedicated fixture host.
+   Use only fictitious configurations. Commands and coverage are in
+   [README.md](../README.md) and [VERIFICATION.md](VERIFICATION.md).
+3. Run the publication guard and its tests. Privately review all reachable Git
+   history, author metadata, issue/PR bodies and comments, screenshots and asset
+   provenance. Deleting a file in a new commit leaves its old blobs in history.
+   Keep credential values and private review inventories out of logs and commits.
+4. Reconcile README, CHANGELOG, `project.yml`, generated Info.plist and bundled
+   dependency notices. Review the complete diff and run `git diff --check` for
+   both the working tree and the candidate commit range.
+5. Record the exact revision, environment, commands and actual results in the
+   release issue and update the dated summary in [VERIFICATION.md](VERIFICATION.md).
+   Distinguish compiled UI tests from executed tests; retain failures and limits.
 
-Also run `python3 scripts/test-audit-publication.py` after changing the scanner.
-The scanner covers reachable blobs, commit and annotated-tag metadata, and extra
-files supplied with `--extra-file`. Its one exact reviewed token-shaped fixture
-is restricted to `Tests/LinterTests.swift`; other credentials in that same file
-remain findings. A clean scan is not a comprehensive security audit.
+## Publish source
 
-## Source publication
+After the owner approves the candidate:
 
-The existing repository is `tavodev/agentsconfig`, with GitHub Actions disabled
-at repository level and no hosted CI configuration. The owner requested open-source
-preparation on 2026-10-04; this supersedes the earlier decision to stop preparation
-at the private source repository. Actual publication remains a separate step.
-The security email was confirmed monitored on 2026-09-19.
+1. Verify the authenticated account, expected local/remote branch and clean working
+   tree. Confirm Actions is disabled with
+   `gh api repos/tavodev/agentsconfig/actions/permissions` (`enabled: false`).
+2. Push the reviewed candidate and verify its remote revision. Integrate unexpected
+   remote changes before publishing; never overwrite them.
+3. If authorized, change repository visibility and verify the resulting state.
+   Actions stays disabled; no hosted workflow is configured by this procedure.
+4. If a tag/release is authorized, tag the reviewed revision and publish notes based
+   on [CHANGELOG.md](../CHANGELOG.md) and the README's supported scope. Source can
+   also be published without a release. Attach binaries only after their own checks.
+5. Record the publication URLs and owner decision in the release issue. The owner
+   closes release-decision issues.
 
-Before approval, reconcile [release readiness](RELEASE_READINESS.md) and
-[the private-material review](audits/2026-10-04-publication.md). Public visibility
-exposes reachable Git history, author metadata, issue/PR bodies and comments,
-including closed items. Local privacy review must cover all of these. Historical
-images require visual inspection; deleting a file in a new commit does not remove
-its historical blobs.
+## Distribute a macOS binary
 
-After the owner approves the reviewed candidate:
+Use archive/export with Developer ID signing and hardened runtime. Verify bundle
+version, entitlements and notices; a normal development build can contain
+`get-task-allow` and is not a distribution artifact. Notarize and staple the app.
+For a DMG, sign it, notarize it separately and staple its accepted ticket.
 
-1. Verify account `tavodev`, the expected local/remote `main`, a clean working tree,
-   and `gh api repos/tavodev/agentsconfig/actions/permissions` (`enabled: false`).
-2. Push the prepared candidate to the existing private `main` and verify the remote
-   commit before changing visibility. Never overwrite unexpected remote changes.
-3. Change visibility only if the instruction explicitly authorizes it. Verify the
-   resulting repository visibility and that Actions remains disabled.
-4. Create `v0.1.0` and a GitHub source release only if those actions are authorized;
-   use [the prepared release notes](releases/0.1.0.md). Source publication can also
-   proceed without a tag/release. Remove the draft wording when publishing.
-5. Record the owner decision and actual publication URLs in release readiness and
-   issue #5. Only the owner closes release-decision issues.
-
-Do not claim hosted CI results or a downloadable notarized app. A signed DMG and
-clean-machine installation verification remain independent work in issue #6.
-
-## Optional binary distribution
-
-Use an owner-provided Developer ID identity, hardened runtime and appropriate signing configuration. Build Release, verify bundled licenses and version, sign all relevant code, submit for notarization, staple the accepted ticket and verify Gatekeeper assessment on a clean Mac. Produce an archive and SHA-256 checksum from the validated artifact. Never commit signing keys, certificates with private keys or notarization credentials. Test installation and first launch independently of the development checkout.
-
-Unsigned/ad-hoc development builds must not be described as Developer ID signed or notarized. Source-only publication does not require binary signing. No binary publication workflow is enabled automatically.
+Verify Gatekeeper, installation and first launch on a clean Mac or user. Publish
+checksums with the validated artifact. Never commit private keys, signing
+certificates containing private keys or notarization credentials. Locally signed
+builds must not be described as Developer ID signed or notarized.

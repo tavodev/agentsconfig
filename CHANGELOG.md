@@ -2,7 +2,7 @@
 
 ## 0.1.0 — Unreleased
 
-Initial experimental release candidate. No release has been published by this preparation.
+Initial experimental release candidate.
 
 - Security diagnostics for broad permissions, approval bypasses, risky hooks,
   unpinned MCP packages and literal secrets, with per-file rule muting.
@@ -11,7 +11,7 @@ Initial experimental release candidate. No release has been published by this pr
 - Skills in the file list and Configuration → Skills are grouped by origin (personal, project, plugins, system) and nested by owner when more than one is present; skill rows omit the long cache path.
 - Native macOS interface for Claude Code, Codex, Gemini/Antigravity and OpenCode configuration inspection.
 - Per-repository (project) config inspection, including git submodules, with the same watching, diffing, history and masking as global files; local MCP servers appear read-only in the cross-agent comparator.
-- Sidebar Global/Projects switcher with a project picker and root/submodule scope chips, replacing nested disclosure trees.
+- Sidebar Global/Projects switcher with a project picker and root/submodule scope chips.
 - De-duplicated structured view (no key shown both in a special card and in "All keys"), with key descriptions shown inline; the cross-agent MCP comparator is a column-aligned table.
 - Rendered Markdown preview (real headings, lists, code blocks, quotes) for instruction files.
 - Settings reachable inline from the sidebar, in addition to the native macOS Settings window.
@@ -23,8 +23,8 @@ Initial experimental release candidate. No release has been published by this pr
 - English and Spanish interfaces, activity feed and optional local notifications.
 - Isolated hostless tests, multiprocess storage verification and a separate UI regression host.
 - Native per-destination navigation: three columns for files/Activity, full-width Settings and MCP comparator, an inspector that adapts between a side panel and a compact sheet, and a History view that switches between a compact version picker and a side-by-side list.
-- Project and scope now have separate, labelled selectors (a project menu plus root/submodule scope chips) instead of one unlabelled sidebar row.
-- Product-specific icons for Claude, Codex, Gemini and OpenCode replace generic symbols in the sidebar, MCP matrix and MCP cards.
+- Product icons for Claude, Codex, Gemini and OpenCode in the sidebar, MCP matrix and MCP cards.
 - Twenty-nine XCUITest scenarios covering reviewed save/restore, conflict state, named controls, window-size-driven layout, compact inspector sequencing and integrated editing flows.
 
-See [release notes](docs/releases/0.1.0.md) for limitations and [release preparation](docs/RELEASING.md) for publication gates.
+See [README.md](README.md) for supported scope and limitations, and
+[the release procedure](docs/RELEASING.md) for verification and publication steps.

@@ -11,16 +11,14 @@ inventory adapters for Cursor and GitHub Copilot CLI.
 
 ![AgentsConfig inspecting fictitious agent configurations](docs/screenshot.png)
 
-Captured with an isolated demo home and preferences. More
-[screenshots](docs/redesign/README.md) show editing, history and settings.
+Captured with fictitious configurations, an isolated demo home and preferences.
 
 AgentsConfig runs locally and does not require a model, AI subscription or API key of its own. It inspects configuration; it does not run configured MCP servers or hooks. This is an independent project, not endorsed by supported agent vendors.
 
 ## What it does
 
-- **Detects installed agents** and their global config files via a
-  declarative registry — adding support for a new agent is one entry in
-  `AgentRegistry.swift`.
+- **Finds agent configuration sources** through the declarative
+  `AgentRegistry.swift` and `AgentCatalog.swift` catalogs.
 - **Inspects local per-repository config**: register a project folder and
   its `.claude/`, `.codex/`, `.gemini/`, `AGENTS.md`/`opencode.json`, etc.
   get the same watching, diffing, history and secrets masking as global
@@ -78,6 +76,9 @@ rule as the Files list. Resource previews are read-only and never execute script
 Candidate status does not confirm that a session loaded the content. Custom roots
 can be selected in Settings; terminal environment variables are not inferred from
 another process.
+Instruction previews are capped at 20,000 characters, with up to 100 instruction
+entries and five import levels. YAML frontmatter is limited to 64 KiB; unsupported
+glob conditions remain explicit.
 
 The **MCP** comparator filters by project or profile and explains shadowed,
 disabled and ambiguous definitions. Its semantic comparison keeps argument order
@@ -88,8 +89,7 @@ exports anonymize sources and omit setting values/free-form diagnostic details.
 Nothing is uploaded. **Search** searches redacted loaded content across agents and
 projects, up to 2 MB per file and 100 results.
 
-See [implementation and verification](docs/audits/ALL-PRIORITIES.md) for the current
-scope, tested behaviors and verification evidence.
+See [verification](docs/VERIFICATION.md) for tested behaviors and results.
 
 ## Privacy & data handling
 
@@ -139,8 +139,8 @@ pinned review. Large-file reviews show sizes and an explicit detailed-diff
 omission notice; inspect Source before confirming. MCP adds/copies/replacements
 first review the editor change, then use the same confirmed Save workflow. Unsupported cross-client fields (including timeouts
 with different meanings, authentication and expansion syntax) block the copy.
-Destinations and source references are in [MCP-SCHEMAS.md](docs/repair-plan/MCP-SCHEMAS.md).
-Automatic edits in the Antigravity/Gemini group target **Gemini CLI** only.
+Destinations and source references are in [MCP-SCHEMAS.md](docs/MCP-SCHEMAS.md).
+Automatic MCP edits target **Gemini CLI**; Antigravity files are inspected separately.
 
 Files up to 2,000,000 bytes retain structured inspection. Files between 2 MB
 and 16 MB use background reading, validation and saving, with paginated Source
@@ -159,19 +159,25 @@ older app again, keep backups and restore the original directory name manually
 only when that destination is absent; older code does not automatically find
 the renamed directory. Ambiguous or corrupt history stays visible as an error.
 
+Known issues are tracked in [GitHub Issues](https://github.com/tavodev/agentsconfig/issues).
+The Markdown parser can join the first paragraph after a list to its last item
+([#8](https://github.com/tavodev/agentsconfig/issues/8)) and discard surplus table
+cells ([#9](https://github.com/tavodev/agentsconfig/issues/9)). Hook diagnostics can
+mistake a URL path for an external local script
+([#26](https://github.com/tavodev/agentsconfig/issues/26)).
+
 ## Requirements
 
 - macOS 15 or later
 - Xcode with Swift 6 toolchain (verified with Xcode 26.1.1)
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (verified with 2.46.0;
-  previous verification used 2.45.4)
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (verified with 2.46.0)
 
 ## Build & run
 
 ```bash
 git clone https://github.com/tavodev/agentsconfig.git
 cd agentsconfig
-xcodegen generate            # regenerate the .xcodeproj after adding/removing files in Sources/
+xcodegen generate            # regenerate after adding/removing files in Sources/ or Tests/
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
   -configuration Debug -destination 'platform=macOS' \
   -onlyUsePackageVersionsFromResolvedFile build
@@ -184,21 +190,17 @@ follow a separate [release procedure](docs/RELEASING.md).
 
 ### Running against a sandboxed home
 
-Point `AGENTSCONFIG_HOME` at any directory to make the app treat it as
-`~` — agent detection, file watching and history all stay inside it.
-Useful for demos and screenshots without touching real configs:
+For demos and screenshots, use the dedicated UI host and fixture launcher:
 
 ```bash
-AGENTSCONFIG_HOME=/tmp/demo-home \
-  ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/AgentsConfig.app/Contents/MacOS/AgentsConfig
+python3 scripts/run-demo.py --app /absolute/path/AgentsConfigUITestHost.app --wait
 ```
 
-`AGENTSCONFIG_HOME` alone redirects paths only. For isolated UI verification,
-run `python3 scripts/run-demo.py --app /absolute/path/AgentsConfig.app`.
-It creates fictitious configs and sets both `AGENTSCONFIG_HOME` and a unique
+The launcher creates fictitious configs and sets both `AGENTSCONFIG_HOME` and a unique
 `AGENTSCONFIG_DEFAULTS_SUITE`; the app then disables its notification service
 and uses that suite for all preferences. It prints the temporary directory
 and process ID. No MCP command or hook is executed.
+`AGENTSCONFIG_HOME` used alone redirects paths without isolating preferences.
 
 ## Tests
 
@@ -214,7 +216,7 @@ agents and fake secrets (`sk-test-FAKE-…`) — it never touches real
 configs, never posts real notifications, and never launches the app.
 All suites share one serialized parent so async tests cannot overlap those
 process-global seams. The tests include AppKit coordinator checks; they do
-not claim live end-to-end UI coverage. See [verification evidence](docs/repair-plan/VERIFICATION.md).
+not claim live end-to-end UI coverage. See [verification evidence](docs/VERIFICATION.md).
 
 For real multiprocess history locking/migration, run
 `python3 scripts/verify-history-processes.py`. It compiles the production
@@ -240,15 +242,14 @@ xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfigUI \
   -disableAutomaticPackageResolution test
 ```
 
-See [release readiness](docs/RELEASE_READINESS.md) for the current results.
-The historical [improvement record](docs/repair-plan/IMPROVEMENTS.md) preserves
-earlier verification and limitations.
+Current results and coverage are in [verification](docs/VERIFICATION.md).
 
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution and AI-assistance policies,
 [AGENTS.md](AGENTS.md) for architecture, and [CHANGELOG.md](CHANGELOG.md) for changes.
-Release preparation is tracked in [RELEASE_READINESS.md](docs/RELEASE_READINESS.md).
+Current work and release decisions are tracked in
+[GitHub Issues](https://github.com/tavodev/agentsconfig/issues).
 
 This project is developed with the assistance of AI coding agents —
 fitting, since it is a tool for auditing their configuration.
@@ -259,7 +260,8 @@ submit.
 ## Third-party licenses
 
 Bundled dependencies and their licenses are listed in
-[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md). Icon sources and regeneration
+instructions are in [ASSET_SOURCES.md](docs/ASSET_SOURCES.md).
 
 ## License
 

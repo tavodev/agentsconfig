@@ -8,9 +8,10 @@ Use macOS 15+, Xcode with Swift 6 (verified with 26.1.1) and XcodeGen (verified 
 
 Discuss substantial changes in an issue before implementation. Keep pull requests focused, explain the user-visible behavior, and include relevant verification. Use English for code, documentation and pull requests; preserve both English and Spanish UI translations. Commit messages use a gitmoji and an English summary, with a detailed body where useful.
 
-Issues may be written in English or Spanish. GitHub Issues tracks current work;
-the repair-plan documents preserve historical evidence. Verification runs locally
-with GitHub Actions disabled; include the commands and results in your PR.
+Issues may be written in English or Spanish. GitHub Issues tracks current work
+and release decisions. Recorded results are in [verification](docs/VERIFICATION.md).
+Verification runs locally with GitHub Actions disabled; include the commands and
+results in your PR.
 
 ## Safe development
 

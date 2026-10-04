@@ -1,14 +1,18 @@
 # AgentsConfig
 
 App nativa macOS (SwiftUI) para inspeccionar, editar y auditar las configuraciones
-globales de agentes de IA (Claude Code, Codex, Antigravity/Gemini, OpenCode).
+globales y de proyecto de Claude Code, Codex, Gemini CLI, Antigravity y OpenCode,
+con inventario de solo lectura para Cursor y GitHub Copilot CLI.
+
+Este es el único archivo de instrucciones para trabajar en este repositorio.
 
 ## Build & run
 
 ```bash
 xcodegen generate            # tras añadir/quitar archivos en Sources/ o Tests/
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
-  -configuration Debug -destination 'platform=macOS' build
+  -configuration Debug -destination 'platform=macOS' \
+  -onlyUsePackageVersionsFromResolvedFile build
 open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/AgentsConfig.app
 ```
 
@@ -17,7 +21,8 @@ open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/A
 ```bash
 xcodegen generate
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
-  -configuration Debug -destination 'platform=macOS' test
+  -configuration Debug -destination 'platform=macOS' \
+  -onlyUsePackageVersionsFromResolvedFile test
 ```
 
 El target `AgentsConfigTests` compila `Sources/` (sin el `@main`) dentro del
@@ -42,18 +47,21 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 
 ## Arquitectura
 
-- `Sources/Services/AgentRegistry.swift` — catálogo declarativo de agentes
-  (paths de detección + fuentes de config). Añadir un agente = añadir una entrada.
+- `Sources/Services/AgentRegistry.swift` y `AgentCatalog.swift` — catálogo
+  declarativo de fuentes y detección. `AgentCatalog` amplía el catálogo base,
+  separa Gemini CLI de Antigravity, añade adaptadores de inventario y fuentes
+  administradas, y aplica las raíces seleccionadas en Ajustes.
   `AgentDefinition.localSources` declara las fuentes relativas a la raíz de un
   proyecto (`.claude/settings.json`, `.mcp.json`, `AGENTS.md`, etc.);
   `detectLocal(projectRoot:)` las resuelve en agentes sintéticos
-  (`id: "<agentID>::<projectRoot>"`) reutilizando `resolveFiles` sin tocarlo.
+  (`id: "<agentID>::<projectRoot>"`) reutilizando `resolveFiles`.
   También recorre los submódulos git del proyecto (`.gitmodules`, vía
   `submodulePaths`/`directSubmodulePaths`, acotado a 4 niveles/200 entradas
   como `skillTree`): cada submódulo con config propia se resuelve igual,
   con `absRoot = proyecto/submódulo` — el id ya sale único por ruta absoluta,
-  sin lógica especial. `Agent.submodulePath` (relativo al proyecto) es lo
-  único nuevo que distingue a estos agentes en el sidebar.
+  sin lógica especial. `Agent.submodulePath` (relativo al proyecto) distingue
+  a estos agentes en el sidebar. `SubmoduleDiscovery.swift` valida sintaxis,
+  pertenencia canónica, aliases y ciclos sin ejecutar Git.
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación
@@ -99,6 +107,29 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   'subsystem == "com.tavodev.agentsconfig"'` o Points of Interest.
 - `Sources/Services/Parsers.swift` — JSON/JSONC via JSONSerialization,
   TOML via TOMLKit (`TOMLTable.convert(to: .json)` → árbol Foundation).
+- `Sources/Models/WorkspaceAnalysis.swift` y `KnowledgeAnalysis.swift` — contexto,
+  fuentes observadas, procedencia y estados del análisis.
+  `ConfigurationResolver.swift` selecciona capas por agente, proyecto, CWD,
+  perfil, versión y confianza; `SettingMerger.swift` combina key-paths y conserva
+  contribuciones sustituidas, mezcladas, restringidas o excluidas. Las reglas no
+  cubiertas quedan sin resolver. El análisis describe archivos observados;
+  CLI, entorno de otra terminal, políticas remotas y activación de sesión no
+  se infieren. Los controles de versión/confianza no modifican clientes.
+- `Sources/Services/KnowledgeInspector.swift` y `Frontmatter.swift` — cadenas
+  de instrucciones, overrides, imports acotados, YAML, skills compartidas,
+  recursos y colisiones. Una fuente candidata no certifica carga en una sesión.
+  Previews de solo lectura y redactadas; recursos y scripts nunca se ejecutan.
+  Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
+  e imports a 5 niveles. Los globs no soportados quedan condicionados.
+- `Sources/Services/McpComparison.swift` — alcance/perfil, fuentes sustituidas,
+  deshabilitadas y ambiguas, y diff semántico con argumentos ordenados y secretos
+  redactados. No comprueba conectividad ni autenticación.
+- `Sources/Services/DiagnosticReportBuilder.swift` — informes JSON/Markdown sobre
+  una instantánea revisada y fija. Por defecto anonimiza rutas y omite valores y
+  detalles libres; valores opcionales también redactados. `WorkspaceAnalysisView`
+  integra estos análisis; `DiagnosticsView` presenta diagnóstico y exportación.
+  La búsqueda opera sobre documentos cargados y redactados: 2 MB/archivo,
+  100 resultados y cancelación entre archivos.
 - `Sources/Services/DiffEngine.swift` — diff semántico por key-path;
   fallback a diff de líneas; los valores bajo claves secretas se emiten
   enmascarados en todos los consumidores.
@@ -112,7 +143,7 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   exclusivos limpiados en éxito y en fallo.
 - `Sources/Services/Linter.swift` — issues (hooks huérfanos, parse errors) y
   bloques gestionados por terceros (orca-managed, hooks.state, etc.). Además,
-  auditoría de seguridad (`LintRule`, issue #18): permisos Bash/`permission.bash`
+  auditoría de seguridad (`LintRule`): permisos Bash/`permission.bash`
   sin acotar (`Bash`, `Bash(*)`, `Bash(:*)`, `permission.bash: allow` o `"*":
   allow`); modos que saltan la aprobación (`bypassPermissions`,
   `approval_policy = "never"` / `sandbox_mode = "danger-full-access"` —
@@ -170,10 +201,8 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 
 ## Convenciones
 
-- Debug usa bundle id `com.tavodev.agentsconfig.debug`; Release (instalada con
-  Developer ID) usa `com.tavodev.agentsconfig`. Así no comparten permisos TCC
-  (Documents) ni UserDefaults: un build ad hoc guarda el permiso por cdhash y
-  pisaba el de la app instalada.
+- Debug usa bundle id `com.tavodev.agentsconfig.debug`; Release usa
+  `com.tavodev.agentsconfig`. No deben compartir permisos TCC ni UserDefaults.
 
 - Toda resolución de `~` y de Application Support pasa por
   `AppPaths` (Models.swift); `AGENTSCONFIG_HOME` los redirige.
@@ -189,7 +218,7 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   La comprobación previa + rename no es CAS: cambios externos posteriores al
   respaldo pueden perderse y no quedan recuperados por dicho respaldo.
 - `McpAdapter.swift` comparte esquemas entre alta/copia; destinos explícitos en
-  AgentRegistry y contrato en `docs/repair-plan/MCP-SCHEMAS.md`. No se asumen
+  el catálogo y contrato en `docs/MCP-SCHEMAS.md`. No se asumen
   equivalencias de auth/timeouts/opciones desconocidas. Review invalidado si
   cambia buffer o disco; arguments son lista, nunca split por espacios.
 - Hasta 2 MB: inspección estructurada. Entre 2 y 16 MB: `LargeFileWorker`
@@ -232,7 +261,7 @@ cuenta `tavodev` (`gh auth status`; si no es la activa:
 no deben intentar acceder a credenciales del mantenedor.
 
 - **Al empezar:** `gh issue list -R tavodev/agentsconfig` y leer el issue que se
-  vaya a trabajar. No retomar trabajo desde `docs/repair-plan/` salvo como contexto.
+  vaya a trabajar. Usar su estado actual y la documentación vigente del repo.
 - **Levantar issue nuevo** (sin pedir permiso) cuando aparezca un bug, una
   limitación, una deuda o una decisión pendiente que no se resuelva en la tarea
   actual. Antes, buscar duplicados: `gh issue list -R tavodev/agentsconfig --search "<términos>" --state all`.
@@ -253,16 +282,18 @@ no deben intentar acceder a credenciales del mantenedor.
 - Si se descubre que una limitación documentada en `docs/` ya no aplica, cerrar
   su issue y actualizar el doc en el mismo commit.
 
-## Plan de reparación (histórico)
+## Verificación y documentación
 
-- `docs/repair-plan/FOLLOWUP.md`, `PLAN.md`, `IMPROVEMENTS.md` y `VERIFICATION.md`
-  son el registro de evidencia hasta 2026-09-24; el tablero de FOLLOWUP ya no se
-  actualiza. `VERIFICATION.md` y `RELEASE_READINESS.md` sí se amplían con nuevas
-  verificaciones completas (Release, UI, multiproceso, escaneo de publicación).
+- `docs/VERIFICATION.md` resume resultados fechados y comandos reproducibles.
+  Registrar revisión exacta, entorno y resultados reales en el issue trabajado;
+  actualizar el resumen cuando se ejecuten nuevas verificaciones completas.
+  Las bitácoras internas y rutas temporales de sesiones no se incorporan a docs.
 - `AgentsConfigUI` compila `UITests/` con host propio `AgentsConfigUITestHost`
   (`com.tavodev.agentsconfig.ui-fixture`), separado de la app real y del esquema hostless.
   El host exige home+defaults aislados para arrancar. Compilar con
   build-for-testing; ejecutar solo con sesión gráfica desbloqueada. Nunca afirmar
   ejecución UI por el hecho de que compile.
-- El registro de primera ronda en `docs/repair-plan/PLAN.md` no certifica cierre:
-  la auditoría reabrió garantías de historial, restauración, máscara y escritura.
+- `docs/RELEASING.md` contiene el procedimiento de publicación; CHANGELOG recoge
+  cambios del producto. Las decisiones de release se llevan en GitHub Issues.
+  Publicación, tags y cambios de visibilidad requieren autorización del propietario.
+  Actions permanece desactivado; la verificación es local.

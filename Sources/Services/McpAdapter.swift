@@ -1,6 +1,6 @@
 import Foundation
 
-/// Supported schema contract and sources: docs/repair-plan/MCP-SCHEMAS.md.
+/// Supported schema contract and sources: docs/MCP-SCHEMAS.md.
 @MainActor enum McpAdapter {
     enum Dialect: String, CaseIterable {
         case claude, codex, gemini, opencode
