@@ -9,8 +9,10 @@ inventory adapters for Cursor and GitHub Copilot CLI.
 > features with care: always review diffs and keep your own backups of
 > critical configs.
 
-See [screenshots](docs/redesign/README.md) from verified fictitious demo
-configurations.
+![AgentsConfig inspecting fictitious agent configurations](docs/screenshot.png)
+
+Captured with an isolated demo home and preferences. More
+[screenshots](docs/redesign/README.md) show editing, history and settings.
 
 AgentsConfig runs locally and does not require a model, AI subscription or API key of its own. It inspects configuration; it does not run configured MCP servers or hooks. This is an independent project, not endorsed by supported agent vendors.
 
@@ -41,6 +43,9 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   server × agent, with copy-to-agent to sync specs across tools.
 - **Secrets masking**: API keys and tokens render masked in the
   structured and read-only views.
+- **Security diagnostics**: flags broad permissions, approval bypasses,
+  risky hooks, unpinned MCP packages and literal secrets. Rules can be
+  muted per file; these static checks do not execute commands.
 - **In-app docs**: explains what each file and each known setting does,
   with links to the official documentation — the same explanations apply
   whether the file is global or a per-project copy.
@@ -157,16 +162,19 @@ the renamed directory. Ambiguous or corrupt history stays visible as an error.
 ## Requirements
 
 - macOS 15 or later
-- Xcode with Swift 6 toolchain
-- [XcodeGen 2.45.4](https://github.com/yonaskolb/XcodeGen/releases/tag/2.45.4)
-  (CI verifies the official release checksum)
+- Xcode with Swift 6 toolchain (verified with Xcode 26.1.1)
+- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (verified with 2.46.0;
+  previous verification used 2.45.4)
 
 ## Build & run
 
 ```bash
+git clone https://github.com/tavodev/agentsconfig.git
+cd agentsconfig
 xcodegen generate            # regenerate the .xcodeproj after adding/removing files in Sources/
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
-  -configuration Debug -destination 'platform=macOS' build
+  -configuration Debug -destination 'platform=macOS' \
+  -onlyUsePackageVersionsFromResolvedFile build
 open ~/Library/Developer/Xcode/DerivedData/AgentsConfig-*/Build/Products/Debug/AgentsConfig.app
 ```
 
@@ -197,7 +205,8 @@ and process ID. No MCP command or hook is executed.
 ```bash
 xcodegen generate
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfig \
-  -configuration Debug -destination 'platform=macOS' test
+  -configuration Debug -destination 'platform=macOS' \
+  -onlyUsePackageVersionsFromResolvedFile test
 ```
 
 The suite runs entirely inside per-test temporary homes with fictitious
@@ -214,12 +223,12 @@ baseline without touching real history.
 
 ### Opt-in UI regression tests
 
-The separate `AgentsConfigUI` scheme contains fifteen XCUITest scenarios using
+The separate `AgentsConfigUI` scheme contains 29 XCUITest scenarios using
 fictitious homes, isolated preference suites and disabled notifications. Its
 `AgentsConfigUITestHost` has a distinct bundle identifier so it cannot terminate
 your normal app; the host refuses to start without the isolated environment.
-The ordinary `AgentsConfig` test scheme never launches the app. CI compiles
-the UI suite but does not claim graphical execution.
+The ordinary `AgentsConfig` test scheme never launches the app. Verification
+runs locally; GitHub Actions is disabled and no hosted CI is configured.
 
 ```bash
 xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfigUI \
@@ -231,8 +240,9 @@ xcodebuild -project AgentsConfig.xcodeproj -scheme AgentsConfigUI \
   -disableAutomaticPackageResolution test
 ```
 
-See [the improvement record](docs/repair-plan/IMPROVEMENTS.md) for results and
-remaining live-validation limits.
+See [release readiness](docs/RELEASE_READINESS.md) for the current results.
+The historical [improvement record](docs/repair-plan/IMPROVEMENTS.md) preserves
+earlier verification and limitations.
 
 ## Development
 

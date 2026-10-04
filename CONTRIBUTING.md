@@ -4,9 +4,13 @@ AgentsConfig is an experimental native macOS application. Changes must protect u
 
 ## Getting started
 
-Use macOS 15+, Xcode 26.1.1 and XcodeGen 2.45.4. Follow the build and test commands in [README.md](README.md). Architecture and safety invariants are in [AGENTS.md](AGENTS.md).
+Use macOS 15+, Xcode with Swift 6 (verified with 26.1.1) and XcodeGen (verified with 2.46.0). Follow the build and test commands in [README.md](README.md). Architecture and safety invariants are in [AGENTS.md](AGENTS.md). Keep dependency versions pinned to the committed `Package.resolved`.
 
 Discuss substantial changes in an issue before implementation. Keep pull requests focused, explain the user-visible behavior, and include relevant verification. Use English for code, documentation and pull requests; preserve both English and Spanish UI translations. Commit messages use a gitmoji and an English summary, with a detailed body where useful.
+
+Issues may be written in English or Spanish. GitHub Issues tracks current work;
+the repair-plan documents preserve historical evidence. Verification runs locally
+with GitHub Actions disabled; include the commands and results in your PR.
 
 ## Safe development
 
@@ -16,6 +20,11 @@ Discuss substantial changes in an issue before implementation. Keep pull request
 - Preserve reviewed saves/restores, conflict checks, private file permissions and redacted diffs.
 - Run the hostless tests for behavior changes and the multiprocess probe for storage changes. Run UI tests only in an unlocked graphical session with the isolated host. Compilation alone is not a UI pass.
 - Regenerate the Xcode project when adding or removing source files. Commit the generated project and locked package resolution together.
+
+For changes to publication checks, run `python3 scripts/test-audit-publication.py`.
+Before sharing a candidate, run `python3 scripts/audit-publication.py`; it reports
+locations without printing matched credentials. Review images, private paths and
+asset provenance separately, including material retained in Git history.
 
 ## AI-assisted contributions
 

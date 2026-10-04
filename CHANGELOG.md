@@ -4,6 +4,10 @@
 
 Initial experimental release candidate. No release has been published by this preparation.
 
+- Security diagnostics for broad permissions, approval bypasses, risky hooks,
+  unpinned MCP packages and literal secrets, with per-file rule muting.
+- Configuration analysis with per-key provenance, instruction and skill inspection,
+  context-aware MCP comparison, reviewed diagnostic exports and redacted search.
 - Skills in the file list and Configuration → Skills are grouped by origin (personal, project, plugins, system) and nested by owner when more than one is present; skill rows omit the long cache path.
 - Native macOS interface for Claude Code, Codex, Gemini/Antigravity and OpenCode configuration inspection.
 - Per-repository (project) config inspection, including git submodules, with the same watching, diffing, history and masking as global files; local MCP servers appear read-only in the cross-agent comparator.
@@ -21,6 +25,6 @@ Initial experimental release candidate. No release has been published by this pr
 - Native per-destination navigation: three columns for files/Activity, full-width Settings and MCP comparator, an inspector that adapts between a side panel and a compact sheet, and a History view that switches between a compact version picker and a side-by-side list.
 - Project and scope now have separate, labelled selectors (a project menu plus root/submodule scope chips) instead of one unlabelled sidebar row.
 - Product-specific icons for Claude, Codex, Gemini and OpenCode replace generic symbols in the sidebar, MCP matrix and MCP cards.
-- Fifteen XCUITest scenarios covering reviewed save/restore, conflict state, named controls, window-size-driven layout and compact inspector sequencing.
+- Twenty-nine XCUITest scenarios covering reviewed save/restore, conflict state, named controls, window-size-driven layout, compact inspector sequencing and integrated editing flows.
 
 See [release notes](docs/releases/0.1.0.md) for limitations and [release preparation](docs/RELEASING.md) for publication gates.

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability privately
+    url: mailto:hola@tavo.dev
+    about: Please use the private security contact rather than a public issue. Send fictitious reproductions and no live credentials.

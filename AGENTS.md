@@ -226,8 +226,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 ## Tracking de trabajo: GitHub Issues
 
 La fuente de verdad de pendientes, decisiones y limitaciones es **GitHub Issues**
-de `tavodev/agentsconfig` (repo privado). Usar `gh` con la cuenta `tavodev`
-(`gh auth status`; si no es la activa: `gh auth switch -u tavodev`).
+de `tavodev/agentsconfig`. En las sesiones del mantenedor, usar `gh` con la
+cuenta `tavodev` (`gh auth status`; si no es la activa:
+`gh auth switch -u tavodev`). Los contribuidores externos usan su propia cuenta;
+no deben intentar acceder a credenciales del mantenedor.
 
 - **Al empezar:** `gh issue list -R tavodev/agentsconfig` y leer el issue que se
   vaya a trabajar. No retomar trabajo desde `docs/repair-plan/` salvo como contexto.
