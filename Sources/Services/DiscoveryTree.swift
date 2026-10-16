@@ -181,7 +181,7 @@ enum DiscoveryTree {
     /// Folders never descended into during project discovery (agent config
     /// dirs are resolved as sources instead; the rest are generated trees).
     static let projectSkipNames: Set<String> = [".git", ".claude", ".codex", ".gemini", ".opencode", ".agents", ".agent",
-        ".cursor", ".copilot", ".github", "node_modules", ".build", "build", "dist", "vendor", ".venv", ".next"]
+        ".cursor", ".copilot", ".windsurf", ".devin", ".github", "node_modules", ".build", "build", "dist", "vendor", ".venv", ".next"]
 
     static func projectFolders(root: String, collectFiles: Bool = true) -> Result {
         let submodules = Set(SubmoduleDiscovery.scan(root: root).paths.map { (root as NSString).appendingPathComponent($0) })

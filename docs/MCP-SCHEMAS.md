@@ -22,6 +22,18 @@ separately; no shared schema or migration is assumed. Unsupported source dialect
 require manual Source editing. Local project MCP sources appear in the comparator
 but are not copy/add destinations.
 
+Read-only inventory clients are never add/copy destinations; their servers
+appear in the comparator only (decision recorded on 2026-10-16, issue #23):
+
+| Client | Inspected MCP files | Why not a destination |
+| --- | --- | --- |
+| Cursor | `~/.cursor/mcp.json`, `.cursor/mcp.json` | Inventory only; remote transport and interpolation rules are not modelled. |
+| Copilot CLI | `~/.copilot/mcp-config.json`, `.mcp.json`, `.github/mcp.json`, plugin `mcp.json` | Inventory only; IDE/cloud policies are not observed. |
+| Windsurf / Devin Desktop | `~/.config/devin/mcp_config.json`, `~/.codeium/mcp_config.json`, legacy `~/.codeium/windsurf/mcp_config.json` | Official pages disagree on the loaded file; `${env:}`/`${file:}` interpolation and team allowlists have no mapping. |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` | Remote connectors and extensions live in the app; the file needs an app restart and holds secrets in `env`. |
+
+Sources: [Cursor MCP](https://cursor.com/docs/context/mcp), [Copilot CLI configuration directory](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference), [Devin Desktop MCP](https://docs.devin.ai/desktop/cascade/mcp), [Devin Desktop FAQ](https://docs.devin.ai/desktop/devin-desktop-faq), [Claude Desktop local servers](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
+
 Every add/copy/replacement is staged for diff review before changing a buffer.
 Review records the original buffer and disk state; changes to either invalidate
 approval. JSONC/TOML normalization warnings are displayed. TOML edits preserve

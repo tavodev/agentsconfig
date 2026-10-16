@@ -2,11 +2,13 @@ import Foundation
 import SwiftUI
 
 /// Additional source contracts, verified against official documentation on
-/// 2026-09-13. Inventory is separate from configuration/session resolution.
+/// 2026-09-13 (Windsurf / Devin Desktop and Claude Desktop on 2026-10-16).
+/// Inventory is separate from configuration/session resolution.
 enum AgentCatalog {
     static let defaultRoots = ["claude-code": "~/.claude", "codex": "~/.codex", "gemini-cli": "~/.gemini",
                                "antigravity": "~/.gemini/config", "opencode": "~/.config/opencode",
-                               "cursor": "~/.cursor", "copilot-cli": "~/.copilot"]
+                               "cursor": "~/.cursor", "copilot-cli": "~/.copilot",
+                               "windsurf": "~/.codeium/windsurf", "claude-desktop": "~/Library/Application Support/Claude"]
     static func root(for id: String) -> String {
         let overrides = AppSettings.defaults.dictionary(forKey: "agentConfigRoots") as? [String: String] ?? [:]
         return AppPaths.expand(overrides[id] ?? defaultRoots[id] ?? "~")
@@ -92,6 +94,37 @@ enum AgentCatalog {
                 file(".github/mcp.json", .mcp, readOnly: true), file("AGENTS.md", .instructions, readOnly: true),
                 file("CLAUDE.md", .instructions, readOnly: true), file("GEMINI.md", .instructions, readOnly: true)],
             notes: "Copilot CLI read-only inventory. IDE/cloud Copilot policies and runtime permission decisions are not inferred."))
+        // Windsurf was renamed Devin Desktop (2026-06). It prefers `.devin/`
+        // and falls back to `.windsurf/`; `~/.codeium/` keeps its layout. The
+        // official pages disagree on the MCP file, so every documented
+        // location is inventoried and none is assumed to be the loaded one.
+        definitions.append(AgentDefinition(id: "windsurf", name: "Windsurf / Devin Desktop", symbol: "wind", color: .teal,
+            detectionPaths: ["~/.codeium/windsurf", "~/.config/devin"],
+            sources: [file("~/.codeium/windsurf/memories/global_rules.md", .instructions, readOnly: true),
+                .init(path: "~/.config/devin/mcp_config.json", role: .mcp, readOnly: true, note: "MCP config documented for Devin Desktop"),
+                .init(path: "~/.codeium/mcp_config.json", role: .mcp, readOnly: true, note: "MCP config documented in the Devin Desktop FAQ"),
+                .init(path: "~/.codeium/windsurf/mcp_config.json", role: .mcp, readOnly: true, note: "Legacy Windsurf MCP config"),
+                file("~/.codeium/windsurf/hooks.json", .hooks, readOnly: true),
+                tree("~/.codeium/windsurf/global_workflows", "*.md", .other, readOnly: true),
+                .init(path: "~/.codeium/windsurf/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true),
+                .init(path: "~/.config/devin/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true),
+                .init(path: "~/.agents/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true)],
+            localSources: [tree(".devin/rules", "*.md", .instructions, readOnly: true), tree(".windsurf/rules", "*.md", .instructions, readOnly: true),
+                .init(path: ".windsurfrules", format: .markdown, role: .instructions, readOnly: true, note: "Legacy single-file rules"),
+                file("AGENTS.md", .instructions, readOnly: true),
+                file(".devin/hooks.json", .hooks, readOnly: true),
+                .init(path: ".windsurf/hooks.json", role: .hooks, readOnly: true, note: "Legacy — used only when .devin/hooks.json is absent or empty"),
+                tree(".devin/workflows", "*.md", .other, readOnly: true), tree(".windsurf/workflows", "*.md", .other, readOnly: true),
+                .init(path: ".devin/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true),
+                .init(path: ".windsurf/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true),
+                .init(path: ".agents/skills", isDirectory: true, glob: "*/SKILL.md", role: .skills, readOnly: true)],
+            notes: "Read-only inventory. Not an MCP destination: the documented MCP file location differs between official pages. Rule activation triggers, team allowlists and Claude Code config reading are not observed."))
+        definitions.append(AgentDefinition(id: "claude-desktop", name: "Claude Desktop", symbol: "macwindow", color: Color(red: 0.82, green: 0.51, blue: 0.35),
+            detectionPaths: ["~/Library/Application Support/Claude/claude_desktop_config.json"],
+            sources: [.init(path: "~/Library/Application Support/Claude/claude_desktop_config.json", role: .mcp,
+                            excludeFromHistory: true, readOnly: true,
+                            note: "Local MCP servers (mcpServers) — env often holds secrets, excluded from history")],
+            notes: "Read-only inventory. Not an MCP destination. Remote connectors and desktop extensions are managed in the app and not observed."))
         let managed: [String: [ConfigSource]] = [
             "claude-code": [file("/Library/Application Support/ClaudeCode/managed-settings.json", .settings, readOnly: true),
                 file("/Library/Application Support/ClaudeCode/managed-mcp.json", .mcp, readOnly: true),
@@ -103,7 +136,15 @@ enum AgentCatalog {
                 file("/Library/Application Support/GeminiCli/settings.json", .settings, readOnly: true),
                 tree("/Library/Application Support/GeminiCli/policies", "*.toml", .permissions, readOnly: true)],
             "opencode": [file("/Library/Application Support/opencode/opencode.json", .settings, readOnly: true),
-                file("/Library/Application Support/opencode/opencode.jsonc", .settings, readOnly: true)]
+                file("/Library/Application Support/opencode/opencode.jsonc", .settings, readOnly: true)],
+            "windsurf": [file("/Library/Application Support/Devin/hooks.json", .hooks, readOnly: true),
+                file("/Library/Application Support/Windsurf/hooks.json", .hooks, readOnly: true),
+                tree("/Library/Application Support/Devin/rules", "*.md", .instructions, readOnly: true),
+                tree("/Library/Application Support/Devin/workflows", "*.md", .other, readOnly: true),
+                tree("/Library/Application Support/Devin/skills", "SKILL.md", .skills, readOnly: true),
+                tree("/Library/Application Support/Windsurf/rules", "*.md", .instructions, readOnly: true),
+                tree("/Library/Application Support/Windsurf/workflows", "*.md", .other, readOnly: true),
+                tree("/Library/Application Support/Windsurf/skills", "SKILL.md", .skills, readOnly: true)]
         ]
         for index in definitions.indices {
             let id = definitions[index].id

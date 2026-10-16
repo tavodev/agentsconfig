@@ -108,6 +108,20 @@ enum DocsCatalog {
                          titleES: "Status line",
                          bodyES: "Script que alimenta la barra de estado del agente. Debe imprimir por stdout; errores aquí se ven como status vacío.")
         default:
+            if name.hasSuffix(".mdc") {
+                return .init(title: "Cursor rule",
+                             body: "Project rule for Cursor. Its frontmatter (description, globs, alwaysApply) decides when it is attached. Inventoried read-only here.",
+                             docsURL: URL(string: "https://cursor.com/docs/context/rules"),
+                             titleES: "Regla de Cursor",
+                             bodyES: "Regla de proyecto de Cursor. Su frontmatter (description, globs, alwaysApply) decide cuándo se adjunta. Aquí se inventaría en solo lectura.")
+            }
+            if name.hasSuffix(".instructions.md") {
+                return .init(title: "Copilot path-specific instructions",
+                             body: "Instructions GitHub Copilot applies to files matching the applyTo glob in the frontmatter. Inventoried read-only here.",
+                             docsURL: URL(string: "https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions"),
+                             titleES: "Instrucciones de Copilot por ruta",
+                             bodyES: "Instrucciones que GitHub Copilot aplica a los archivos que coinciden con el glob applyTo del frontmatter. Aquí se inventaría en solo lectura.")
+            }
             if name.hasSuffix(".rules") {
                 return .init(title: "Permission rules",
                              body: "Lists of allowed/denied command prefixes (the agent's own DSL). Consulted before running shell commands.",
@@ -201,6 +215,146 @@ enum DocsCatalog {
             docsURL: nil,
             titleES: "MCP de Antigravity (legacy)",
             bodyES: "Ubicación anterior a la migración. Si existe ~/.gemini/config/mcp_config.json, este archivo puede estar ignorado — verifica antes de editar."
+        )),
+        (".cursor/mcp.json", .init(
+            title: "Cursor MCP servers",
+            body: "MCP servers for Cursor (mcpServers). The user file applies to every workspace; a project's .cursor/mcp.json applies to that project. Inventoried read-only here.",
+            docsURL: URL(string: "https://cursor.com/docs/context/mcp"),
+            titleES: "Servidores MCP de Cursor",
+            bodyES: "Servidores MCP de Cursor (mcpServers). El archivo de usuario aplica a todos los workspaces; el .cursor/mcp.json de un proyecto aplica solo a ese proyecto. Aquí se inventaría en solo lectura."
+        )),
+        (".cursor/cli-config.json", .init(
+            title: "Cursor CLI configuration",
+            body: "Cursor CLI settings: permissions, editor mode, model and other CLI preferences. Inventoried read-only here.",
+            docsURL: URL(string: "https://cursor.com/docs/cli/reference/configuration"),
+            titleES: "Configuración de Cursor CLI",
+            bodyES: "Ajustes de Cursor CLI: permisos, modo de editor, modelo y otras preferencias del CLI. Aquí se inventaría en solo lectura."
+        )),
+        (".cursor/hooks.json", .init(
+            title: "Cursor hooks",
+            body: "Commands Cursor runs on agent lifecycle events. Hook scripts are inspected, never executed. Inventoried read-only here.",
+            docsURL: URL(string: "https://cursor.com/docs/hooks"),
+            titleES: "Hooks de Cursor",
+            bodyES: "Comandos que Cursor ejecuta en eventos del ciclo de vida del agente. Los scripts se inspeccionan, nunca se ejecutan. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/settings.json", .init(
+            title: "Copilot CLI settings",
+            body: "GitHub Copilot CLI user settings (JSONC): model, theme, trusted folders and other preferences. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Ajustes de Copilot CLI",
+            bodyES: "Ajustes de usuario de GitHub Copilot CLI (JSONC): modelo, tema, carpetas de confianza y otras preferencias. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/config.json", .init(
+            title: "Copilot CLI state",
+            body: "State maintained by Copilot CLI, which may include authentication data. Watched live, without history. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Estado de Copilot CLI",
+            bodyES: "Estado mantenido por Copilot CLI, que puede incluir datos de autenticación. Se vigila en vivo, sin historial. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/mcp-config.json", .init(
+            title: "Copilot CLI MCP servers",
+            body: "User-level MCP servers for GitHub Copilot CLI. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Servidores MCP de Copilot CLI",
+            bodyES: "Servidores MCP a nivel usuario de GitHub Copilot CLI. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/permissions-config.json", .init(
+            title: "Copilot CLI permissions",
+            body: "Tool and path permissions remembered by Copilot CLI. Runtime permission decisions are not inferred. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Permisos de Copilot CLI",
+            bodyES: "Permisos de herramientas y rutas que recuerda Copilot CLI. Las decisiones de permisos en tiempo de ejecución no se infieren. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/providers.json", .init(
+            title: "Copilot CLI model providers",
+            body: "Custom model providers for Copilot CLI. May hold credentials: excluded from history. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Proveedores de modelos de Copilot CLI",
+            bodyES: "Proveedores de modelos personalizados de Copilot CLI. Puede contener credenciales: excluido del historial. Aquí se inventaría en solo lectura."
+        )),
+        (".copilot/copilot-instructions.md", .init(
+            title: "Copilot CLI global instructions",
+            body: "User-level instructions Copilot CLI adds in every repository. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Instrucciones globales de Copilot CLI",
+            bodyES: "Instrucciones de usuario que Copilot CLI añade en todos los repositorios. Aquí se inventaría en solo lectura."
+        )),
+        (".github/copilot-instructions.md", .init(
+            title: "Copilot repository instructions",
+            body: "Repository-wide custom instructions for GitHub Copilot. Path-specific files live in .github/instructions/*.instructions.md. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions"),
+            titleES: "Instrucciones de repositorio de Copilot",
+            bodyES: "Instrucciones personalizadas de GitHub Copilot para todo el repositorio. Las específicas por ruta viven en .github/instructions/*.instructions.md. Aquí se inventaría en solo lectura."
+        )),
+        (".github/mcp.json", .init(
+            title: "Copilot repository MCP servers",
+            body: "MCP servers declared for GitHub Copilot in this repository. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference"),
+            titleES: "Servidores MCP de Copilot del repositorio",
+            bodyES: "Servidores MCP declarados para GitHub Copilot en este repositorio. Aquí se inventaría en solo lectura."
+        )),
+        (".codeium/windsurf/memories/global_rules.md", .init(
+            title: "Windsurf / Devin Desktop global rules",
+            body: "Single always-on rules file applied to every workspace (6,000-character limit). Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/cascade/memories"),
+            titleES: "Reglas globales de Windsurf / Devin Desktop",
+            bodyES: "Archivo único de reglas siempre activo en todos los workspaces (límite de 6000 caracteres). Aquí se inventaría en solo lectura."
+        )),
+        (".config/devin/mcp_config.json", .init(
+            title: "Devin Desktop MCP servers",
+            body: "MCP servers for the Cascade agent (mcpServers; serverUrl or url for remote servers). Values may use ${env:VAR} or ${file:/path} interpolation. Official pages also list ~/.codeium/mcp_config.json; which file a session loads is not verified. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/cascade/mcp"),
+            titleES: "Servidores MCP de Devin Desktop",
+            bodyES: "Servidores MCP del agente Cascade (mcpServers; serverUrl o url para servidores remotos). Los valores pueden usar interpolación ${env:VAR} o ${file:/ruta}. Las páginas oficiales también citan ~/.codeium/mcp_config.json; no se verifica qué archivo carga una sesión. Aquí se inventaría en solo lectura."
+        )),
+        (".codeium/mcp_config.json", .init(
+            title: "Devin Desktop MCP servers (FAQ location)",
+            body: "MCP config location listed in the Devin Desktop FAQ. The MCP page documents ~/.config/devin/mcp_config.json instead; which one a session loads is not verified. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/devin-desktop-faq"),
+            titleES: "Servidores MCP de Devin Desktop (ubicación del FAQ)",
+            bodyES: "Ubicación de la config MCP que cita el FAQ de Devin Desktop. La página de MCP documenta ~/.config/devin/mcp_config.json; no se verifica cuál carga una sesión. Aquí se inventaría en solo lectura."
+        )),
+        (".codeium/windsurf/mcp_config.json", .init(
+            title: "Windsurf MCP servers (legacy)",
+            body: "MCP config location used by Windsurf before the Devin Desktop rename. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/devin-desktop-faq"),
+            titleES: "Servidores MCP de Windsurf (legacy)",
+            bodyES: "Ubicación de la config MCP que usaba Windsurf antes de renombrarse Devin Desktop. Aquí se inventaría en solo lectura."
+        )),
+        (".codeium/windsurf/hooks.json", .init(
+            title: "Windsurf / Devin Desktop user hooks",
+            body: "Commands Cascade runs on agent events, for every workspace. System and workspace hooks.json files are combined with it. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/cascade/hooks"),
+            titleES: "Hooks de usuario de Windsurf / Devin Desktop",
+            bodyES: "Comandos que Cascade ejecuta en eventos del agente, en todos los workspaces. Se combinan con los hooks.json de sistema y de workspace. Aquí se inventaría en solo lectura."
+        )),
+        (".devin/hooks.json", .init(
+            title: "Devin Desktop workspace hooks",
+            body: "Workspace hooks for Cascade. Takes precedence over the legacy .windsurf/hooks.json. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/cascade/hooks"),
+            titleES: "Hooks de workspace de Devin Desktop",
+            bodyES: "Hooks de workspace de Cascade. Tiene prioridad sobre el .windsurf/hooks.json legacy. Aquí se inventaría en solo lectura."
+        )),
+        (".windsurf/hooks.json", .init(
+            title: "Windsurf workspace hooks (legacy)",
+            body: "Used only when .devin/hooks.json is absent or defines no hooks. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/cascade/hooks"),
+            titleES: "Hooks de workspace de Windsurf (legacy)",
+            bodyES: "Solo se usa si .devin/hooks.json no existe o no define hooks. Aquí se inventaría en solo lectura."
+        )),
+        (".windsurfrules", .init(
+            title: "Windsurf rules (legacy single file)",
+            body: "Legacy workspace rules file, still read. New rules belong in .devin/rules/*.md (preferred) or .windsurf/rules/*.md. Inventoried read-only here.",
+            docsURL: URL(string: "https://docs.devin.ai/desktop/devin-desktop-faq"),
+            titleES: "Reglas de Windsurf (archivo único legacy)",
+            bodyES: "Archivo de reglas de workspace legacy, todavía se lee. Las reglas nuevas van en .devin/rules/*.md (preferido) o .windsurf/rules/*.md. Aquí se inventaría en solo lectura."
+        )),
+        ("Library/Application Support/Claude/claude_desktop_config.json", .init(
+            title: "Claude Desktop configuration",
+            body: "Local MCP servers Claude Desktop launches at startup (mcpServers: command, args, env). Restart the app after changes. Remote connectors and extensions are managed in the app. Excluded from history: env values often hold secrets. Inventoried read-only here.",
+            docsURL: URL(string: "https://modelcontextprotocol.io/docs/develop/connect-local-servers"),
+            titleES: "Configuración de Claude Desktop",
+            bodyES: "Servidores MCP locales que Claude Desktop lanza al arrancar (mcpServers: command, args, env). Reinicia la app tras cambiarlo. Los conectores remotos y las extensiones se gestionan en la app. Excluido del historial: los valores de env suelen contener secretos. Aquí se inventaría en solo lectura."
         )),
         ("opencode.json", .init(
             title: "OpenCode configuration",

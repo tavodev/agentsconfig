@@ -131,6 +131,30 @@ final class TestEnvironment {
         try write(".config/opencode/AGENTS.md", "# opencode\n")
     }
 
+    // Read-only inventory agents (issue #23). Never destinations for MCP.
+
+    func installCursor() throws {
+        try write(".cursor/mcp.json", #"{"mcpServers":{"docs":{"command":"npx","args":["-y","@fake/docs-mcp@1.0.0"]}}}"#)
+        try write(".cursor/cli-config.json", #"{"permissions":{"allow":["Shell(ls)"]}}"#)
+    }
+
+    func installCopilot() throws {
+        try write(".copilot/settings.json", "{// fixture\n\"model\":\"fake\"}")
+        try write(".copilot/mcp-config.json", #"{"mcpServers":{"docs":{"command":"npx","args":["-y","@fake/docs-mcp@1.0.0"]}}}"#)
+        try write(".copilot/copilot-instructions.md", "# copilot fixture\n")
+    }
+
+    func installWindsurf() throws {
+        try write(".codeium/windsurf/memories/global_rules.md", "# windsurf fixture\n")
+        try write(".config/devin/mcp_config.json", #"{"mcpServers":{"remote":{"serverUrl":"https://mcp.example.test/sse","headers":{"Authorization":"Bearer FAKE-WINDSURF-TOKEN"}}}}"#)
+        try write(".codeium/windsurf/hooks.json", #"{"hooks":{"pre_run_command":[{"command":"echo fixture","show_output":true}]}}"#)
+        try write(".codeium/windsurf/skills/demo/SKILL.md", "---\nname: demo\ndescription: fixture\n---\n")
+    }
+
+    func installClaudeDesktop() throws {
+        try write("Library/Application Support/Claude/claude_desktop_config.json", #"{"mcpServers":{"docs":{"command":"npx","args":["-y","@fake/docs-mcp@1.0.0"],"env":{"API_KEY":"sk-test-FAKE-DESKTOP"}}}}"#)
+    }
+
     func installAllAgents() throws {
         try installClaude()
         try installCodex()

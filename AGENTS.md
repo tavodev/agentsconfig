@@ -2,7 +2,8 @@
 
 App nativa macOS (SwiftUI) para inspeccionar, editar y auditar las configuraciones
 globales y de proyecto de Claude Code, Codex, Gemini CLI, Antigravity y OpenCode,
-con inventario de solo lectura para Cursor y GitHub Copilot CLI.
+con inventario de solo lectura para Cursor, GitHub Copilot CLI, Windsurf / Devin
+Desktop y Claude Desktop (ninguno es destino MCP; ver `docs/MCP-SCHEMAS.md`).
 
 Este es el único archivo de instrucciones para trabajar en este repositorio.
 

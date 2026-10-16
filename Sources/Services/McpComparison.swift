@@ -54,13 +54,13 @@ struct McpComparedSource: Identifiable {
         if !entry.isRemote { transport = "stdio" }
         else if family == "gemini-cli" { transport = raw["httpUrl"] == nil ? "sse" : "http" }
         else if family == "opencode" { transport = "negotiated-remote" }
-        else { transport = raw["type"] as? String ?? raw["transport"] as? String ?? (["cursor", "copilot-cli", "antigravity"].contains(family) ? "unspecified-remote" : "http") }
+        else { transport = raw["type"] as? String ?? raw["transport"] as? String ?? (["cursor", "copilot-cli", "antigravity", "windsurf", "claude-desktop"].contains(family) ? "unspecified-remote" : "http") }
         var value: [String: Any] = ["transport": transport, "enabled": entry.enabled ?? true]
         if entry.isRemote { value["url"] = entry.url ?? "" }
         else { value["command"] = entry.command ?? ""; value["args"] = entry.args }
         value["env"] = raw[family == "opencode" ? "environment" : "env"] ?? [String: String]()
         value["headers"] = raw[family == "codex" ? "http_headers" : "headers"] ?? [String: String]()
-        let common: Set<String> = ["command", "args", "url", "httpUrl", "type", "transport", "enabled", "disabled", "env", "environment", "headers", "http_headers"]
+        let common: Set<String> = ["command", "args", "url", "serverUrl", "httpUrl", "type", "transport", "enabled", "disabled", "env", "environment", "headers", "http_headers"]
         let other = raw.filter { !common.contains($0.key) }
         if !other.isEmpty { value["clientOptions:" + family] = other }
         return value

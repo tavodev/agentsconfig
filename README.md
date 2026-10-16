@@ -3,7 +3,8 @@
 A native macOS app (SwiftUI) to inspect, edit and audit the global
 configuration of your AI coding agents — Claude Code, Codex,
 Gemini CLI, Antigravity and OpenCode — from one place, with read-only
-inventory adapters for Cursor and GitHub Copilot CLI.
+inventory adapters for Cursor, GitHub Copilot CLI, Windsurf / Devin Desktop and
+Claude Desktop.
 
 > **Status: experimental.** The app is usable, but treat its editing
 > features with care: always review diffs and keep your own backups of

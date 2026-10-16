@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Read-only inventory for Windsurf / Devin Desktop (rules, workflows, skills, hooks and every documented MCP file) and Claude Desktop (`claude_desktop_config.json`, excluded from history); per-file docs with official links for Cursor, Copilot CLI, Windsurf and Claude Desktop. None of them is an MCP add/copy destination.
 - Filtering the file list opens every skill group with matches; clearing the filter restores the session's previous expansion.
 - Hook audit no longer treats the path of a remote URL (`https://host/scripts/x.sh`) as a local script outside the config root; `file://` paths still count.
 

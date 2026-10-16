@@ -186,7 +186,7 @@ struct ProjectLocalTests {
         // TestEnvironment already gives a physical, realpath-canonical root.
         let sharedPath = project.appendingPathComponent(".agents/skills/flutter-expert/SKILL.md").path
         let owners = store.agents.filter { $0.projectRoot == project.path && $0.files.contains { $0.path == sharedPath } }
-        #expect(Set(owners.map { String($0.id.split(separator: ":").first!) }) == ["codex", "claude-code", "gemini-cli", "antigravity", "opencode"])
+        #expect(Set(owners.map { String($0.id.split(separator: ":").first!) }) == ["codex", "claude-code", "gemini-cli", "antigravity", "opencode", "windsurf"])
         store.updateEdit(path: sharedPath, text: "# Shared draft")
         for owner in owners {
             let file = try #require(owner.files.first { $0.role == .skills })
