@@ -562,6 +562,22 @@ final class Loc {
         "Antigravity app, IDE and CLI share ~/.gemini/config after migration (marker: .migrated).": "Antigravity app, IDE y CLI comparten ~/.gemini/config tras la migración (marca: .migrated).",
         "Providers, models and MCP": "Providers, modelos y MCP",
         "Declares $schema — validatable against https://opencode.ai/config.json.": "Declara $schema — validable contra https://opencode.ai/config.json.",
+        "Only the selected agent": "Solo el agente seleccionado",
+        "Listed by agent, layer (managed → user → project → local) and declaration order. The client decides the execution order, and hooks of different agents never run together.": "Ordenado por agente, capa (gestionada → usuario → proyecto → local) y orden de declaración. El cliente decide el orden de ejecución, y los hooks de agentes distintos nunca se ejecutan juntos.",
+        "No hooks found": "No se encontraron hooks",
+        "No configuration file in this context declares hooks.": "Ningún archivo de configuración de este contexto declara hooks.",
+        "matcher": "matcher",
+        "all tools": "todas las herramientas",
+        "Orphan": "Huérfano",
+        "Local": "Local",
+        "Read-only inventory. Not an MCP destination: the documented MCP file location differs between official pages. Rule activation triggers, team allowlists and Claude Code config reading are not observed.": "Inventario de solo lectura. No es destino MCP: la ubicación documentada del archivo MCP difiere entre páginas oficiales. No se observan los disparadores de activación de reglas, las allowlists de equipo ni la lectura de la config de Claude Code.",
+        "Read-only inventory. Not an MCP destination. Remote connectors and desktop extensions are managed in the app and not observed.": "Inventario de solo lectura. No es destino MCP. Los conectores remotos y las extensiones de escritorio se gestionan en la app y no se observan.",
+        "MCP config documented for Devin Desktop": "Config MCP documentada para Devin Desktop",
+        "MCP config documented in the Devin Desktop FAQ": "Config MCP documentada en el FAQ de Devin Desktop",
+        "Legacy Windsurf MCP config": "Config MCP legacy de Windsurf",
+        "Legacy single-file rules": "Reglas legacy en un solo archivo",
+        "Legacy — used only when .devin/hooks.json is absent or empty": "Legacy — solo se usa si .devin/hooks.json no existe o está vacío",
+        "Local MCP servers (mcpServers) — env often holds secrets, excluded from history": "Servidores MCP locales (mcpServers) — env suele contener secretos, excluido del historial",
     ]
 }
 

@@ -346,6 +346,23 @@ final class ConfigStore {
         }
     }
 
+    /// Hooks of every agent for the global context (`projectRoot` empty) or
+    /// a registered project plus the global layers it inherits (issue #22).
+    func hookMap(projectRoot: String) -> [HookMapEntry] {
+        var seen = Set<String>()
+        var sources: [HookMapSource] = []
+        for agent in agents where agent.projectRoot == nil || agent.projectRoot == projectRoot {
+            let family = agent.id.components(separatedBy: "::")[0]
+            let name = AgentRegistry.definitions.first { $0.id == family }?.name ?? agent.name
+            for file in agent.files where file.exists && file.format.isStructured
+                && seen.insert(family + "|" + file.path).inserted {
+                guard let tree = documents[file.path]?.tree as? [String: Any], tree["hooks"] is [String: Any] else { continue }
+                sources.append(.init(agentID: family, agentName: name, path: file.path, tree: tree))
+            }
+        }
+        return HookMap.build(sources, projectRoot: projectRoot.isEmpty ? nil : projectRoot)
+    }
+
     // MARK: - scanning
 
     /// Main-actor state a scan depends on, captured so the disk work can run

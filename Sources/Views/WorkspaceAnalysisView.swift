@@ -6,12 +6,14 @@ struct WorkspaceAnalysisView: View {
     @State private var context = AnalysisContext()
     @State private var analysis = ConfigurationAnalysis(context: AnalysisContext())
     @State private var knowledge = KnowledgeAnalysis()
+    @State private var hooks: [HookMapEntry] = []
     @State private var query = ""
     @State private var selectedTab = "Configuration"
 
     private func update() {
         analysis = store.configurationAnalysis(context)
         knowledge = store.knowledgeAnalysis(context, configuration: analysis)
+        hooks = store.hookMap(projectRoot: context.projectRoot)
     }
     private var settings: [ResolvedSetting] {
         analysis.settings.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) ||
@@ -63,6 +65,7 @@ struct WorkspaceAnalysisView: View {
                     Text(L("Sources")).tag("Sources")
                     Text(L("Instructions")).tag("Instructions")
                     Text(L("Skills")).tag("Skills")
+                    Text(L("Hooks")).tag("Hooks")
                     Text(L("Diagnostics")).tag("Diagnostics")
                 }.pickerStyle(.segmented).accessibilityIdentifier("analysis-tabs")
             }.padding(20)
@@ -73,6 +76,8 @@ struct WorkspaceAnalysisView: View {
             } else if selectedTab == "Skills" {
                 SkillPackagesView(packages: knowledge.skills.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.description.localizedCaseInsensitiveContains(query) },
                                   projectRoot: context.projectRoot.isEmpty ? nil : context.projectRoot)
+            } else if selectedTab == "Hooks" {
+                HookMapView(entries: hooks, selectedAgentID: context.agentID, query: query)
             } else if selectedTab == "Diagnostics" {
                 DiagnosticsView(configuration: analysis, diagnostics: DiagnosticReportBuilder.diagnostics(configuration: analysis, knowledge: knowledge,
                     files: store.agents.filter { $0.id.components(separatedBy: "::").first == context.agentID && ($0.projectRoot == nil || $0.projectRoot == context.projectRoot) }.flatMap(\.files),

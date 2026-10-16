@@ -122,6 +122,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Previews de solo lectura y redactadas; recursos y scripts nunca se ejecutan.
   Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
   e imports a 5 niveles. Los globs no soportados quedan condicionados.
+- `Sources/Models/HookMap.swift` — mapa de hooks por evento × matcher que
+  combina capas (gestionada, usuario, proyecto, local) y agentes; marca
+  huérfanos con `Linter.referencedPaths`. El orden listado es de lectura, no
+  de ejecución. Se muestra en Análisis → Hooks (`HookMapView`).
 - `Sources/Services/McpComparison.swift` — alcance/perfil, fuentes sustituidas,
   deshabilitadas y ambiguas, y diff semántico con argumentos ordenados y secretos
   redactados. No comprueba conectividad ni autenticación.
