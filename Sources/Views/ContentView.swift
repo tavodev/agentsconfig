@@ -539,6 +539,9 @@ struct FileListView: View {
                 }
                 .listStyle(.inset)
                 .searchable(text: $query, prompt: L("Filter files"))
+                .onChange(of: query.isEmpty) { _, empty in
+                    if empty { store.endSkillSearch() }
+                }
             } else {
                 ContentUnavailableView(L("No agents"),
                                        systemImage: "tray",
@@ -589,22 +592,36 @@ struct FileListView: View {
     /// it survives leaving this view or switching agents.
     @ViewBuilder
     private func skillGroups(_ agent: Agent) -> some View {
+        // A filtered list only renders groups with matches: open them all
+        // while searching (issue #11); `endSkillSearch` restores the rest.
+        let searching = !query.isEmpty
         let groups = SkillGrouping.group(filteredFiles(agent, role: .skills),
                                          path: \.path, readOnly: \.readOnly,
                                          projectRoot: agent.projectRoot)
         ForEach(groups) { group in
             DisclosureGroup(isExpanded: Binding(
-                get: { store.skillExpansion.isExpanded(group.origin, count: group.items.count) },
-                set: { store.setSkillExpanded(group.origin, $0) }
+                get: {
+                    searching ? store.skillExpansion.isExpandedForSearch(group.origin)
+                        : store.skillExpansion.isExpanded(group.origin, count: group.items.count)
+                },
+                set: {
+                    if searching { store.setSkillSearchExpanded(group.origin, $0) }
+                    else { store.setSkillExpanded(group.origin, $0) }
+                }
             )) {
                 if group.nestsOwners {
                     ForEach(group.owners) { ownerGroup in
                         DisclosureGroup(isExpanded: Binding(
                             get: {
-                                store.skillExpansion.isExpanded(group.origin, owner: ownerGroup.owner,
-                                                                count: ownerGroup.items.count)
+                                searching
+                                    ? store.skillExpansion.isExpandedForSearch(group.origin, owner: ownerGroup.owner)
+                                    : store.skillExpansion.isExpanded(group.origin, owner: ownerGroup.owner,
+                                                                      count: ownerGroup.items.count)
                             },
-                            set: { store.setSkillExpanded(group.origin, owner: ownerGroup.owner, $0) }
+                            set: {
+                                if searching { store.setSkillSearchExpanded(group.origin, owner: ownerGroup.owner, $0) }
+                                else { store.setSkillExpanded(group.origin, owner: ownerGroup.owner, $0) }
+                            }
                         )) {
                             ForEach(ownerGroup.items) { file in fileRow(file) }
                         } label: {

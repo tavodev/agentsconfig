@@ -181,6 +181,31 @@ struct SkillGroupingTests {
         #expect(!store.skillExpansion.isExpanded(.plugins, count: 3))
     }
 
+    /// Issue #11: a search opens every group with matches, toggles made
+    /// during it are scoped to it, and clearing restores the session state.
+    @Test @MainActor func searchOpensMatchingGroupsAndRestoresExpansion() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let store = env.makeStore()
+        store.setSkillExpanded(.personal, false)
+        store.setSkillExpanded(.plugins, owner: "mkt / plug", false)
+        #expect(store.skillExpansion.isExpandedForSearch(.personal))
+        #expect(store.skillExpansion.isExpandedForSearch(.plugins, owner: "mkt / plug"))
+
+        store.setSkillSearchExpanded(.personal, false)
+        store.setSkillSearchExpanded(.plugins, owner: "mkt / plug", true)
+        #expect(!store.skillExpansion.isExpandedForSearch(.personal))
+        // Session state is untouched while searching.
+        #expect(!store.skillExpansion.isExpanded(.personal, count: 1))
+        #expect(!store.skillExpansion.isExpanded(.plugins, owner: "mkt / plug", count: 1))
+
+        store.endSkillSearch()
+        #expect(store.skillExpansion.isExpandedForSearch(.personal))
+        #expect(!store.skillExpansion.isExpanded(.personal, count: 1))
+        #expect(!store.skillExpansion.isExpanded(.plugins, owner: "mkt / plug", count: 1))
+        #expect(!store.skillExpansion.isExpanded(.plugins, count: 6))
+    }
+
     // MARK: - Owner labels
 
     private func owner(_ path: String, _ origin: SkillOrigin,

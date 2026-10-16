@@ -86,6 +86,17 @@ final class ConfigStore {
         expansion.set(origin, owner: owner, value)
         skillExpansion = expansion
     }
+    func setSkillSearchExpanded(_ origin: SkillOrigin, owner: String? = nil, _ value: Bool) {
+        var expansion = skillExpansion
+        expansion.setForSearch(origin, owner: owner, value)
+        skillExpansion = expansion
+    }
+    /// Drops the toggles made while the file list was filtered.
+    func endSkillSearch() {
+        var expansion = skillExpansion
+        expansion.endSearch()
+        skillExpansion = expansion
+    }
 
     static let activityID = "__activity__"
     static let mcpID = "__mcp__"

@@ -282,4 +282,28 @@ struct SkillGroupExpansion {
     mutating func set(_ origin: SkillOrigin, owner: String, _ value: Bool) {
         ownerOverrides[origin, default: [:]][owner] = value
     }
+
+    // MARK: Search
+
+    /// While the file list is filtered only groups holding matches render, so
+    /// every one of them opens. Toggles made during the search live apart and
+    /// are dropped by `endSearch()`: clearing the search restores the session
+    /// expansion untouched.
+    private var searchOverrides: [String: Bool] = [:]
+
+    func isExpandedForSearch(_ origin: SkillOrigin, owner: String? = nil) -> Bool {
+        searchOverrides[Self.searchKey(origin, owner)] ?? true
+    }
+
+    mutating func setForSearch(_ origin: SkillOrigin, owner: String? = nil, _ value: Bool) {
+        searchOverrides[Self.searchKey(origin, owner)] = value
+    }
+
+    mutating func endSearch() {
+        searchOverrides = [:]
+    }
+
+    private static func searchKey(_ origin: SkillOrigin, _ owner: String?) -> String {
+        origin.rawValue + "\u{0}" + (owner ?? "")
+    }
 }

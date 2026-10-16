@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Filtering the file list opens every skill group with matches; clearing the filter restores the session's previous expansion.
 - Hook audit no longer treats the path of a remote URL (`https://host/scripts/x.sh`) as a local script outside the config root; `file://` paths still count.
 
 ## 0.1.0 — 2026-10-04
