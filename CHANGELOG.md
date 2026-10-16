@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Hook audit no longer treats the path of a remote URL (`https://host/scripts/x.sh`) as a local script outside the config root; `file://` paths still count.
+
 ## 0.1.0 — 2026-10-04
 
 Initial experimental release, build 3.

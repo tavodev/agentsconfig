@@ -261,13 +261,22 @@ enum LintRule: String, CaseIterable {
         return out
     }
 
-    /// Extract absolute-path tokens from a shell command.
+    /// Extract absolute-path tokens from a shell command. Paths inside a
+    /// remote URL (`https://host/scripts/x.sh`) are not local files and are
+    /// skipped; a `file://` URL keeps its path as a local reference.
     static func referencedPaths(in command: String) -> [String] {
         let pattern = #"(?<![\w.-])/(?:[A-Za-z0-9._~@-]+/)+[A-Za-z0-9._~@-]*"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let urlRegex = try? NSRegularExpression(pattern: #"(?i)\b([a-z][a-z0-9+.-]*)://[^\s"'`]*"#)
+        else { return [] }
         let ns = command as NSString
+        let full = NSRange(location: 0, length: ns.length)
+        let remoteURLs = urlRegex.matches(in: command, range: full)
+            .filter { ns.substring(with: $0.range(at: 1)).lowercased() != "file" }
+            .map(\.range)
         var paths: [String] = []
-        for m in regex.matches(in: command, range: NSRange(location: 0, length: ns.length)) {
+        for m in regex.matches(in: command, range: full) {
+            if remoteURLs.contains(where: { NSIntersectionRange($0, m.range).length > 0 }) { continue }
             var p = ns.substring(with: m.range)
             p = p.trimmingCharacters(in: CharacterSet(charactersIn: "\"'`"))
             // expand ~ inside token
