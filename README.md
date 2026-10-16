@@ -84,6 +84,13 @@ glob conditions remain explicit.
 The **MCP** comparator filters by project or profile and explains shadowed,
 disabled and ambiguous definitions. Its semantic comparison keeps argument order
 and redacts credentials. It does not connect to servers or validate login state.
+Static checks flag, per server, a command missing from PATH or not executable,
+unset `${VAR}`/`${env:VAR}` references, empty env values, missing `cwd`, path
+arguments or `${file:…}` targets, and malformed remote URLs — without starting
+anything. An app opened from the Finder gets launchd's short PATH, not your
+terminal's: common install folders are added, and Settings → MCP checks can read
+PATH and variable names once from your login shell (this runs its startup files;
+values are discarded). Variables exported only in another terminal stay unknown.
 
 **Diagnostics** exports a reviewed, fixed snapshot as JSON or Markdown. Default
 exports anonymize sources and omit setting values/free-form diagnostic details.

@@ -159,6 +159,7 @@ final class ConfigStore {
         notifier?.onSelect = { [weak self] path in self?.openFile(path) }
         // One-time audit: tighten permissions on history written by older
         // versions; failures surface as warnings (no content is deleted).
+        reloadMcpCheckEnvironment()
         guard backgroundScan else {
             permissionWarnings = snapshots.secureExistingPermissions()
             refresh()
@@ -657,7 +658,44 @@ final class ConfigStore {
 
     private var volatileMcpEntries: [McpServerEntry] = []
 
+    // MARK: - MCP static checks (issue #21)
+
+    /// Search path and variable names the static checks resolve against.
+    /// Assigning drops every cached result.
+    var mcpCheckEnvironment = McpCheckEnvironment.app() {
+        didSet { mcpCheckCache = [:] }
+    }
+    private(set) var mcpLoginShellFailed = false
+    @ObservationIgnored private var mcpCheckCache: [String: [McpCheckFinding]] = [:]
+
+    /// Cached per index entry until the index or the environment changes.
+    func mcpChecks(for entry: McpServerEntry) -> [McpCheckFinding] {
+        if let cached = mcpCheckCache[entry.id] { return cached }
+        let findings = McpStaticCheck.check(entry, environment: mcpCheckEnvironment)
+        mcpCheckCache[entry.id] = findings
+        return findings
+    }
+
+    /// Applies `AppSettings.mcpLoginShellEnvironment`: the opt-in login-shell
+    /// read runs off the main actor; isolated runs never read the host shell.
+    func reloadMcpCheckEnvironment() {
+        guard AppSettings.mcpLoginShellEnvironment, !AppSettings.isIsolatedRun, AppPaths.overrideHome == nil else {
+            mcpLoginShellFailed = false
+            mcpCheckEnvironment = .app()
+            return
+        }
+        Task.detached(priority: .utility) {
+            let environment = McpCheckEnvironment.loginShell()
+            await MainActor.run {
+                guard AppSettings.mcpLoginShellEnvironment else { return }
+                self.mcpLoginShellFailed = environment == nil
+                self.mcpCheckEnvironment = environment ?? .app()
+            }
+        }
+    }
+
     func rebuildMcpIndex() {
+        mcpCheckCache = [:]
         var out = volatileMcpEntries
         for agent in agents {
             for f in agent.files where f.exists && !f.volatile {

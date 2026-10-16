@@ -34,6 +34,24 @@ appear in the comparator only (decision recorded on 2026-10-16, issue #23):
 
 Sources: [Cursor MCP](https://cursor.com/docs/context/mcp), [Copilot CLI configuration directory](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference), [Devin Desktop MCP](https://docs.devin.ai/desktop/cascade/mcp), [Devin Desktop FAQ](https://docs.devin.ai/desktop/devin-desktop-faq), [Claude Desktop local servers](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
 
+## Static checks
+
+`McpStaticCheck` inspects each indexed server without launching it, connecting
+or authenticating: command resolution (absolute/`~`/`cwd`-relative path that
+exists and is executable, or a bare name found on the inspected PATH), variable
+references (`${VAR}`, `${env:VAR}`; `${VAR:-default}` and client-provided names
+such as `CLAUDE_PROJECT_DIR` or `workspaceFolder` are not reported), Codex
+`env_vars`/`bearer_token_env_var`, empty env values, `cwd`, absolute path
+arguments, `${file:…}` targets and remote URL syntax (http, https, ws, wss).
+
+PATH limitation: a GUI app inherits launchd's PATH, not the login shell's. The
+default environment appends common install folders (Homebrew, `~/.local/bin`,
+`~/.cargo/bin`, `~/.bun/bin`, `~/.deno/bin`, `~/.volta/bin`). The opt-in login
+shell read runs `$SHELL -l -i` once with a 5 s limit and keeps only PATH and
+variable names. Neither source sees variables a client receives from another
+terminal, launch agent or its own settings, so findings are hints, not proof
+that a session fails.
+
 Every add/copy/replacement is staged for diff review before changing a buffer.
 Review records the original buffer and disk state; changes to either invalidate
 approval. JSONC/TOML normalization warnings are displayed. TOML edits preserve

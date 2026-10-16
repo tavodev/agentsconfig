@@ -40,6 +40,12 @@ enum AppSettings {
         defaults.object(forKey: "maskSecrets") as? Bool ?? true
     }
 
+    /// MCP static checks read PATH and variable names from the login shell
+    /// (runs its startup files once). Off: the app's own environment.
+    static var mcpLoginShellEnvironment: Bool {
+        defaults.bool(forKey: "mcpLoginShellEnvironment")
+    }
+
     static var menuBarExtra: Bool {
         defaults.object(forKey: "menuBarExtra") as? Bool ?? true
     }

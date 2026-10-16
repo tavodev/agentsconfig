@@ -15,6 +15,7 @@ struct AppSettingsView: View {
     @AppStorage("historyEnabled", store: AppSettings.defaults) private var historyEnabled = true
     @AppStorage("menuBarExtra", store: AppSettings.defaults) private var menuBarExtra = true
     @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
+    @AppStorage("mcpLoginShellEnvironment", store: AppSettings.defaults) private var mcpLoginShell = false
 
     var body: some View {
         Form {
@@ -65,6 +66,16 @@ struct AppSettingsView: View {
                     }
                 }
             }
+            Section(L("MCP checks")) {
+                Toggle(L("Read PATH and variable names from the login shell"), isOn: $mcpLoginShell)
+                    .accessibilityIdentifier("mcp-login-shell")
+                Text(L("Apps opened from the Finder get a shorter PATH than your terminal. When on, AgentsConfig runs your login shell once to read PATH and variable names (values are discarded); this runs its startup files. MCP servers are never started."))
+                    .font(.callout).foregroundStyle(.secondary)
+                if mcpLoginShell && store.mcpLoginShellFailed {
+                    Label(L("The login shell could not be read; using the app environment."), systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout).foregroundStyle(.orange)
+                }
+            }
             Section(L("Privacy")) {
                 Toggle(L("Mask secrets (API keys, tokens…)"), isOn: $maskSecrets)
                     .accessibilityIdentifier("mask-secrets")
@@ -91,6 +102,7 @@ struct AppSettingsView: View {
             }
         }
         .onChange(of: debounce) { _, value in store.setWatchDebounce(value) }
+        .onChange(of: mcpLoginShell) { _, _ in store.reloadMcpCheckEnvironment() }
         .formStyle(.grouped)
         .padding(8)
     }

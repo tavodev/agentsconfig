@@ -131,8 +131,11 @@ struct McpMatrixRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name).font(.body.monospaced().weight(.medium))
                     .lineLimit(1).truncationMode(.middle)
-                Text(entries.count == 1 ? L("1 source") : L("%d sources", entries.count))
-                    .font(.callout).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(entries.count == 1 ? L("1 source") : L("%d sources", entries.count))
+                        .font(.callout).foregroundStyle(.secondary)
+                    McpCheckBadge(findings: entries.flatMap { store.mcpChecks(for: $0) })
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             ForEach(agents) { agent in
@@ -148,6 +151,21 @@ struct McpMatrixRow: View {
         }
         .padding(.vertical, 8)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Worst static-check severity of a server's sources (issue #21); nothing
+/// when every check passed. Details live in the server's agent cards.
+struct McpCheckBadge: View {
+    let findings: [McpCheckFinding]
+    var body: some View {
+        let problems = findings.filter { $0.severity > .info }
+        if let worst = problems.map(\.severity).max() {
+            Label(problems.count == 1 ? L("1 check") : L("%d checks", problems.count), systemImage: worst.icon)
+                .font(.caption)
+                .foregroundStyle(worst == .error ? Color.red : Color.orange)
+                .help(L("Static check without starting the server. See Server details."))
+        }
     }
 }
 
@@ -270,6 +288,13 @@ struct McpAgentCard: View {
                             .font(.body.monospaced())
                             .foregroundStyle(.secondary)
                     }
+                }
+                ForEach(store.mcpChecks(for: entry)) { finding in
+                    Label(finding.detail.map { L(finding.message, Secrets.displayText($0, masking: maskSecrets)) } ?? L(finding.message),
+                          systemImage: finding.severity.icon)
+                        .font(.callout)
+                        .foregroundStyle(finding.severity == .error ? Color.red : finding.severity == .warning ? Color.orange : Color.secondary)
+                        .accessibilityIdentifier("mcp-check:" + finding.id)
                 }
                 if store.agents.contains(where: { $0.id == entry.agentID && $0.projectRoot != nil }) {
                     Label(L("Project configuration · read-only"), systemImage: "lock")

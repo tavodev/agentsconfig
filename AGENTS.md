@@ -129,6 +129,12 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `Sources/Services/McpComparison.swift` — alcance/perfil, fuentes sustituidas,
   deshabilitadas y ambiguas, y diff semántico con argumentos ordenados y secretos
   redactados. No comprueba conectividad ni autenticación.
+- `Sources/Services/McpStaticCheck.swift` — comprobación estática por
+  servidor MCP (comando en PATH/ejecutable, `${VAR}`, env vacías, `cwd`,
+  rutas de args, `${file:}`, URL) sin lanzar procesos MCP. `ConfigStore`
+  cachea por entrada; `mcpCheckEnvironment` es inyectable en tests. La
+  lectura opcional de la shell de login (`AppSettings.mcpLoginShellEnvironment`)
+  nunca corre en ejecuciones aisladas ni con `AppPaths.overrideHome`.
 - `Sources/Services/DiagnosticReportBuilder.swift` — informes JSON/Markdown sobre
   una instantánea revisada y fija. Por defecto anonimiza rutas y omite valores y
   detalles libres; valores opcionales también redactados. `WorkspaceAnalysisView`
