@@ -46,6 +46,12 @@ enum AppSettings {
         defaults.bool(forKey: "mcpLoginShellEnvironment")
     }
 
+    /// Analysis → Context warns when the estimated tokens exceed this.
+    static var contextBudgetThreshold: Int {
+        let v = defaults.integer(forKey: "contextBudgetThreshold")
+        return v > 0 ? v : 8_000
+    }
+
     static var menuBarExtra: Bool {
         defaults.object(forKey: "menuBarExtra") as? Bool ?? true
     }

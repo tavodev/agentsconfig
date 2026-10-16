@@ -122,6 +122,11 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Previews de solo lectura y redactadas; recursos y scripts nunca se ejecutan.
   Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
   e imports a 5 niveles. Los globs no soportados quedan condicionados.
+- `Sources/Models/ContextBudget.swift` — presupuesto de contexto puro a partir
+  de `KnowledgeAnalysis` (bytes incluidos de instrucciones e imports;
+  nombre+descripción de skills) y de `McpComparison.sources` (solo recuento de
+  servidores). Estimación bytes ÷ 4 rotulada como aproximada; umbral en
+  `AppSettings.contextBudgetThreshold`. Pestaña Análisis → Contexto.
 - `Sources/Models/HookMap.swift` — mapa de hooks por evento × matcher que
   combina capas (gestionada, usuario, proyecto, local) y agentes; marca
   huérfanos con `Linter.referencedPaths`. El orden listado es de lectura, no

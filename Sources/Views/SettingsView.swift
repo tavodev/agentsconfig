@@ -16,6 +16,7 @@ struct AppSettingsView: View {
     @AppStorage("menuBarExtra", store: AppSettings.defaults) private var menuBarExtra = true
     @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
     @AppStorage("mcpLoginShellEnvironment", store: AppSettings.defaults) private var mcpLoginShell = false
+    @AppStorage("contextBudgetThreshold", store: AppSettings.defaults) private var budgetThreshold = 8_000
 
     var body: some View {
         Form {
@@ -65,6 +66,13 @@ struct AppSettingsView: View {
                         }
                     }
                 }
+            }
+            Section(L("Context budget")) {
+                Stepper(L("Warn above %d estimated tokens", budgetThreshold),
+                        value: $budgetThreshold, in: 1_000...200_000, step: 1_000)
+                    .accessibilityIdentifier("context-budget-threshold")
+                Text(L("Estimated as bytes ÷ 4 from instruction files, skill names and descriptions. Not a tokenizer; MCP tool definitions are not counted."))
+                    .font(.callout).foregroundStyle(.secondary)
             }
             Section(L("MCP checks")) {
                 Toggle(L("Read PATH and variable names from the login shell"), isOn: $mcpLoginShell)

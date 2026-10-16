@@ -598,6 +598,18 @@ final class Loc {
         "Read PATH and variable names from the login shell": "Leer PATH y nombres de variables de la shell de login",
         "Apps opened from the Finder get a shorter PATH than your terminal. When on, AgentsConfig runs your login shell once to read PATH and variable names (values are discarded); this runs its startup files. MCP servers are never started.": "Las apps abiertas desde el Finder reciben un PATH más corto que tu terminal. Si se activa, AgentsConfig ejecuta una vez tu shell de login para leer PATH y los nombres de variables (los valores se descartan); esto ejecuta sus archivos de arranque. Los servidores MCP nunca se arrancan.",
         "The login shell could not be read; using the app environment.": "No se pudo leer la shell de login; se usa el entorno de la app.",
+        "Context": "Contexto",
+        "Counted": "Contabilizado",
+        "Not loaded": "No se carga",
+        "Imported": "Importado",
+        "MCP": "MCP",
+        "Estimated total": "Total estimado",
+        "Above the warning threshold of %d estimated tokens.": "Supera el umbral de aviso de %d tokens estimados.",
+        "Conditional sources could add ≈ %d more.": "Las fuentes condicionales podrían añadir ≈ %d más.",
+        "Approximate: bytes ÷ 4, not a tokenizer. Skills count name and description only. MCP tool definitions are unknown without starting the servers, so only servers are counted.": "Aproximado: bytes ÷ 4, no es un tokenizador. Las skills cuentan solo nombre y descripción. Las definiciones de herramientas MCP no se conocen sin arrancar los servidores, así que solo se cuentan los servidores.",
+        "Context budget": "Presupuesto de contexto",
+        "Warn above %d estimated tokens": "Avisar por encima de %d tokens estimados",
+        "Estimated as bytes ÷ 4 from instruction files, skill names and descriptions. Not a tokenizer; MCP tool definitions are not counted.": "Se estima como bytes ÷ 4 a partir de archivos de instrucciones y de nombres y descripciones de skills. No es un tokenizador; las definiciones de herramientas MCP no se cuentan.",
     ]
 }
 

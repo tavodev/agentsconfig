@@ -7,6 +7,7 @@ struct WorkspaceAnalysisView: View {
     @State private var analysis = ConfigurationAnalysis(context: AnalysisContext())
     @State private var knowledge = KnowledgeAnalysis()
     @State private var hooks: [HookMapEntry] = []
+    @AppStorage("contextBudgetThreshold", store: AppSettings.defaults) private var budgetThreshold = 8_000
     @State private var query = ""
     @State private var selectedTab = "Configuration"
 
@@ -14,6 +15,9 @@ struct WorkspaceAnalysisView: View {
         analysis = store.configurationAnalysis(context)
         knowledge = store.knowledgeAnalysis(context, configuration: analysis)
         hooks = store.hookMap(projectRoot: context.projectRoot)
+    }
+    private var contextMcp: [McpComparedSource] {
+        McpComparison.sources(store.mcpIndex.filter { McpComparison.family($0) == context.agentID }, project: context.projectRoot, profile: context.profile)
     }
     private var settings: [ResolvedSetting] {
         analysis.settings.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) ||
@@ -66,6 +70,7 @@ struct WorkspaceAnalysisView: View {
                     Text(L("Instructions")).tag("Instructions")
                     Text(L("Skills")).tag("Skills")
                     Text(L("Hooks")).tag("Hooks")
+                    Text(L("Context")).tag("Context")
                     Text(L("Diagnostics")).tag("Diagnostics")
                 }.pickerStyle(.segmented).accessibilityIdentifier("analysis-tabs")
             }.padding(20)
@@ -76,12 +81,14 @@ struct WorkspaceAnalysisView: View {
             } else if selectedTab == "Skills" {
                 SkillPackagesView(packages: knowledge.skills.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.description.localizedCaseInsensitiveContains(query) },
                                   projectRoot: context.projectRoot.isEmpty ? nil : context.projectRoot)
+            } else if selectedTab == "Context" {
+                ContextBudgetView(budget: ContextBudget.build(knowledge: knowledge, mcp: contextMcp, threshold: budgetThreshold), query: query)
             } else if selectedTab == "Hooks" {
                 HookMapView(entries: hooks, selectedAgentID: context.agentID, query: query)
             } else if selectedTab == "Diagnostics" {
                 DiagnosticsView(configuration: analysis, diagnostics: DiagnosticReportBuilder.diagnostics(configuration: analysis, knowledge: knowledge,
                     files: store.agents.filter { $0.id.components(separatedBy: "::").first == context.agentID && ($0.projectRoot == nil || $0.projectRoot == context.projectRoot) }.flatMap(\.files),
-                    mcp: McpComparison.sources(store.mcpIndex.filter { McpComparison.family($0) == context.agentID }, project: context.projectRoot, profile: context.profile)))
+                    mcp: contextMcp))
             } else { settingsView }
         }
         .navigationTitle(L("Configuration"))

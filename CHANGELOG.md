@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Analysis → Context estimates the tokens an agent loads before any task (instructions with imports, skill names and descriptions, MCP server count), per file, with a configurable warning threshold. Labelled as an approximation.
 - Static MCP checks per server, shown in the comparator and server cards: missing or non-executable commands, unset variables, empty env values, missing `cwd`/path arguments and malformed URLs. Nothing is launched; Settings can opt into reading PATH from the login shell.
 - Analysis → Hooks maps every hook by event and matcher across managed, user, project and local layers and all agents, with the source file and an orphan mark for missing scripts.
 - Read-only inventory for Windsurf / Devin Desktop (rules, workflows, skills, hooks and every documented MCP file) and Claude Desktop (`claude_desktop_config.json`, excluded from history); per-file docs with official links for Cursor, Copilot CLI, Windsurf and Claude Desktop. None of them is an MCP add/copy destination.

@@ -81,6 +81,14 @@ Instruction previews are capped at 20,000 characters, with up to 100 instruction
 entries and five import levels. YAML frontmatter is limited to 64 KiB; unsupported
 glob conditions remain explicit.
 
+**Context** estimates what an agent loads before any task: instruction files
+after byte budgets (imports included), skill names and descriptions (bodies load
+on invocation) and the number of MCP servers. It is an approximation — bytes ÷ 4,
+not a tokenizer — and MCP tool definitions are unknown without starting the
+servers. A warning appears above the threshold set in Settings (8,000 by default).
+**Hooks** maps every hook by event and matcher across managed, user, project and
+local layers and agents, with its source file and an orphan mark.
+
 The **MCP** comparator filters by project or profile and explains shadowed,
 disabled and ambiguous definitions. Its semantic comparison keeps argument order
 and redacts credentials. It does not connect to servers or validate login state.
