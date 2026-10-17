@@ -122,6 +122,14 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Previews de solo lectura y redactadas; recursos y scripts nunca se ejecutan.
   Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
   e imports a 5 niveles. Los globs no soportados quedan condicionados.
+- `Sources/Models/Divergence.swift` — `DivergenceDetector` (puro) compara
+  instrucciones raíz por familia (normaliza espacios; un archivo solo de
+  `@imports` a otro miembro cuenta como alineado), skills escribibles por
+  nombre de carpeta (ausentes o con contenido distinto) y definiciones MCP por
+  familia ignorando `clientOptions:*`. El igualado reutiliza `McpReview`
+  (`title`, `createsFile`): `alignText` modifica solo el buffer tras revisión;
+  `copySkill` crea un SKILL.md nuevo con `AtomicWriter.createNew` (enlace duro,
+  nunca sobrescribe) y rechaza paquetes con recursos. MCP usa `copyMcpServer`.
 - `Sources/Models/ContextBudget.swift` — presupuesto de contexto puro a partir
   de `KnowledgeAnalysis` (bytes incluidos de instrucciones e imports;
   nombre+descripción de skills) y de `McpComparison.sources` (solo recuento de

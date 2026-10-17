@@ -194,7 +194,11 @@ struct SidebarView: View {
                          color: .teal)
                     .tag(ConfigStore.mcpID)
                     .accessibilityIdentifier("destination-mcp")
-                PanelRow(icon: "slider.horizontal.3", title: L("Configuration"), subtitle: L("sources and precedence"), count: 0, color: .blue)
+                PanelRow(icon: "slider.horizontal.3", title: L("Configuration"), subtitle: L("sources and precedence"),
+                         count: store.divergences(projectRoot: "").count
+                            + (store.preferredAnalysisProject.isEmpty ? 0 : store.divergences(projectRoot: store.preferredAnalysisProject).count),
+                         color: .blue)
+                    .help(L("Count of divergences between agents (global and the selected project)."))
                     .tag(ConfigStore.analysisID)
                     .accessibilityIdentifier("destination-analysis")
                 PanelRow(icon: "magnifyingglass", title: L("Search"), subtitle: L("all inspected files"), count: 0, color: .blue)

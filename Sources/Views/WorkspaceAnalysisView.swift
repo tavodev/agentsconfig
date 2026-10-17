@@ -71,6 +71,7 @@ struct WorkspaceAnalysisView: View {
                     Text(L("Skills")).tag("Skills")
                     Text(L("Hooks")).tag("Hooks")
                     Text(L("Context")).tag("Context")
+                    Text(L("Alignment")).tag("Alignment")
                     Text(L("Diagnostics")).tag("Diagnostics")
                 }.pickerStyle(.segmented).accessibilityIdentifier("analysis-tabs")
             }.padding(20)
@@ -81,6 +82,8 @@ struct WorkspaceAnalysisView: View {
             } else if selectedTab == "Skills" {
                 SkillPackagesView(packages: knowledge.skills.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) || $0.description.localizedCaseInsensitiveContains(query) },
                                   projectRoot: context.projectRoot.isEmpty ? nil : context.projectRoot)
+            } else if selectedTab == "Alignment" {
+                DivergenceView(projectRoot: context.projectRoot, query: query)
             } else if selectedTab == "Context" {
                 ContextBudgetView(budget: ContextBudget.build(knowledge: knowledge, mcp: contextMcp, threshold: budgetThreshold), query: query)
             } else if selectedTab == "Hooks" {

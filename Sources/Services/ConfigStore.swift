@@ -828,6 +828,10 @@ final class ConfigStore {
         let format: ConfigFormat
         let replacesExisting: Bool
         let warnings: [String]
+        /// Divergence alignment (issue #19) reuses this review: a custom
+        /// title, and `createsFile` for a skill copied where none exists.
+        var title: String? = nil
+        var createsFile = false
     }
     private(set) var pendingMcpReview: McpReview?
     private var mcpReviewDisk: DiskState?
@@ -932,17 +936,111 @@ final class ConfigStore {
     @discardableResult
     func confirmMcpReview() -> Bool {
         guard let review = pendingMcpReview, let disk = mcpReviewDisk else { return false }
-        guard !isReadOnly(review.path), text(for: review.path) == review.originalText,
+        guard review.createsFile || !isReadOnly(review.path), text(for: review.path) == review.originalText,
               readDiskState(review.path) == disk else {
             actionError = L("The destination changed during review. Review the operation again.")
             cancelMcpReview()
             return false
         }
+        if review.createsFile {
+            do { try AtomicWriter.createNew(review.proposedText, atPath: review.path) }
+            catch {
+                actionError = L("The destination changed during review. Review the operation again.")
+                cancelMcpReview(); return false
+            }
+            cancelMcpReview()
+            refresh()
+            selectedAgentID = fileOwners[review.path] ?? review.agentID
+            selectedPath = review.path
+            requestedTab = .source
+            return true
+        }
         updateEdit(path: review.path, text: review.proposedText)
         selectedAgentID = review.agentID
         selectedPath = review.path
-        requestedTab = .structured
+        requestedTab = review.format.isStructured ? .structured : .source
         cancelMcpReview()
+        return true
+    }
+
+    // MARK: - Divergences (issue #19)
+
+    /// Instructions, skills and MCP definitions that differ between agent
+    /// families in the global scope (`projectRoot` empty) or a project.
+    func divergences(projectRoot: String) -> [Divergence] {
+        DivergenceDetector.detect(agents: agents, scope: projectRoot,
+                                  mcp: McpComparison.sources(mcpIndex, project: projectRoot)) { documents[$0]?.text }
+    }
+
+    /// Matrix indicator: the selected context defines `name` differently
+    /// in two or more agent families.
+    func mcpDefinitionsDiverge(_ name: String) -> Bool {
+        let rows = comparedMcpSources.filter { $0.entry.name == name && !["Outside context", "Shadowed"].contains($0.state) }
+        let byFamily = Dictionary(grouping: rows, by: { McpComparison.family($0.entry) })
+        return byFamily.count > 1
+            && Set(byFamily.values.compactMap { $0.first.map { DivergenceDetector.comparableSignature($0.entry) } }).count > 1
+    }
+
+    /// Stages replacing `target`'s buffer with `source`'s text — or, with
+    /// `importOnly`, with a single `@file` import of it. Applies to the
+    /// editor only after review; saving is the usual reviewed save.
+    @discardableResult
+    func alignText(target: String, toMatch source: String, importOnly: Bool = false) -> Bool {
+        actionError = nil
+        pendingMcpReview = nil; mcpReviewDisk = nil
+        guard let file = trackedFile(for: target), !isReadOnly(target), let owner = fileOwners[target] else {
+            actionError = L("Read-only file"); return false
+        }
+        let disk = readDiskState(target)
+        guard disk != .unreadable, let sourceText = documents[source]?.text ?? (try? Parsers.readText(at: source)) else {
+            actionError = L("Could not read the current file"); return false
+        }
+        let proposed: String
+        if importOnly {
+            let base = URL(fileURLWithPath: target).deletingLastPathComponent().path
+            guard URL(fileURLWithPath: source).deletingLastPathComponent().path == base else {
+                actionError = L("An import is offered only for files in the same folder."); return false
+            }
+            proposed = "@" + URL(fileURLWithPath: source).lastPathComponent + "\n"
+        } else { proposed = sourceText }
+        if edits[target] == nil {
+            if let text = disk.text { installDocument(target, text: text) } else { documents.removeValue(forKey: target) }
+        }
+        var warnings = [L("Content is copied as text; agent-specific wording, imports and paths are not translated.")]
+        if !keepsHistory(file) { warnings.append(L("History is disabled for this destination; saving will not create a backup.")) }
+        pendingMcpReview = McpReview(path: target, agentID: owner, name: URL(fileURLWithPath: target).lastPathComponent,
+            originalText: edits[target] ?? disk.text ?? "", proposedText: proposed, format: file.format,
+            replacesExisting: false, warnings: warnings,
+            title: L("Review alignment of %@", URL(fileURLWithPath: target).lastPathComponent))
+        mcpReviewDisk = disk
+        return true
+    }
+
+    /// Stages copying a skill package's SKILL.md to `family` in the
+    /// divergence's scope. Packages with other files are refused: their
+    /// resources would be left behind.
+    @discardableResult
+    func copySkill(from source: String, to family: String, scope: String) -> Bool {
+        actionError = nil
+        pendingMcpReview = nil; mcpReviewDisk = nil
+        let folder = URL(fileURLWithPath: source).deletingLastPathComponent()
+        guard let target = DivergenceDetector.skillDestination(family: family, name: folder.lastPathComponent, scope: scope) else {
+            actionError = L("This agent has no supported skills folder."); return false
+        }
+        let extra = DiscoveryTree.scan(root: folder.path).files.filter { $0 != source && !$0.hasSuffix("/.DS_Store") }
+        guard extra.isEmpty else {
+            actionError = L("This skill has other files; copy its folder manually so its resources come along."); return false
+        }
+        guard let text = documents[source]?.text ?? (try? Parsers.readText(at: source)) else {
+            actionError = L("Could not read the current file"); return false
+        }
+        if trackedFile(for: target) != nil && readDiskState(target) != .missing { return alignText(target: target, toMatch: source) }
+        guard readDiskState(target) == .missing else { actionError = L("Could not read the current file"); return false }
+        pendingMcpReview = McpReview(path: target, agentID: scope.isEmpty ? family : family + "::" + scope,
+            name: folder.lastPathComponent, originalText: "", proposedText: text, format: .markdown,
+            replacesExisting: false, warnings: [L("Creates a new file. Agent-specific frontmatter fields are copied as they are.")],
+            title: L("Review new skill %@", folder.lastPathComponent), createsFile: true)
+        mcpReviewDisk = .missing
         return true
     }
 

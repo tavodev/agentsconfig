@@ -86,6 +86,13 @@ after byte budgets (imports included), skill names and descriptions (bodies load
 on invocation) and the number of MCP servers. It is an approximation — bytes ÷ 4,
 not a tokenizer — and MCP tool definitions are unknown without starting the
 servers. A warning appears above the threshold set in Settings (8,000 by default).
+**Alignment** lists what should match across agents but does not: root
+instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) with different text —
+a file that only imports another (`@AGENTS.md`) counts as aligned —, writable
+skills missing for some agents or with different copies, and MCP servers defined
+differently (client-only options ignored). Aligning is never silent: copying text,
+replacing a file with an `@import`, copying a single-file skill or matching an MCP
+definition all open a diff review first. The sidebar shows the divergence count.
 **Hooks** maps every hook by event and matcher across managed, user, project and
 local layers and agents, with its source file and an orphan mark.
 

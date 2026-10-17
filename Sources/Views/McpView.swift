@@ -135,6 +135,12 @@ struct McpMatrixRow: View {
                     Text(entries.count == 1 ? L("1 source") : L("%d sources", entries.count))
                         .font(.callout).foregroundStyle(.secondary)
                     McpCheckBadge(findings: entries.flatMap { store.mcpChecks(for: $0) })
+                    if store.mcpDefinitionsDiverge(name) {
+                        Label(L("Differs"), systemImage: "arrow.triangle.branch")
+                            .font(.caption).foregroundStyle(.orange)
+                            .help(L("Agents define this server differently. Compare them in Server details."))
+                            .accessibilityIdentifier("mcp-diverges:" + name)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -264,6 +270,21 @@ struct McpAgentCard: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
+                    let others = store.contextualMcpIndex.filter {
+                        $0.name == entry.name && McpComparison.family($0) != McpComparison.family(entry)
+                            && DivergenceDetector.comparableSignature($0) != DivergenceDetector.comparableSignature(entry)
+                    }
+                    if !others.isEmpty, store.mcpTargetFiles(for: entry.agentID).contains(where: { $0.path == entry.sourcePath }) {
+                        Menu(L("Match")) {
+                            ForEach(others) { other in
+                                Button(other.agentName + " — " + URL(fileURLWithPath: other.sourcePath).lastPathComponent) {
+                                    store.copyMcpServer(other, to: entry.agentID, targetPath: entry.sourcePath)
+                                }
+                            }
+                        }
+                        .controlSize(.small)
+                        .help(L("Replace this definition with another agent's, after reviewing the diff."))
+                    }
                     Button { store.openFile(entry.sourcePath) } label: {
                         Label(L("Open"), systemImage: "doc.text")
                     }
@@ -400,14 +421,15 @@ struct McpReviewSheet: View {
     @Environment(ConfigStore.self) private var store
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L("Review MCP change")).font(.headline)
+            Text(review.title ?? L("Review MCP change")).font(.headline)
             Text(review.path.replacingOccurrences(of: AppPaths.home, with: "~")).font(.caption)
             if review.replacesExisting {
                 Label(L("This replaces the existing server named %@.", review.name), systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
             ForEach(review.warnings, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
-            Text(L("Apply updates the editor only. Save writes the file. Secret values stay hidden in this diff."))
+            Text(review.createsFile ? L("Create writes this new file now; nothing is overwritten. Secret values stay hidden in this diff.")
+                 : L("Apply updates the editor only. Save writes the file. Secret values stay hidden in this diff."))
                 .font(.caption).foregroundStyle(.secondary)
             Divider()
             ScrollView {
@@ -417,7 +439,7 @@ struct McpReviewSheet: View {
             HStack {
                 Button(L("Cancel")) { store.cancelMcpReview() }.keyboardShortcut(.cancelAction)
                 Spacer()
-                Button(L("Apply to editor")) { store.confirmMcpReview() }
+                Button(review.createsFile ? L("Create file") : L("Apply to editor")) { store.confirmMcpReview() }
                     .accessibilityIdentifier("apply-mcp")
                     .buttonStyle(.borderedProminent)
             }

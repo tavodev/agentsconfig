@@ -92,6 +92,21 @@ enum AtomicWriter {
         try write(Data(text.utf8), to: target, permissions: perms)
     }
 
+    /// Creates `path` with `text` (0600) only if nothing exists there: the
+    /// temporary file is hard-linked into place, which fails on an existing
+    /// name instead of replacing it. Missing parent folders are created.
+    static func createNew(_ text: String, atPath path: String) throws {
+        let target = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let tmp = target.deletingLastPathComponent().appendingPathComponent(
+            ".\(target.lastPathComponent).acfg-tmp-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: tmp) }
+        try createAndWrite(Data(text.utf8), to: tmp)
+        guard link(tmp.path, target.path) == 0 else {
+            throw WriteFailure(operation: "create", path: target.path, errnoCode: errno)
+        }
+    }
+
     private static func createAndWrite(_ data: Data, to tmp: URL) throws {
         let fd = open(tmp.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
         guard fd >= 0 else {
