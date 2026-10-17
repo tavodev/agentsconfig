@@ -10,11 +10,20 @@ struct DiagnosticsView: View {
         let diagnostics: [AuditDiagnostic]
     }
     @State private var snapshot: ExportSnapshot?
+    @State private var exportingSetup = false
+    @State private var importDirectory: URL?
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(L("Diagnostics")).font(.title3.bold())
                 Spacer()
+                Button(L("Export setup…")) { exportingSetup = true }
+                    .accessibilityIdentifier("open-setup-export")
+                Button(L("Import setup…")) {
+                    let panel = NSOpenPanel()
+                    panel.canChooseDirectories = true; panel.canChooseFiles = false
+                    if panel.runModal() == .OK { importDirectory = panel.url }
+                }.accessibilityIdentifier("open-setup-import")
                 Button(L("Review export…")) {
                     snapshot = ExportSnapshot(configuration: configuration, diagnostics: diagnostics)
                 }.accessibilityIdentifier("review-diagnostic-export")
@@ -35,7 +44,16 @@ struct DiagnosticsView: View {
         .sheet(item: $snapshot) { request in
             DiagnosticExportReview(configuration: request.configuration, diagnostics: request.diagnostics)
         }
+        .sheet(isPresented: $exportingSetup) { SetupExportSheet() }
+        .sheet(item: Binding(get: { importDirectory.map(ImportRequest.init) }, set: { importDirectory = $0?.directory })) { request in
+            SetupImportSheet(directory: request.directory)
+        }
     }
+}
+
+private struct ImportRequest: Identifiable {
+    var id: String { directory.path }
+    let directory: URL
 }
 
 private struct DiagnosticExportReview: View {

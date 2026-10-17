@@ -148,6 +148,13 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   cachea por entrada; `mcpCheckEnvironment` es inyectable en tests. La
   lectura opcional de la shell de login (`AppSettings.mcpLoginShellEnvironment`)
   nunca corre en ejecuciones aisladas ni con `AppPaths.overrideHome`.
+- `Sources/Services/SetupBundle.swift` — export del setup a carpeta nueva
+  (`manifest.json` + `files/global|projects/<nombre>/…`, 0600) con
+  `Secrets.maskText`; sin archivos `readOnly`, de sistema, >2 MB ni (por
+  defecto) `volatile`/`excludeFromHistory`. Import: rutas del manifiesto no
+  confiables (sin `/` inicial ni `..`), proyectos por nombre de carpeta único,
+  `restoringRedactions` recupera el valor local o lo omite. Cada archivo pasa por
+  `McpReview` (`stageReplacement`/`stageCreation`); la UI está en Diagnóstico.
 - `Sources/Services/DiagnosticReportBuilder.swift` — informes JSON/Markdown sobre
   una instantánea revisada y fija. Por defecto anonimiza rutas y omite valores y
   detalles libres; valores opcionales también redactados. `WorkspaceAnalysisView`

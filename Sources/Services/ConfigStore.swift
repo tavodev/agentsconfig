@@ -936,7 +936,9 @@ final class ConfigStore {
     @discardableResult
     func confirmMcpReview() -> Bool {
         guard let review = pendingMcpReview, let disk = mcpReviewDisk else { return false }
-        guard review.createsFile || !isReadOnly(review.path), text(for: review.path) == review.originalText,
+        // A new file is checked against the disk only: a stale cached
+        // document of a deleted file must not block (or feed) its creation.
+        guard review.createsFile || (!isReadOnly(review.path) && text(for: review.path) == review.originalText),
               readDiskState(review.path) == disk else {
             actionError = L("The destination changed during review. Review the operation again.")
             cancelMcpReview()
@@ -949,6 +951,7 @@ final class ConfigStore {
                 cancelMcpReview(); return false
             }
             cancelMcpReview()
+            documents.removeValue(forKey: review.path)
             refresh()
             selectedAgentID = fileOwners[review.path] ?? review.agentID
             selectedPath = review.path
@@ -988,11 +991,7 @@ final class ConfigStore {
     func alignText(target: String, toMatch source: String, importOnly: Bool = false) -> Bool {
         actionError = nil
         pendingMcpReview = nil; mcpReviewDisk = nil
-        guard let file = trackedFile(for: target), !isReadOnly(target), let owner = fileOwners[target] else {
-            actionError = L("Read-only file"); return false
-        }
-        let disk = readDiskState(target)
-        guard disk != .unreadable, let sourceText = documents[source]?.text ?? (try? Parsers.readText(at: source)) else {
+        guard let sourceText = documents[source]?.text ?? (try? Parsers.readText(at: source)) else {
             actionError = L("Could not read the current file"); return false
         }
         let proposed: String
@@ -1003,17 +1002,93 @@ final class ConfigStore {
             }
             proposed = "@" + URL(fileURLWithPath: source).lastPathComponent + "\n"
         } else { proposed = sourceText }
+        return stageReplacement(target: target, proposed: proposed,
+            title: L("Review alignment of %@", URL(fileURLWithPath: target).lastPathComponent),
+            warnings: [L("Content is copied as text; agent-specific wording, imports and paths are not translated.")])
+    }
+
+    /// Shared by alignment and setup import: stages replacing a tracked,
+    /// writable file's buffer with `proposed` through the review sheet.
+    private func stageReplacement(target: String, proposed: String, title: String, warnings: [String]) -> Bool {
+        guard let file = trackedFile(for: target), !isReadOnly(target), let owner = fileOwners[target] else {
+            actionError = L("Read-only file"); return false
+        }
+        let disk = readDiskState(target)
+        guard disk != .unreadable else { actionError = L("Could not read the current file"); return false }
         if edits[target] == nil {
             if let text = disk.text { installDocument(target, text: text) } else { documents.removeValue(forKey: target) }
         }
-        var warnings = [L("Content is copied as text; agent-specific wording, imports and paths are not translated.")]
-        if !keepsHistory(file) { warnings.append(L("History is disabled for this destination; saving will not create a backup.")) }
+        var notices = warnings
+        if !keepsHistory(file) { notices.append(L("History is disabled for this destination; saving will not create a backup.")) }
         pendingMcpReview = McpReview(path: target, agentID: owner, name: URL(fileURLWithPath: target).lastPathComponent,
             originalText: edits[target] ?? disk.text ?? "", proposedText: proposed, format: file.format,
-            replacesExisting: false, warnings: warnings,
-            title: L("Review alignment of %@", URL(fileURLWithPath: target).lastPathComponent))
+            replacesExisting: false, warnings: notices, title: title)
         mcpReviewDisk = disk
         return true
+    }
+
+    /// Stages creating a file that does not exist yet; confirming writes it
+    /// with `AtomicWriter.createNew`, which never replaces an existing file.
+    private func stageCreation(target: String, agentID: String, proposed: String, format: ConfigFormat,
+                               title: String, warnings: [String]) -> Bool {
+        guard readDiskState(target) == .missing else { actionError = L("Could not read the current file"); return false }
+        pendingMcpReview = McpReview(path: target, agentID: agentID, name: URL(fileURLWithPath: target).lastPathComponent,
+            originalText: "", proposedText: proposed, format: format, replacesExisting: false,
+            warnings: warnings, title: title, createsFile: true)
+        mcpReviewDisk = .missing
+        return true
+    }
+
+    // MARK: - Setup export / import (issue #24)
+
+    func setupExportCandidates(_ options: SetupExportOptions) -> [SetupBundle.Candidate] {
+        SetupBundle.candidates(agents: agents, projectRoots: projectRoots, options: options)
+    }
+
+    @discardableResult
+    func exportSetup(to directory: URL, options: SetupExportOptions) throws -> SetupManifest {
+        try SetupBundle.export(setupExportCandidates(options), to: directory) { path in
+            self.documents[path]?.text ?? (try? Parsers.readText(at: path))
+        }
+    }
+
+    func setupImportItems(from directory: URL) throws -> [SetupImportItem] {
+        let manifest = try SetupBundle.readManifest(directory)
+        return SetupBundle.importItems(manifest, directory: directory, projectRoots: projectRoots) { self.localText($0) }
+    }
+
+    /// The draft or current text of a file that exists on disk; nil when the
+    /// file is gone even if a stale document is still cached.
+    private func localText(_ path: String) -> String? {
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        return edits[path] ?? documents[path]?.text ?? (try? Parsers.readText(at: path))
+    }
+
+    /// Stages one imported file for review. Redacted values are restored
+    /// from the local file or dropped (listed in the review), never written.
+    @discardableResult
+    func stageSetupImport(_ item: SetupImportItem, from directory: URL) -> Bool {
+        actionError = nil
+        pendingMcpReview = nil; mcpReviewDisk = nil
+        guard let target = item.target, item.status != .tampered, item.status != .unmapped,
+              let imported = try? String(contentsOf: SetupBundle.bundlePath(directory, scope: item.file.scope,
+                  project: item.file.project, path: item.file.path), encoding: .utf8) else {
+            actionError = L("This file cannot be imported."); return false
+        }
+        let format = ConfigFormat(rawValue: item.file.format) ?? .text
+        let local = localText(target)
+        let merged = SetupBundle.restoringRedactions(imported, local: local, format: format)
+        var warnings = [L("Redaction is best-effort; review every value before saving.")]
+        if !merged.dropped.isEmpty {
+            warnings.append(L("Redacted values without a local counterpart were left out: %@", merged.dropped.joined(separator: ", ")))
+        }
+        let title = L("Review import of %@", item.file.path)
+        if local == nil {
+            let owner = item.file.scope == "global" ? item.file.agent
+                : projectRoots.first { target.hasPrefix($0 + "/") }.map { item.file.agent + "::" + $0 } ?? item.file.agent
+            return stageCreation(target: target, agentID: owner, proposed: merged.text, format: format, title: title, warnings: warnings)
+        }
+        return stageReplacement(target: target, proposed: merged.text, title: title, warnings: warnings)
     }
 
     /// Stages copying a skill package's SKILL.md to `family` in the
@@ -1035,13 +1110,9 @@ final class ConfigStore {
             actionError = L("Could not read the current file"); return false
         }
         if trackedFile(for: target) != nil && readDiskState(target) != .missing { return alignText(target: target, toMatch: source) }
-        guard readDiskState(target) == .missing else { actionError = L("Could not read the current file"); return false }
-        pendingMcpReview = McpReview(path: target, agentID: scope.isEmpty ? family : family + "::" + scope,
-            name: folder.lastPathComponent, originalText: "", proposedText: text, format: .markdown,
-            replacesExisting: false, warnings: [L("Creates a new file. Agent-specific frontmatter fields are copied as they are.")],
-            title: L("Review new skill %@", folder.lastPathComponent), createsFile: true)
-        mcpReviewDisk = .missing
-        return true
+        return stageCreation(target: target, agentID: scope.isEmpty ? family : family + "::" + scope, proposed: text,
+            format: .markdown, title: L("Review new skill %@", folder.lastPathComponent),
+            warnings: [L("Creates a new file. Agent-specific frontmatter fields are copied as they are.")])
     }
 
     func clearActionError() { actionError = nil }

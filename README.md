@@ -109,7 +109,17 @@ values are discarded). Variables exported only in another terminal stay unknown.
 
 **Diagnostics** exports a reviewed, fixed snapshot as JSON or Markdown. Default
 exports anonymize sources and omit setting values/free-form diagnostic details.
-Nothing is uploaded. **Search** searches redacted loaded content across agents and
+Nothing is uploaded. **Export setup** writes a new folder with `manifest.json`
+(agent, path relative to `~` or to the project, SHA-256) and the writable global
+and, optionally, project files, redacted with the same rules as the views. State
+files and files excluded from history stay out unless requested. Redaction is
+best-effort — a secret without a recognizable key, URL or argument position can
+remain, and MCP arguments are hidden as a whole — so review the folder before
+sharing it; structured files are normalized and lose comments. **Import setup**
+previews each file (new, identical, differs, no destination, changed after
+export) and opens a diff review per file; redacted values keep the local value
+or are left out and listed, never written. Projects map by folder name.
+**Search** searches redacted loaded content across agents and
 projects, up to 2 MB per file and 100 results.
 
 See [verification](docs/VERIFICATION.md) for tested behaviors and results.
