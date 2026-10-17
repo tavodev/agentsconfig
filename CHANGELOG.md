@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `docs/PRECEDENCE.md` documents, per agent and with official links, the settings layers and merge rules the analysis models, the instruction load order, the scope/version/trust assumptions and the cases left unresolved.
 - Export setup writes a redacted folder with a manifest (agent, relative path, SHA-256) of global and project configuration; Import setup previews each file and stages a diff review in which redacted values keep the local value or are left out. Redaction is documented as best-effort.
 - Analysis → Alignment detects instructions, skills and MCP definitions that differ between agents, with a redacted diff and reviewed actions (copy text, `@import`, copy a single-file skill, match an MCP definition). The comparator flags servers defined differently and the sidebar shows the divergence count.
 - Analysis → Context estimates the tokens an agent loads before any task (instructions with imports, skill names and descriptions, MCP server count), per file, with a configurable warning threshold. Labelled as an approximation.

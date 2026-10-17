@@ -49,6 +49,16 @@ Publication review and decisions are tracked in
 [#5](https://github.com/tavodev/agentsconfig/issues/5). Raw logs, temporary paths
 and session inventories are not part of the documentation shipped to readers.
 
+## Unreleased changes after 0.1.0
+
+On 2026-10-16, after the work for issues #11 and #19–#26, the hostless suite ran
+from the working tree with macOS 26.6.2 and Xcode 26.1.1: **273 tests in 31
+suites passed**. The Debug app and the `AgentsConfigUI` test bundle compiled; the
+graphical suite was **not executed** for these changes. The publication guard
+reported no credential-pattern findings. MCP servers, hooks and login shells were
+never executed by the tests: the login-shell read is opt-in and disabled in
+isolated runs.
+
 ## Reproducing checks
 
 Use the build, hostless and UI commands in [README.md](../README.md), keeping the

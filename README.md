@@ -122,7 +122,9 @@ or are left out and listed, never written. Projects map by folder name.
 **Search** searches redacted loaded content across agents and
 projects, up to 2 MB per file and 100 results.
 
-See [verification](docs/VERIFICATION.md) for tested behaviors and results.
+See [configuration precedence](docs/PRECEDENCE.md) for the layers and merge rules
+modelled per agent, and [verification](docs/VERIFICATION.md) for tested behaviors
+and results.
 
 ## Privacy & data handling
 

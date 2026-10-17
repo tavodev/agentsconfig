@@ -58,8 +58,7 @@ struct McpCheckEnvironment: Equatable {
         let pipe = Pipe()
         process.standardOutput = pipe
         do { try process.run() } catch { return nil }
-        nonisolated(unsafe) let running = process
-        let watchdog = DispatchWorkItem { if running.isRunning { running.terminate() } }
+        let watchdog = DispatchWorkItem { if process.isRunning { process.terminate() } }
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: watchdog)
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         watchdog.cancel()

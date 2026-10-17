@@ -116,6 +116,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   cubiertas quedan sin resolver. El análisis describe archivos observados;
   CLI, entorno de otra terminal, políticas remotas y activación de sesión no
   se infieren. Los controles de versión/confianza no modifican clientes.
+- `docs/PRECEDENCE.md` — precedencia y reglas de combinación por agente con
+  enlaces oficiales, distinguiendo lo que el resolver modela de lo que no
+  observa (CLI, entorno, políticas remotas/MDM, sesión). Actualizarlo junto con
+  `ConfigurationResolver`/`SettingMerger`/`KnowledgeInspector`.
 - `Sources/Services/KnowledgeInspector.swift` y `Frontmatter.swift` — cadenas
   de instrucciones, overrides, imports acotados, YAML, skills compartidas,
   recursos y colisiones. Una fuente candidata no certifica carga en una sesión.
