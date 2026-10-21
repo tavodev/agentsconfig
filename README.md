@@ -73,7 +73,9 @@ The **Instructions** and **Skills** tabs show instruction candidates and overrid
 YAML metadata, shared consumers, resources, import cycles and traversal limits.
 Skills are grouped by origin (personal, project, plugins, system) and, when an
 origin has more than one owner, by skills folder or plugin package — the same
-rule as the Files list. Resource previews are read-only and never execute scripts.
+rule as the Files list. Skills in the global folders of read-only inventories
+(`~/.cursor/skills`, `~/.copilot/skills`) count as personal, and their project
+folders (`.cursor/skills`, `.github/skills`) as project. Resource previews are read-only and never execute scripts.
 Candidate status does not confirm that a session loaded the content. Custom roots
 can be selected in Settings; terminal environment variables are not inferred from
 another process.

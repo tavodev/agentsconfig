@@ -80,7 +80,13 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   origen (personal/proyecto/plugins/sistema) y dueño (carpeta o paquete),
   a partir de ruta + `readOnly` + raíz de proyecto opcional. La lista de
   archivos y Configuración → Skills usan la misma regla; los tests no
-  necesitan home, watchers ni UI. Plugins ganan sobre proyecto; un origen
+  necesitan home, watchers ni UI. Orden: plugins (`/plugins/`,
+  `/extensions/`) → proyecto (bajo la raíz registrada, aunque sea
+  `readOnly`) → personal (marcadores `/.agents|.claude|.codex|.gemini|
+  .opencode|.cursor|.copilot/skills/`) → sistema (resto `readOnly`) →
+  personal. Cursor y Copilot CLI son inventario `readOnly`, pero sus skills
+  globales son del usuario: el marcador gana a `readOnly` (issue #10);
+  Windsurf/Devin no tiene marcador y sigue en sistema. Un origen
   con un solo dueño se aplana en la vista. Las filas se ordenan por nombre
   de carpeta (`localizedStandardCompare`).
 - `Sources/Services/FileWatcher.swift` — DispatchSource vnode por archivo/dir,

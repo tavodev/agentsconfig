@@ -28,12 +28,18 @@ enum SkillOrigin: String, CaseIterable {
 }
 
 enum SkillGrouping {
-    /// User-owned skill directories for the supported agents, matching the
-    /// markers `KnowledgeInspector` already uses. Paths keep their trailing
-    /// slash so a component boundary is required.
+    /// User-owned skill directories, matching the markers `KnowledgeInspector`
+    /// already uses plus the global skills folders of the read-only
+    /// inventories (Cursor `~/.cursor/skills`, Copilot CLI `~/.copilot/skills`).
+    /// Those sources are `readOnly` only because the app does not edit them,
+    /// not because the user doesn't own them, so the marker has to win over
+    /// the read-only → system fallback. Paths keep their trailing slash so a
+    /// component boundary is required (`~/.copilot/installed-plugins` and
+    /// project `.github/skills` never match).
     static let personalMarkers = [
         "/.agents/skills/", "/.claude/skills/", "/.codex/skills/",
         "/.gemini/skills/", "/.opencode/skills/",
+        "/.cursor/skills/", "/.copilot/skills/",
     ]
 
     static func isPlugin(path: String) -> Bool {
@@ -41,10 +47,13 @@ enum SkillGrouping {
     }
 
     /// Order matters: plugin folders live under agent roots too, and a
-    /// project-local `.claude/skills` also contains the personal marker, so
-    /// plugins win first and a registered project root wins over personal.
-    /// Anything else that is read-only is system; otherwise it is treated as
-    /// the user's own (personal).
+    /// project-local `.claude/skills` (or `.cursor/skills`) also contains the
+    /// personal marker, so plugins win first and a registered project root
+    /// wins over personal — read-only or not, so Cursor `.cursor/skills` and
+    /// Copilot `.github/skills` inside the project are project skills.
+    /// A personal marker then wins over `readOnly`. Anything else that is
+    /// read-only is system; otherwise it is treated as the user's own
+    /// (personal).
     static func origin(path: String, readOnly: Bool, projectRoot: String? = nil) -> SkillOrigin {
         if isPlugin(path: path) { return .plugins }
         if let projectRoot, !projectRoot.isEmpty, path.hasPrefix(projectRoot + "/") {
@@ -203,7 +212,7 @@ enum SkillGrouping {
 
     /// Personal skills belong to the skills root (`~/.claude/skills`, …).
     /// Falls back to the folder holding the skill when no `skills` segment
-    /// exists (personal-fallback paths like `~/.cursor/skills` still match).
+    /// exists (personal-fallback paths outside any `skills` folder still match).
     private static func skillsRoot(parts: [String], skillFolder: Int) -> String {
         if let j = parts[..<skillFolder].firstIndex(of: "skills") {
             return "/" + parts[...j].joined(separator: "/")

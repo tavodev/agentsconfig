@@ -13,7 +13,8 @@ struct SkillGroupingTests {
 
     @Test func personalMarkersClassifyEverySupportedAgentAsPersonal() {
         for marker in ["/.agents/skills/", "/.claude/skills/", "/.codex/skills/",
-                       "/.gemini/skills/", "/.opencode/skills/"] {
+                       "/.gemini/skills/", "/.opencode/skills/",
+                       "/.cursor/skills/", "/.copilot/skills/"] {
             let path = "/Users/fixture" + marker + "demo/SKILL.md"
             #expect(SkillGrouping.origin(path: path, readOnly: false) == .personal, "\(path)")
         }
@@ -37,16 +38,76 @@ struct SkillGroupingTests {
     }
 
     @Test func readOnlyForeignSkillIsSystemAndUnknownNonReadOnlyFallsBackToPersonal() {
-        #expect(SkillGrouping.origin(path: "/Users/fixture/.cursor/skills/x/SKILL.md",
+        #expect(SkillGrouping.origin(path: "/Users/fixture/.codeium/windsurf/skills/x/SKILL.md",
                                      readOnly: true) == .system)
-        #expect(SkillGrouping.origin(path: "/Users/fixture/.cursor/skills/x/SKILL.md",
+        #expect(SkillGrouping.origin(path: "/Users/fixture/.codeium/windsurf/skills/x/SKILL.md",
                                      readOnly: false) == .personal)
+    }
+
+    // MARK: - Read-only inventories (issue #10)
+
+    /// Cursor and Copilot CLI sources are all `readOnly` (inventory only), but
+    /// their global skills live in the user's home: they are personal, with
+    /// the skills root as owner, exactly like the editable agents.
+    @Test func cursorAndCopilotGlobalSkillsArePersonalDespiteReadOnly() {
+        let home = "/Users/fixture"
+        for (path, root) in [
+            (home + "/.cursor/skills/demo/SKILL.md", "~/.cursor/skills"),
+            (home + "/.cursor/skills/team/nested/SKILL.md", "~/.cursor/skills"),
+            (home + "/.copilot/skills/demo/SKILL.md", "~/.copilot/skills"),
+        ] {
+            #expect(SkillGrouping.origin(path: path, readOnly: true) == .personal, "\(path)")
+            // a project context doesn't claim skills that live outside it
+            #expect(SkillGrouping.origin(path: path, readOnly: true,
+                                         projectRoot: home + "/repo") == .personal, "\(path)")
+            #expect(owner(path, .personal, home: home) == root, "\(path)")
+        }
+    }
+
+    @Test func cursorAndCopilotProjectSkillsAreProjectDespiteReadOnly() {
+        let root = "/Users/fixture/repo"
+        let cursor = root + "/.cursor/skills/demo/SKILL.md"
+        let copilot = root + "/.github/skills/demo/SKILL.md"
+        #expect(SkillGrouping.origin(path: cursor, readOnly: true, projectRoot: root) == .project)
+        #expect(SkillGrouping.origin(path: copilot, readOnly: true, projectRoot: root) == .project)
+        #expect(owner(cursor, .project, projectRoot: root) == ".cursor/skills")
+        #expect(owner(copilot, .project, projectRoot: root) == ".github/skills")
+        // a submodule's Copilot skills stay inside the project too
+        #expect(SkillGrouping.origin(path: root + "/sub/.github/skills/s/SKILL.md",
+                                     readOnly: true, projectRoot: root) == .project)
+    }
+
+    /// Plugin-packaged Copilot skills keep the rule they had: the personal
+    /// marker needs `/.copilot/skills/`, so `installed-plugins` never matches.
+    @Test func copilotInstalledPluginSkillsAreNotPersonal() {
+        let path = "/Users/fixture/.copilot/installed-plugins/mkt/plug/skills/s/SKILL.md"
+        #expect(SkillGrouping.origin(path: path, readOnly: true) == .system)
+    }
+
+    /// Regression: the new markers don't change other agents' origins.
+    @Test func otherAgentsKeepTheirOriginsAfterAddingInventoryMarkers() {
+        let home = "/Users/fixture"
+        let root = home + "/repo"
+        #expect(SkillGrouping.origin(path: home + "/.claude/skills/a/SKILL.md",
+                                     readOnly: false, projectRoot: root) == .personal)
+        #expect(SkillGrouping.origin(path: root + "/.claude/skills/a/SKILL.md",
+                                     readOnly: false, projectRoot: root) == .project)
+        #expect(SkillGrouping.origin(path: home + "/.claude/plugins/cache/m/p/1.0/skills/a/SKILL.md",
+                                     readOnly: true) == .plugins)
+        #expect(SkillGrouping.origin(path: "/etc/codex/skills/a/SKILL.md",
+                                     readOnly: true) == .system)
+        // Windsurf / Devin Desktop global skills are read-only inventory too
+        // and stay system: only Cursor and Copilot gained markers.
+        #expect(SkillGrouping.origin(path: home + "/.config/devin/skills/a/SKILL.md",
+                                     readOnly: true) == .system)
+        #expect(SkillGrouping.origin(path: home + "/.agents/skills/a/SKILL.md",
+                                     readOnly: true) == .personal)
     }
 
     @Test func groupsOmitEmptyBucketsAndKeepDisplayOrder() {
         let root = "/Users/fixture/repo"
         let items = [
-            Item(path: "/Users/fixture/.cursor/skills/sys/SKILL.md", readOnly: true),
+            Item(path: "/etc/codex/skills/sys/SKILL.md", readOnly: true),
             Item(path: "/Users/fixture/.codex/plugins/cache/plug/SKILL.md", readOnly: true),
             Item(path: root + "/.agents/skills/proj/SKILL.md", readOnly: false),
             Item(path: "/Users/fixture/.agents/skills/personal/SKILL.md", readOnly: false),
