@@ -91,6 +91,9 @@ import Foundation
             return [value]
         }
         let exclusions = context.agentID == "claude-code" ? configuredStrings(["claudeMdExcludes"]) : []
+        let claudeMode = context.agentID == "claude-code" ? claudeInstructionFiles(configuration, version: context.version) : nil
+        let managedOnly = claudeMode == .managedOnly
+        let managedOnlyReason = "Project instructions is managed-only: only managed CLAUDE.md and auto memory load at launch."
         var consumed = 0
         var instructionSeen = Set<String>()
         func add(_ path: String, state: String = "Candidate", reason: String = "", boundary: String, importedBy: String? = nil, depth: Int = 0) {
@@ -113,9 +116,11 @@ import Foundation
             let parsed = Frontmatter.parse(text)
             var status = state
             var explanation = reason
-            if let issue = parsed.issue { status = "Unresolved"; explanation = issue }
+            // A setting-driven exclusion stands; only path-scoped rules still load on demand.
+            let fixed = state == "Excluded"
+            if let issue = parsed.issue, !fixed { status = "Unresolved"; explanation = issue }
             let patterns = parsed.header?.paths?.values ?? parsed.header?.globs?.values ?? parsed.header?.applyTo?.values.flatMap { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } } ?? []
-            if !patterns.isEmpty {
+            if !patterns.isEmpty && (!fixed || path.contains("/rules/")) {
                 if context.targetFile.isEmpty { status = "Conditional"; explanation = "Path-scoped instructions need a target file." }
                 else {
                     let matches = patterns.map { KnowledgeGlob.matches(context.targetFile, pattern: $0) }
@@ -123,19 +128,25 @@ import Foundation
                     explanation = "Path patterns: " + patterns.joined(separator: ", ")
                 }
             }
-            if parsed.header?.alwaysApply == false && patterns.isEmpty { status = "Conditional"; explanation = "Manual or model-selected rule." }
+            if parsed.header?.alwaysApply == false && patterns.isEmpty && !fixed { status = "Conditional"; explanation = "Manual or model-selected rule." }
             let bytes = text.utf8.count
-            let eligible = !["Not applicable", "Replaced", "Unresolved", "Outside scope"].contains(status)
+            let eligible = !["Not applicable", "Replaced", "Unresolved", "Outside scope", "Excluded", "Not loaded"].contains(status)
             let included = eligible ? min(bytes, max(0, byteLimit - consumed)) : 0
             if eligible && included < bytes { status = "Truncated"; explanation = "Instruction byte budget reached." }
             consumed += included
             output.instructions.append(.init(path: path, state: status, reason: explanation, bytes: bytes, includedBytes: included,
                 text: Secrets.maskText(String(text.prefix(20_000)), format: .markdown, masking: true), importedBy: importedBy))
-            guard included > 0, depth < 5, ["claude-code", "gemini-cli", "copilot-cli", "antigravity"].contains(context.agentID) else { return }
+            // Claude Code documents at most four import hops; the other clients keep the previous five-level cap.
+            let claudeHops = context.agentID == "claude-code"
+            guard included > 0, depth < 5 || claudeHops, ["claude-code", "gemini-cli", "copilot-cli", "antigravity"].contains(context.agentID) else { return }
             for ref in references(in: parsed.body, importsOnly: true).prefix(100) {
                 guard output.instructions.count < 100 else { break }
                 guard let target = safeReference(ref, base: (path as NSString).deletingLastPathComponent, boundary: boundary) else {
                     output.instructions.append(.init(path: ref, state: "Outside scope", reason: "External import is shown but was not read.",
+                        bytes: 0, includedBytes: 0, text: "", importedBy: path)); continue
+                }
+                if claudeHops && depth >= claudeImportHops {
+                    output.instructions.append(.init(path: target, state: "Not loaded", reason: "Import depth limit reached: Claude Code follows at most four hops.",
                         bytes: 0, includedBytes: 0, text: "", importedBy: path)); continue
                 }
                 add(target, boundary: boundary, importedBy: path, depth: depth + 1)
@@ -165,18 +176,58 @@ import Foundation
             } else if context.agentID == "copilot-cli" {
                 add(user + "/copilot-instructions.md", boundary: user)
                 output.notices.append("Copilot CLI combines instruction sources without a general precedence order.")
-            } else { for name in names { add(user + "/" + name, boundary: user) } }
+            } else { for name in names { add(user + "/" + name, state: managedOnly ? "Excluded" : "Candidate", reason: managedOnly ? managedOnlyReason : "", boundary: user) } }
+            // Claude Code: AGENTS.md and .claude/AGENTS.md per directory, after that directory's CLAUDE files
+            // (memory docs, "Project instructions"). Only the CLAUDE files from the project root down are observed.
+            let agentsFiles = claudeMode == nil ? [] : directories.flatMap { [$0 + "/AGENTS.md", $0 + "/.claude/AGENTS.md"] }.filter { read($0) != nil }
+            let claudeFiles = claudeMode == nil ? false : directories.contains { directory in
+                ["/CLAUDE.md", "/.claude/CLAUDE.md", "/CLAUDE.local.md"].contains { read(directory + $0) != nil }
+            }
+            var agentsPlacement: (state: String, reason: String, inline: Bool)?
+            switch claudeMode {
+            case nil: agentsPlacement = nil
+            case .claudeOrAgents?:
+                agentsPlacement = claudeFiles
+                    ? ("Replaced", "A CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md in the working folder or above takes precedence over AGENTS.md.", false)
+                    : ("Candidate", "No CLAUDE.md, .claude/CLAUDE.md or CLAUDE.local.md in the working folder or above: Claude Code reads AGENTS.md instead.", true)
+                if !claudeFiles && !agentsFiles.isEmpty {
+                    output.notices.append("Claude Code reads AGENTS.md because no CLAUDE file was found from the project root to the working folder. Folders above the project root are not inspected.")
+                }
+            case .claudeAndAgents?: agentsPlacement = ("Candidate", "Project instructions is claude-md-and-agents-md: AGENTS.md loads after this folder's CLAUDE files.", true)
+            case .claudeOnly?: agentsPlacement = ("Excluded", "Project instructions is claude-md: AGENTS.md is not read.", false)
+            case .managedOnly?: agentsPlacement = ("Excluded", managedOnlyReason, false)
+            case .unsupportedVersion?: agentsPlacement = ("Excluded", "Reading AGENTS.md directly requires Claude Code 2.1.277 or later.", false)
+            case .unresolved?:
+                agentsPlacement = ("Conditional", "The Project instructions value is not documented or differs between plugin IDs; confirm it in /config.", true)
+                if !agentsFiles.isEmpty { output.notices.append("Claude Code's Project instructions setting could not be resolved; AGENTS.md is shown as conditional.") }
+            }
             for directory in directories {
-                for name in names { add(directory + "/" + name, boundary: root) }
-                if context.agentID == "claude-code" { add(directory + "/.claude/CLAUDE.md", boundary: root); add(directory + "/CLAUDE.local.md", boundary: root) }
+                let claudeState = managedOnly ? "Excluded" : "Candidate", claudeReason = managedOnly ? managedOnlyReason : ""
+                for name in names { add(directory + "/" + name, state: claudeState, reason: claudeReason, boundary: root) }
+                if context.agentID == "claude-code" {
+                    add(directory + "/.claude/CLAUDE.md", state: claudeState, reason: claudeReason, boundary: root)
+                    add(directory + "/CLAUDE.local.md", state: claudeState, reason: claudeReason, boundary: root)
+                    if let placement = agentsPlacement, placement.inline {
+                        for path in [directory + "/AGENTS.md", directory + "/.claude/AGENTS.md"] where agentsFiles.contains(path) {
+                            add(path, state: placement.state, reason: placement.reason, boundary: root)
+                        }
+                    }
+                }
                 if context.agentID == "copilot-cli" {
                     for relative in [".github/copilot-instructions.md", "CLAUDE.md", ".claude/CLAUDE.md", "GEMINI.md"] { add(directory + "/" + relative, boundary: root) }
+                }
+            }
+            // Files the client does not read are listed after the chain; one already imported keeps its import row.
+            if let placement = agentsPlacement, !placement.inline {
+                for path in agentsFiles where !instructionSeen.contains(AppPaths.canonicalPath(path) ?? path) {
+                    add(path, state: placement.state, reason: placement.reason, boundary: root)
                 }
             }
             for file in familyAgents.flatMap(\.files) where file.role == .instructions && file.exists {
                 if file.path.contains("/rules/") || file.path.contains("/instructions/") {
                     let local = !root.isEmpty && file.path.hasPrefix(root + "/")
-                    add(file.path, state: "Conditional", reason: "Activation depends on the client's rule discovery.",
+                    add(file.path, state: managedOnly ? "Excluded" : "Conditional",
+                        reason: managedOnly ? managedOnlyReason : "Activation depends on the client's rule discovery.",
                         boundary: local ? root : (file.path as NSString).deletingLastPathComponent)
                 }
             }
@@ -195,6 +246,29 @@ import Foundation
         if output.instructions.count >= 100 { output.notices.append("Instruction inspection limited to 100 entries.") }
         output.notices.append("Instruction order and candidate status do not confirm what a model actually loaded. Previews are capped at 20,000 characters.")
         return output
+    }
+    /// Claude Code memory docs: "a maximum depth of four hops" for `@` imports.
+    static let claudeImportHops = 4
+    /// Built-in plugin that reads AGENTS.md; `agents-md@builtin` is its ID before Claude Code 2.1.285.
+    static let claudeAgentsPluginIDs = ["cc-plugin-agents-md@builtin", "agents-md@builtin"]
+    enum ClaudeInstructionFiles: Equatable { case claudeOrAgents, claudeAndAgents, claudeOnly, managedOnly, unsupportedVersion, unresolved }
+    /// "Project instructions" (`pluginConfigs.<plugin>.options.instructionFiles`). Project and local
+    /// entries arrive already `Excluded` from `SettingMerger`; 2.1.285+ reads either plugin ID.
+    static func claudeInstructionFiles(_ configuration: ConfigurationAnalysis, version: String) -> ClaudeInstructionFiles {
+        guard ConfigurationResolver.version(version, atLeast: "2.1.277") else { return .unsupportedVersion }
+        let ids = ConfigurationResolver.version(version, atLeast: "2.1.285") ? claudeAgentsPluginIDs : ["agents-md@builtin"]
+        let values = Set(ids.compactMap { id in
+            configuration.settings.first { $0.key == ["pluginConfigs", id, "options", "instructionFiles"] &&
+                ["Estimated", "Conditional"].contains($0.state) && $0.value != "—" }?.value
+        })
+        guard values.count <= 1 else { return .unresolved }
+        switch values.first {
+        case nil, "claude-md-or-agents-md"?: return .claudeOrAgents
+        case "claude-md-and-agents-md"?: return .claudeAndAgents
+        case "claude-md"?: return .claudeOnly
+        case "managed-only"?: return .managedOnly
+        default: return .unresolved
+        }
     }
     static func safeReference(_ reference: String, base: String, boundary: String) -> String? {
         guard !reference.contains("://"), !reference.hasPrefix("~"), !reference.hasPrefix("/"),

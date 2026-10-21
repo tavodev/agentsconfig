@@ -39,6 +39,11 @@ import Foundation
                 if agentID == "claude-code", local, top == "remoteControlAtStartup", raw as? Bool == true {
                     state = "Excluded"; reason = "A project may disable remote control, but cannot enable it with this key."
                 }
+                // Memory docs: the built-in AGENTS.md plugin options ("Project instructions")
+                // are read from user, --settings or managed settings, never from project/local files.
+                if agentID == "claude-code", local, top == "pluginConfigs", key.count > 1, KnowledgeInspector.claudeAgentsPluginIDs.contains(key[1]) {
+                    state = "Excluded"; reason = "Claude Code reads this plugin option only from user, --settings or managed settings."
+                }
                 var origin = ValueOrigin(source: source.path, state: state,
                     value: ConfigurationResolver.render(raw, key: key), reason: reason)
                 if ["Excluded", "Unresolved", "Missing"].contains(state) {

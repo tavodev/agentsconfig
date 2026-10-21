@@ -131,7 +131,9 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   recursos y colisiones. Una fuente candidata no certifica carga en una sesión.
   Previews de solo lectura y redactadas; recursos y scripts nunca se ejecutan.
   Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
-  e imports a 5 niveles. Los globs no soportados quedan condicionados.
+  e imports a 4 saltos en Claude Code (5 niveles en Gemini CLI, Copilot CLI y
+  Antigravity). Claude Code lee `AGENTS.md` según "Project instructions"
+  (`claudeInstructionFiles`). Los globs no soportados quedan condicionados.
 - `Sources/Models/Divergence.swift` — `DivergenceDetector` (puro) compara
   instrucciones raíz por familia (normaliza espacios; un archivo solo de
   `@imports` a otro miembro cuenta como alineado), skills escribibles por
