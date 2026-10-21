@@ -255,6 +255,84 @@ final class ConfigStore {
         refreshHistory(path: request.path)
     }
 
+    // MARK: global history purge
+
+    /// A reviewed request to delete all local history (Settings → Privacy).
+    /// Independent of `historyEnabled`: disabling recording never purges.
+    struct HistoryPurge: Identifiable {
+        let id = UUID()
+        let summary: SnapshotStore.PurgeSummary
+    }
+    private(set) var pendingHistoryPurge: HistoryPurge?
+    /// Visible, retriable failure of the last purge.
+    private(set) var historyPurgeError: String?
+    /// Outcome of the last purge request when there is no error.
+    private(set) var historyPurgeNotice: String?
+    /// A save may depend on the backup it just recorded; purge waits for it.
+    var historyPurgeBlocked: Bool { !savingPaths.isEmpty }
+
+    func requestHistoryPurge() {
+        guard !historyPurgeBlocked else { return }
+        let summary = snapshots.purgeSummary()
+        if summary.isEmpty {
+            pendingHistoryPurge = nil
+            historyPurgeError = nil
+            historyPurgeNotice = L("There is no local history to delete.")
+            return
+        }
+        historyPurgeNotice = nil
+        pendingHistoryPurge = HistoryPurge(summary: summary)
+    }
+
+    func cancelHistoryPurge() { pendingHistoryPurge = nil }
+
+    func confirmHistoryPurge() {
+        guard pendingHistoryPurge != nil else { return }
+        pendingHistoryPurge = nil
+        purgeHistory()
+    }
+
+    /// Removes whatever the previous, already confirmed purge left behind.
+    func retryHistoryPurge() {
+        guard historyPurgeError != nil else { return }
+        purgeHistory()
+    }
+
+    private func purgeHistory() {
+        guard !historyPurgeBlocked else {
+            historyPurgeError = L("A save is in progress. Try again when it finishes.")
+            return
+        }
+        // Reviews that point at versions about to disappear are invalidated.
+        if pendingRestore?.version != nil { cancelRestore() }
+        pendingHistoryRemoval = nil
+        do {
+            try snapshots.purgeAll()
+            historyPurgeError = nil
+            historyPurgeNotice = L("Local history deleted.")
+        } catch SnapshotStore.HistoryError.incompletePurge(let paths) {
+            historyPurgeError = L("%d history item(s) could not be deleted. Retry to remove the rest.", paths.count)
+            historyPurgeNotice = nil
+        } catch SnapshotStore.HistoryError.unsafeHistoryRoot {
+            historyPurgeError = L("The history folder is not a regular folder (for example, a symbolic link); nothing was deleted.")
+            historyPurgeNotice = nil
+        } catch {
+            historyPurgeError = L(error.localizedDescription)
+            historyPurgeNotice = nil
+        }
+        // Published state is rebuilt from disk lazily: anything a partial
+        // purge left (including a corrupt index) surfaces again on read.
+        histories = [:]
+        historyErrors = [:]
+        historyRemovalErrors = [:]
+        activity = []
+        selectedEventID = nil
+        permissionWarnings = permissionWarnings.filter {
+            var info = stat()
+            return lstat($0, &info) == 0
+        }
+    }
+
     /// History reads that surface corrupt/ambiguous indexes instead of
     /// silently treating them as empty.
     private func safeLoadHistory(_ path: String) -> [FileVersion] {

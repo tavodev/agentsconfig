@@ -198,6 +198,17 @@ final class Loc {
         "File exceeds the 16 MB limit.": "El archivo supera el límite de 16 MB.",
         "History changed during review. Review the removal again.": "El historial cambió durante la revisión. Revisa la eliminación de nuevo.",
 
+        // Global history purge (Settings → Privacy)
+        "Delete all history…": "Borrar todo el historial…",
+        "Delete all local history?": "¿Borrar todo el historial local?",
+        "Delete all history": "Borrar todo el historial",
+        "Permanently deletes the history of %d file(s): %d version(s) and %d legacy backup(s), %@ on disk. Config files are not changed and the activity feed is cleared. If recording stays on, future changes create new versions. This cannot be undone.": "Borra de forma permanente el historial de %d archivo(s): %d versión(es) y %d respaldo(s) legado(s), %@ en disco. Los archivos de configuración no cambian y se vacía la actividad. Si el registro sigue activo, los cambios futuros crearán nuevas versiones. No se puede deshacer.",
+        "There is no local history to delete.": "No hay historial local que borrar.",
+        "Local history deleted.": "Historial local borrado.",
+        "A save is in progress. Try again when it finishes.": "Hay un guardado en curso. Inténtalo de nuevo cuando termine.",
+        "The history folder is not a regular folder (for example, a symbolic link); nothing was deleted.": "La carpeta del historial no es una carpeta normal (por ejemplo, es un enlace simbólico); no se borró nada.",
+        "%d history item(s) could not be deleted. Retry to remove the rest.": "No se pudieron borrar %d elemento(s) del historial. Reintenta para borrar el resto.",
+
         // Repair acceptance: privacy, MCP review and bounded inspection
         "A local MCP server requires a command.": "Un servidor MCP local requiere un comando.",
         "A remote MCP server requires an HTTP or HTTPS URL.": "Un servidor MCP remoto requiere una URL HTTP o HTTPS.",

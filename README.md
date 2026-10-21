@@ -143,8 +143,15 @@ no network calls.
   globally; the History tab also allows per-file opt-out. Existing history
   is retained. Individual versions or all indexed versions for one file can
   be removed with confirmation; concurrent new versions invalidate that review.
-  Physical cleanup errors are visible and retriable. Legacy backups are retained. Purging is a deliberate manual
-  deletion of the `History` folder after reviewing what you need to keep.
+  Physical cleanup errors are visible and retriable. Legacy backups are retained
+  by those per-file removals. **Settings → Privacy → Delete all history…**
+  purges everything under the `History` folder (current, legacy and
+  `.migrated` backups) after a confirmation that shows how many files,
+  versions and bytes will go. It waits for each file's history lock, never
+  follows symbolic links (links are removed, their targets are not), keeps
+  config files untouched, clears the activity feed and leaves the recording
+  setting as it was; anything that cannot be deleted is reported and can be
+  retried. Turning recording off does not purge by itself.
   Retention removes older versions; a save temporarily keeps at least two
   versions, and a restore with unsaved edits keeps at least three. Later
   operations resume the configured retention limit.

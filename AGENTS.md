@@ -279,6 +279,17 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `historyEnabled` desactiva nuevos snapshots/respaldos sin purgar existentes.
   HistoryView permite exclusión por archivo y eliminación confirmada de versiones;
   ID set revisado bajo lock, publicación antes de GC, errores de limpieza reintentables.
+  La purga global es una acción aparte (Ajustes → Privacidad, junto al toggle):
+  `SnapshotStore.purgeSummary`/`purgeAll` y `ConfigStore.requestHistoryPurge`/
+  `confirmHistoryPurge`/`retryHistoryPurge`. Borra todo bajo `History/` (formato 2,
+  legado `a__b`, `*.migrated`, restos) sin seguir symlinks (se desenlazan; una raíz
+  `History` que sea symlink se rechaza). Cada dir formato 2 se vacía bajo su
+  `.index.lock` y el lock se desenlaza al final aún tomado; `withIndexLock` usa
+  `O_NOFOLLOW` y comprueba tras el `flock` que el inodo sigue en la ruta (si no,
+  los escritores recrean y reintentan; los lectores ven historial vacío). Se
+  bloquea con guardados en curso, vacía `histories`, `historyErrors`,
+  `historyRemovalErrors` y la actividad, y los fallos quedan en
+  `historyPurgeError` con Reintentar. No cifra nada (cifrado en reposo: #16).
 - Guardados UI usan `requestSave` + review/confirmación (incluye Retry/Keep mine).
   `save(path:)` es primitiva para tests del modelo, no para controles UI.
   Restauración también muestra diff y fija el contenido/estado revisado.

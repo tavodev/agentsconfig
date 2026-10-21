@@ -92,6 +92,7 @@ struct AppSettingsView: View {
                     Text(L("New snapshots and save backups are disabled. Existing history is retained; restore with unsaved edits is blocked."))
                         .font(.callout).foregroundStyle(.orange)
                 }
+                purgeHistoryControls
                 if !store.permissionWarnings.isEmpty {
                     ForEach(store.permissionWarnings, id: \.self) { w in
                         Label(w, systemImage: "exclamationmark.triangle.fill")
@@ -113,5 +114,35 @@ struct AppSettingsView: View {
         .onChange(of: mcpLoginShell) { _, _ in store.reloadMcpCheckEnvironment() }
         .formStyle(.grouped)
         .padding(8)
+    }
+
+    /// Global purge next to the recording toggle. The dialog lives here (not
+    /// in ContentView) because the Settings scene is a separate window.
+    @ViewBuilder private var purgeHistoryControls: some View {
+        Button(L("Delete all history…"), role: .destructive) { store.requestHistoryPurge() }
+            .disabled(store.historyPurgeBlocked)
+            .accessibilityIdentifier("purge-history")
+            .confirmationDialog(L("Delete all local history?"), isPresented: Binding(
+                get: { store.pendingHistoryPurge != nil },
+                set: { if !$0 { store.cancelHistoryPurge() } }
+            ), titleVisibility: .visible, presenting: store.pendingHistoryPurge) { _ in
+                Button(L("Delete all history"), role: .destructive) { store.confirmHistoryPurge() }
+                Button(L("Cancel"), role: .cancel) { store.cancelHistoryPurge() }
+            } message: { request in
+                let s = request.summary
+                Text(L("Permanently deletes the history of %d file(s): %d version(s) and %d legacy backup(s), %@ on disk. Config files are not changed and the activity feed is cleared. If recording stays on, future changes create new versions. This cannot be undone.",
+                       s.histories, s.versions, s.legacyBackups,
+                       ByteCountFormatter.string(fromByteCount: s.bytes, countStyle: .file)))
+            }
+        if let error = store.historyPurgeError {
+            HStack {
+                Label(error, systemImage: "exclamationmark.triangle.fill")
+                    .font(.callout).foregroundStyle(.red)
+                Button(L("Retry")) { store.retryHistoryPurge() }
+                    .disabled(store.historyPurgeBlocked)
+            }
+        } else if let notice = store.historyPurgeNotice {
+            Text(notice).font(.callout).foregroundStyle(.secondary)
+        }
     }
 }

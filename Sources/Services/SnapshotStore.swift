@@ -33,6 +33,8 @@ struct SnapshotStore {
         case cannotLock(String)
         case changedDuringReview
         case incompleteRemoval(String)
+        case incompletePurge([String])
+        case unsafeHistoryRoot(String)
 
         var errorDescription: String? {
             switch self {
@@ -46,6 +48,10 @@ struct SnapshotStore {
                 return "History changed during review. Review the removal again."
             case .incompleteRemoval(let error):
                 return "History entries were updated, but content cleanup failed: \(error)"
+            case .incompletePurge(let paths):
+                return "\(paths.count) history item(s) could not be deleted."
+            case .unsafeHistoryRoot(let p):
+                return "The history folder is not a regular folder; nothing was deleted: \(p)"
             }
         }
     }
@@ -204,9 +210,12 @@ struct SnapshotStore {
             guard hasLegacyDir(for: path) else { return [] }
             try ensurePrivateTree(dir)
         }
-        let entries = try withIndexLock(dir) {
-            try migrateIfNeeded(for: path) ?? loadIndex(for: path)
-        }
+        let entries: [IndexEntry]
+        do {
+            entries = try withIndexLock(dir, recreate: false) {
+                try migrateIfNeeded(for: path) ?? loadIndex(for: path)
+            }
+        } catch is DirectoryVanished { return [] }
         let sorted = entries.enumerated().sorted { lhs, rhs in
             lhs.element.ts == rhs.element.ts
                 ? lhs.offset > rhs.offset
@@ -296,6 +305,143 @@ struct SnapshotStore {
         if let failure { throw HistoryError.incompleteRemoval(failure.localizedDescription) }
     }
 
+    // MARK: - global purge
+
+    /// What a global purge would delete, measured with `lstat` only:
+    /// symlinks are counted as entries, never followed or sized.
+    struct PurgeSummary: Equatable, Sendable {
+        /// Per-file history directories: format 2 plus unmigrated legacy.
+        var histories = 0
+        /// Legacy `*.migrated` backups kept after a migration.
+        var legacyBackups = 0
+        /// Index entries that could be read (corrupt indexes count 0).
+        var versions = 0
+        /// Total size of regular files.
+        var bytes: Int64 = 0
+        /// Anything else at the root (stray files, links).
+        var otherItems = 0
+        var isEmpty: Bool { histories == 0 && legacyBackups == 0 && otherItems == 0 }
+    }
+
+    private static func fileType(_ url: URL) -> mode_t? {
+        var info = stat()
+        return lstat(url.path, &info) == 0 ? info.st_mode & S_IFMT : nil
+    }
+
+    func purgeSummary() -> PurgeSummary {
+        var summary = PurgeSummary()
+        guard Self.fileType(root) == S_IFDIR,
+              let names = try? FileManager.default.contentsOfDirectory(atPath: root.path)
+        else { return summary }
+        for name in names {
+            let url = root.appendingPathComponent(name)
+            guard Self.fileType(url) == S_IFDIR else {
+                summary.otherItems += 1
+                summary.bytes += Self.regularBytes(url)
+                continue
+            }
+            summary.bytes += Self.regularBytes(url)
+            if name.hasSuffix(".migrated") {
+                summary.legacyBackups += 1
+            } else if isValidBlobName(name) {
+                summary.histories += 1
+                if let text = readRegularContent(indexURL(url)),
+                   let idx = try? JSONDecoder().decode(IndexFile.self, from: Data(text.utf8)) {
+                    summary.versions += idx.entries.count
+                }
+            } else {
+                summary.histories += 1
+                if let text = readRegularContent(url.appendingPathComponent("index.json")),
+                   let entries = try? JSONDecoder().decode([IndexEntry].self, from: Data(text.utf8)) {
+                    summary.versions += entries.count
+                }
+            }
+        }
+        return summary
+    }
+
+    /// Sum of regular-file sizes under `url`, without following symlinks.
+    private static func regularBytes(_ url: URL) -> Int64 {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { return 0 }
+        switch info.st_mode & S_IFMT {
+        case S_IFREG: return Int64(info.st_size)
+        case S_IFDIR:
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? []
+            return names.reduce(0) { $0 + regularBytes(url.appendingPathComponent($1)) }
+        default: return 0
+        }
+    }
+
+    /// Deletes everything under the history root, keeping the root itself.
+    /// Symlinks are unlinked, never followed, so their targets survive.
+    /// Format-2 directories are emptied under their `.index.lock` (like
+    /// `removeVersions`); the lock file and directory go last, still locked,
+    /// and `withIndexLock` waiters notice the unlinked inode. Legacy and
+    /// `.migrated` directories go first so a migration racing the purge
+    /// cannot repopulate an already purged format-2 directory. Every
+    /// failure is collected and reported; retrying removes what remains.
+    func purgeAll() throws {
+        switch Self.fileType(root) {
+        case nil: return
+        case S_IFDIR: break
+        default: throw HistoryError.unsafeHistoryRoot(root.path)
+        }
+        let names = try FileManager.default.contentsOfDirectory(atPath: root.path)
+        let hashed = Set(names.filter { isValidBlobName($0) && Self.fileType(root.appendingPathComponent($0)) == S_IFDIR })
+        var failures: [String] = []
+        for name in names where !hashed.contains(name) {
+            removeTree(root.appendingPathComponent(name), failures: &failures)
+        }
+        for name in hashed.sorted() {
+            purgeHistoryDir(root.appendingPathComponent(name, isDirectory: true), failures: &failures)
+        }
+        if !failures.isEmpty { throw HistoryError.incompletePurge(failures) }
+    }
+
+    private func purgeHistoryDir(_ dir: URL, failures: inout [String]) {
+        let lock = dir.appendingPathComponent(".index.lock")
+        do {
+            try withIndexLock(dir, recreate: false) {
+                var local: [String] = []
+                for name in try FileManager.default.contentsOfDirectory(atPath: dir.path) where name != ".index.lock" {
+                    removeTree(dir.appendingPathComponent(name), failures: &local)
+                }
+                // Keep the lock (and so the directory) if anything survived:
+                // a retry must still serialize against other writers.
+                if local.isEmpty {
+                    removeTree(lock, failures: &local)
+                    removeTree(dir, failures: &local)
+                }
+                failures += local
+            }
+        } catch is DirectoryVanished {
+            return
+        } catch {
+            // A lock that is not a regular file cannot serialize anyone
+            // (`withIndexLock` refuses it too): the directory is unusable.
+            if let type = Self.fileType(lock), type != S_IFREG {
+                removeTree(dir, failures: &failures)
+            } else {
+                failures.append(dir.path)
+            }
+        }
+    }
+
+    /// Depth-first removal that never descends through a symlink.
+    private func removeTree(_ url: URL, failures: inout [String]) {
+        guard let type = Self.fileType(url) else {
+            if errno != ENOENT { failures.append(url.path) }
+            return
+        }
+        if type == S_IFDIR, let names = try? FileManager.default.contentsOfDirectory(atPath: url.path) {
+            let before = failures.count
+            for name in names { removeTree(url.appendingPathComponent(name), failures: &failures) }
+            guard failures.count == before else { return }
+        }
+        do { try removeContentFile(url) } catch { failures.append(url.path) }
+    }
+
     /// Records a snapshot. Throws on any storage failure — a missing backup
     /// must be able to abort the caller's write (F2). Returns nil only when
     /// the content is identical to the newest snapshot.
@@ -344,15 +490,35 @@ struct SnapshotStore {
         }
     }
 
+    /// The history directory disappeared (global purge) while a reader
+    /// waited for its lock: there is nothing left to read.
+    private struct DirectoryVanished: Error {}
+
     /// Serialize index read-modify-write across processes via flock.
-    private func withIndexLock<T>(_ dir: URL, _ body: () throws -> T) throws -> T {
+    /// The lock file is never followed through a symlink. A global purge
+    /// unlinks the lock while holding it, so after acquiring, the held inode
+    /// must still be the one at the path; otherwise a waiter would hold a
+    /// stale lock next to a fresh one. Writers recreate the directory and
+    /// retry; readers (`recreate: false`) report it vanished.
+    private func withIndexLock<T>(_ dir: URL, recreate: Bool = true, _ body: () throws -> T) throws -> T {
         let lock = dir.appendingPathComponent(".index.lock")
-        let fd = open(lock.path, O_CREAT | O_RDWR, 0o600)
-        guard fd >= 0 else { throw HistoryError.cannotLock(lock.path) }
-        defer { close(fd) }
-        guard flock(fd, LOCK_EX) == 0 else { throw HistoryError.cannotLock(lock.path) }
-        defer { flock(fd, LOCK_UN) }
-        return try body()
+        for attempt in 0..<8 {
+            if attempt > 0, recreate { try ensurePrivateTree(dir) }
+            let fd = open(lock.path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, 0o600)
+            guard fd >= 0 else {
+                if errno == ENOENT, !recreate { throw DirectoryVanished() }
+                if errno == ENOENT, attempt == 0 { continue }
+                throw HistoryError.cannotLock(lock.path)
+            }
+            defer { close(fd) }
+            guard flock(fd, LOCK_EX) == 0 else { throw HistoryError.cannotLock(lock.path) }
+            defer { flock(fd, LOCK_UN) }
+            var held = stat(), current = stat()
+            guard fstat(fd, &held) == 0, lstat(lock.path, &current) == 0,
+                  held.st_dev == current.st_dev, held.st_ino == current.st_ino else { continue }
+            return try body()
+        }
+        throw HistoryError.cannotLock(lock.path)
     }
 
     private func loadIndex(for path: String) throws -> [IndexEntry] {

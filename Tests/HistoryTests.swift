@@ -383,6 +383,206 @@ struct HistoryTests {
         // legacy dir still there, untouched
         #expect(FileManager.default.fileExists(atPath: legacyDir.path))
     }
+
+    // MARK: - global purge (#16)
+
+    private func remaining(_ env: TestEnvironment) throws -> [String] {
+        try FileManager.default.contentsOfDirectory(atPath: env.historyRoot.path)
+    }
+
+    /// Format 2, unmigrated legacy and `.migrated` backups all go; the
+    /// summary measures them first and the History root itself survives.
+    @Test func purgeRemovesFormat2LegacyAndMigratedHistory() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let s = env.makeSnapshots()
+        let current = env.path("demo/current.json")
+        let legacyOnly = env.path("demo/legacy-only.json")
+        let migrated = env.path("demo/migrated.json")
+        _ = try s.record(path: current, content: "A", origin: .baseline, changes: [])
+        _ = try s.record(path: current, content: "B", origin: .app, changes: [])
+        _ = try installLegacy(env, path: legacyOnly)
+        _ = try installLegacy(env, path: migrated)
+        #expect(try s.loadHistory(for: migrated).count == 1)   // creates *.migrated
+        #expect(try remaining(env).contains { $0.hasSuffix(".migrated") })
+
+        let summary = s.purgeSummary()
+        #expect(summary.histories == 3)        // current + migrated (format 2) + legacy-only
+        #expect(summary.legacyBackups == 1)
+        #expect(summary.versions == 4)         // 2 + 1 + 1
+        #expect(summary.bytes > 0)
+
+        try s.purgeAll()
+        #expect(try remaining(env).isEmpty)
+        #expect(s.purgeSummary().isEmpty)
+        for p in [current, legacyOnly, migrated] { #expect(try s.loadHistory(for: p).isEmpty) }
+        // recording afterwards starts a fresh, valid history
+        _ = try s.record(path: current, content: "C", origin: .app, changes: [])
+        #expect(try s.loadHistory(for: current).map { s.content(for: current, version: $0) } == ["C"])
+    }
+
+    /// Links inside History are unlinked, never followed: their targets
+    /// outside the history directory keep their content.
+    @Test func purgeNeverFollowsSymlinksOutsideHistory() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let outsideDir = try env.write("outside/keep/secret.txt", "outside-dir").deletingLastPathComponent()
+        let outsideFile = try env.write("outside/blob.txt", "outside-file")
+        let s = env.makeSnapshots()
+        let p = env.path("demo/linked.json")
+        _ = try s.record(path: p, content: "A", origin: .baseline, changes: [])
+        let dir = env.historyRoot.appendingPathComponent(SnapshotStore.historyDirName(for: p))
+        let legacy = try installLegacy(env, path: env.path("demo/legacy-link.json"))
+        let fm = FileManager.default
+        try fm.createSymbolicLink(at: env.historyRoot.appendingPathComponent("root-link"), withDestinationURL: outsideDir)
+        try fm.createSymbolicLink(at: dir.appendingPathComponent("objects/dir-link"), withDestinationURL: outsideDir)
+        try fm.createSymbolicLink(at: dir.appendingPathComponent("objects/" + String(repeating: "a", count: 64)),
+                                  withDestinationURL: outsideFile)
+        try fm.createSymbolicLink(at: legacy.appendingPathComponent("1700000001-link.txt"), withDestinationURL: outsideFile)
+
+        try s.purgeAll()
+        #expect(try remaining(env).isEmpty)
+        #expect(try env.read("outside/keep/secret.txt") == "outside-dir")
+        #expect(try env.read("outside/blob.txt") == "outside-file")
+    }
+
+    /// A symlinked History root is refused as a whole: nothing at its
+    /// destination is deleted.
+    @Test func purgeRefusesSymlinkedHistoryRoot() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let target = try env.write("elsewhere/History/keep.txt", "kept").deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: env.historyRoot.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: env.historyRoot, withDestinationURL: target)
+        let s = env.makeSnapshots()
+        #expect(throws: SnapshotStore.HistoryError.self) { try s.purgeAll() }
+        #expect(try env.read("elsewhere/History/keep.txt") == "kept")
+    }
+
+    /// Failures are collected, the locked directory keeps its lock, and a
+    /// retry removes what is left.
+    @Test func failedPurgeIsReportedAndRetriable() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        var s = env.makeSnapshots()
+        let p = env.path("demo/stubborn.json")
+        let other = env.path("demo/other.json")
+        _ = try s.record(path: p, content: "A", origin: .baseline, changes: [])
+        _ = try s.record(path: other, content: "B", origin: .baseline, changes: [])
+        let dir = env.historyRoot.appendingPathComponent(SnapshotStore.historyDirName(for: p))
+        let index = dir.appendingPathComponent("index.json")
+        s.removeContentFile = { url in
+            if url.path == index.path { throw CocoaError(.fileWriteNoPermission) }
+            try FileManager.default.removeItem(at: url)
+        }
+        do {
+            try s.purgeAll()
+            Issue.record("purge should report the failure")
+        } catch SnapshotStore.HistoryError.incompletePurge(let paths) {
+            #expect(paths == [index.path])
+        }
+        #expect(try remaining(env) == [SnapshotStore.historyDirName(for: p)])
+        #expect(try FileManager.default.contentsOfDirectory(atPath: dir.path).sorted() == [".index.lock", "index.json"])
+        #expect(try s.loadHistory(for: other).isEmpty)
+
+        s.removeContentFile = { try FileManager.default.removeItem(at: $0) }
+        try s.purgeAll()
+        #expect(try remaining(env).isEmpty)
+    }
+
+    /// The purge waits for `.index.lock` like `removeVersions` does, and a
+    /// writer that was queued on the unlinked lock re-locks the live one.
+    @Test func purgeRespectsIndexLock() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        let root = env.historyRoot
+        let p = env.path("demo/locked.json")
+        _ = try env.makeSnapshots().record(path: p, content: "A", origin: .baseline, changes: [])
+        let dir = root.appendingPathComponent(SnapshotStore.historyDirName(for: p))
+        let fd = open(dir.appendingPathComponent(".index.lock").path, O_RDWR)
+        try #require(fd >= 0)
+        defer { close(fd) }
+        try #require(flock(fd, LOCK_EX) == 0)
+
+        let purged = DispatchSemaphore(value: 0)
+        let recorded = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            do { try SnapshotStore(root: root, isPathTracked: { _ in false }).purgeAll() }
+            catch { Issue.record(error) }
+            purged.signal()
+        }
+        DispatchQueue.global().async {
+            do {
+                _ = try SnapshotStore(root: root, historyLimit: { 20 }, isPathTracked: { _ in false })
+                    .record(path: p, content: "after", origin: .app, changes: [])
+            } catch { Issue.record(error) }
+            recorded.signal()
+        }
+        // While the lock is held neither may touch the index.
+        #expect(purged.wait(timeout: .now() + 0.3) == .timedOut)
+        #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("index.json").path))
+        flock(fd, LOCK_UN)
+        #expect(purged.wait(timeout: .now() + 5) == .success)
+        #expect(recorded.wait(timeout: .now() + 5) == .success)
+
+        // Either order leaves one consistent history: empty (purge last) or
+        // just the new version under a live, regular lock file (record last).
+        let s = env.makeSnapshots()
+        let contents = try s.loadHistory(for: p).map { s.content(for: p, version: $0) }
+        #expect(contents == [] || contents == ["after"])
+        if !contents.isEmpty {
+            let attrs = try FileManager.default.attributesOfItem(atPath: dir.appendingPathComponent(".index.lock").path)
+            #expect(attrs[.type] as? FileAttributeType == .typeRegular)
+        }
+    }
+
+    /// The store's purge clears published histories, errors and activity,
+    /// and leaves `historyEnabled` as it was; disabling it alone never purges.
+    @Test func storePurgeKeepsStateCoherent() throws {
+        let env = try TestEnvironment()
+        defer { env.teardown() }
+        try env.installClaude()
+        try env.installCodex()
+        let store = env.makeStore()
+        let claude = env.path(".claude/settings.json")
+        let codex = env.path(".codex/config.toml")
+        #expect(!store.history(for: claude).isEmpty)
+        #expect(!store.history(for: codex).isEmpty)
+        let index = env.historyRoot.appendingPathComponent(SnapshotStore.historyDirName(for: codex))
+            .appendingPathComponent("index.json")
+        try "{corrupt".write(to: index, atomically: true, encoding: .utf8)
+        store.refreshHistory(path: codex)
+        #expect(store.historyErrors[codex] != nil)
+
+        AppSettings.defaults.set(false, forKey: "historyEnabled")
+        store.refresh()
+        #expect(!store.history(for: claude).isEmpty)   // disabling does not purge
+        #expect(!(try remaining(env)).isEmpty)
+
+        store.requestHistoryPurge()
+        let request = try #require(store.pendingHistoryPurge)
+        #expect(request.summary.histories >= 2)
+        store.cancelHistoryPurge()
+        #expect(!store.history(for: claude).isEmpty)   // cancel deletes nothing
+
+        store.requestHistoryPurge()
+        store.confirmHistoryPurge()
+        #expect(store.pendingHistoryPurge == nil)
+        #expect(store.historyPurgeError == nil)
+        #expect(store.historyPurgeNotice != nil)
+        #expect(store.historyErrors.isEmpty)
+        #expect(store.activity.isEmpty)
+        #expect(store.history(for: claude).isEmpty)
+        #expect(store.history(for: codex).isEmpty)
+        #expect(store.historyErrors.isEmpty)
+        #expect(try remaining(env).isEmpty)
+        #expect(AppSettings.historyEnabled == false)
+
+        store.requestHistoryPurge()   // nothing left: notice, no dialog
+        #expect(store.pendingHistoryPurge == nil)
+        #expect(store.historyPurgeNotice != nil)
+    }
 }
 
 }
