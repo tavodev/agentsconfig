@@ -49,7 +49,11 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   with links to the official documentation — the same explanations apply
   whether the file is global or a per-project copy.
 - **Rendered Markdown preview** for instruction files (CLAUDE.md, AGENTS.md…):
-  real headings, lists, code blocks and quotes, not raw source.
+  real headings, lists, code blocks and quotes, not raw source. Lists follow
+  CommonMark: a plain-text line right after an item, with no blank line in
+  between, continues that item; a blank line starts a new paragraph. GFM
+  table cells beyond the header's columns stay visible as extra columns with
+  an empty header (GFM itself drops them).
 - **Native per-destination navigation**: three columns for files and
   Activity, two full-width columns for Settings and the MCP comparator.
   The inspector adapts to available width — a side panel or a compact
@@ -204,9 +208,7 @@ only when that destination is absent; older code does not automatically find
 the renamed directory. Ambiguous or corrupt history stays visible as an error.
 
 Known issues are tracked in [GitHub Issues](https://github.com/tavodev/agentsconfig/issues).
-The Markdown parser can join the first paragraph after a list to its last item
-([#8](https://github.com/tavodev/agentsconfig/issues/8)) and discard surplus table
-cells ([#9](https://github.com/tavodev/agentsconfig/issues/9)). Hook diagnostics can
+Hook diagnostics can
 mistake a URL path for an external local script
 ([#26](https://github.com/tavodev/agentsconfig/issues/26)).
 

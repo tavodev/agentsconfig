@@ -101,6 +101,152 @@ struct MarkdownPreviewTests {
         #expect(table.rows[1].map { String($0.characters) } == ["2", "3", "4"])
     }
 
+    // MARK: - Lists followed by paragraphs (#8)
+
+    private func texts(_ blocks: [MarkdownBlock]) -> [String] {
+        blocks.map { String($0.content.characters) }
+    }
+
+    @Test func paragraphAfterBlankLineLeavesTheList() {
+        let blocks = MarkdownBlock.parse("- one\n- two\n\nAfter the list.\n\nSecond paragraph.")
+        #expect(texts(blocks) == ["one", "two", "After the list.", "Second paragraph."])
+        #expect(blocks.map(\.listDepth) == [1, 1, 0, 0])
+        let ordered = MarkdownBlock.parse("1. one\n2. two\n\nAfter")
+        #expect(texts(ordered) == ["one", "two", "After"])
+        #expect(ordered.map(\.listDepth) == [1, 1, 0])
+        let crlf = MarkdownBlock.parse("- one\r\n- two\r\n\r\nAfter")
+        #expect(texts(crlf) == ["one", "two", "After"])
+        #expect(crlf.map(\.listDepth) == [1, 1, 0])
+    }
+
+    /// CommonMark lazy continuation: an unindented line right after an item
+    /// (no blank line) continues that item's paragraph. This is standard
+    /// behavior (GitHub renders it the same way), not issue #8.
+    @Test func lazyContinuationLineStaysInLastItem() {
+        let blocks = MarkdownBlock.parse("- one\n- two\nlazy line\n\nAfter")
+        #expect(texts(blocks) == ["one", "two lazy line", "After"])
+        #expect(blocks.map(\.listDepth) == [1, 1, 0])
+        #expect(blocks.map(\.showsListMarker) == [true, true, true])
+        let nested = MarkdownBlock.parse("- outer\n  - inner\nlazy")
+        #expect(texts(nested) == ["outer", "inner lazy"])
+        #expect(nested.map(\.listDepth) == [1, 2])
+    }
+
+    @Test func paragraphIndentedLessThanItemContentLeavesTheList() {
+        // "1. " puts item content at column 3: two spaces are not enough.
+        let blocks = MarkdownBlock.parse("1. one\n\n  After")
+        #expect(texts(blocks) == ["one", "After"])
+        #expect(blocks.map(\.listDepth) == [1, 0])
+        // At the content column it is a continuation paragraph instead.
+        let inside = MarkdownBlock.parse("1. one\n\n   Inside")
+        #expect(inside.map(\.listDepth) == [1, 1])
+        #expect(inside.map(\.showsListMarker) == [true, false])
+    }
+
+    @Test func paragraphAfterNestedListsLeavesEveryLevel() {
+        let blocks = MarkdownBlock.parse("- a\n  - b\n    1. c\n\nAfter")
+        #expect(texts(blocks) == ["a", "b", "c", "After"])
+        #expect(blocks.map(\.listDepth) == [1, 2, 3, 0])
+        let quoted = MarkdownBlock.parse("> - a\n>\n> After")
+        #expect(texts(quoted) == ["a", "After"])
+        #expect(quoted.map(\.listDepth) == [1, 0])
+        #expect(quoted.map(\.quoteDepth) == [1, 1])
+    }
+
+    @Test func fencedCodeWithListAndTableLookalikesStaysVerbatim() throws {
+        let code = "- item\nnot a lazy line\n| A | B |\n|---|---|\n| 1 | 2 | 3 |\n"
+        let source = "- real item\n\n```text\n" + code + "```\n\nAfter"
+        #expect(MarkdownTableWidening.widen(source) == nil)
+        let blocks = MarkdownBlock.parse(source)
+        #expect(blocks.count == 3)
+        #expect(blocks[0].listDepth == 1)
+        let block = try #require(blocks.first { $0.isCodeBlock })
+        #expect(String(block.content.characters) == code)
+        #expect(block.listDepth == 0)
+        #expect(!blocks.contains { $0.table != nil })
+        #expect(blocks.last.map { String($0.content.characters) } == "After")
+    }
+
+    // MARK: - Table cells beyond the header (#9)
+
+    @Test func surplusCellsBecomeColumnsWithEmptyHeader() throws {
+        let blocks = MarkdownBlock.parse("""
+        | A | B |
+        |---|---|
+        | 1 | 2 | 3 | 4 |
+        | 5 | 6 |
+        """)
+        #expect(blocks.count == 1)
+        let table = try #require(blocks.first?.table)
+        #expect(table.columns.count == 4)
+        #expect(table.header.map { String($0.characters) } == ["A", "B", "", ""])
+        #expect(table.rows.map { $0.map { String($0.characters) } }
+            == [["1", "2", "3", "4"], ["5", "6", "", ""]])
+    }
+
+    @Test func surplusAndMissingCellsInTheSameTable() throws {
+        let blocks = MarkdownBlock.parse("""
+        | A | B | C |
+        |:--|:-:|--:|
+        | 1 |
+        | 2 | 3 | 4 | 5 |
+        """)
+        let table = try #require(blocks.first?.table)
+        #expect(table.header.map { String($0.characters) } == ["A", "B", "C", ""])
+        #expect(table.rows.map { $0.map { String($0.characters) } }
+            == [["1", "", "", ""], ["2", "3", "4", "5"]])
+        // Declared alignments survive; the added column uses the default.
+        #expect(table.columns.prefix(3).map { String(describing: $0.alignment) }
+            == ["left", "center", "right"])
+    }
+
+    @Test func surplusCellsWithoutBorderPipesAndWithCRLF() throws {
+        let blocks = MarkdownBlock.parse("A | B\r\n--- | ---\r\n1 | 2 | 3\r\n\r\nAfter\r\n")
+        let table = try #require(blocks.first?.table)
+        #expect(table.header.map { String($0.characters) } == ["A", "B", ""])
+        #expect(table.rows.map { $0.map { String($0.characters) } } == [["1", "2", "3"]])
+        #expect(blocks.last.map { String($0.content.characters) } == "After")
+    }
+
+    @Test func escapedPipeIsNotACellBoundary() throws {
+        let blocks = MarkdownBlock.parse("""
+        | A | B |
+        |---|---|
+        | a \\| b | c | d |
+        """)
+        let table = try #require(blocks.first?.table)
+        #expect(table.rows.map { $0.map { String($0.characters) } } == [["a | b", "c", "d"]])
+        #expect(table.header.count == 3)
+    }
+
+    @Test func surplusCellsInQuotedAndListedTables() throws {
+        let quoted = MarkdownBlock.parse("> | A |\n> |---|\n> | 1 | 2 |")
+        let quotedTable = try #require(quoted.first?.table)
+        #expect(quotedTable.rows.map { $0.map { String($0.characters) } } == [["1", "2"]])
+        let listed = MarkdownBlock.parse("- item\n\n  | A |\n  |---|\n  | 1 | 2 |")
+        let listedTable = try #require(listed.compactMap(\.table).first)
+        #expect(listedTable.header.map { String($0.characters) } == ["A", ""])
+        #expect(listedTable.rows.map { $0.map { String($0.characters) } } == [["1", "2"]])
+    }
+
+    @Test func indentedCodeLookingLikeATableIsNeverRewritten() throws {
+        let source = "Intro\n\n    | A |\n    |---|\n    | 1 | 2 |\n"
+        // The line scanner proposes a rewrite, but the parse check rejects
+        // it because the code block text would change.
+        #expect(MarkdownTableWidening.widen(source) != nil)
+        let blocks = MarkdownBlock.parse(source)
+        let code = try #require(blocks.first { $0.isCodeBlock })
+        #expect(String(code.content.characters) == "| A |\n|---|\n| 1 | 2 |\n")
+        #expect(!blocks.contains { $0.table != nil })
+    }
+
+    @Test func wideningOnlyTouchesHeaderAndDelimiterRows() throws {
+        let source = "| A | B |\n|---|---|\n| 1 | 2 | 3 |\n\nText | with | pipes\n"
+        let widened = try #require(MarkdownTableWidening.widen(source))
+        #expect(widened == "| A | B | |\n|---|---| --- |\n| 1 | 2 | 3 |\n\nText | with | pipes\n")
+        #expect(MarkdownTableWidening.widen("| A | B |\n|---|---|\n| 1 | 2 |\n| 3 |") == nil)
+    }
+
     // MARK: - Second delivery: task lists
 
     @Test func taskItemsExposeStateAndStripMarker() {

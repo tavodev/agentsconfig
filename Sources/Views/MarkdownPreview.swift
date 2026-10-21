@@ -70,7 +70,8 @@ struct MarkdownPreview: View {
 }
 
 /// A GFM table: header + body rows of inline-styled cells, plus the declared
-/// column alignments. Cells missing from a row come back empty.
+/// column alignments. Cells missing from a row come back empty; body cells
+/// beyond the declared columns add columns whose header cell is empty.
 struct MarkdownTable {
     var columns: [PresentationIntent.TableColumn]
     var header: [AttributedString]
@@ -166,11 +167,7 @@ struct MarkdownBlock: Identifiable {
     /// stray rule + heading), and table cell blocks merge afterwards.
     static func parse(_ text: String) -> [MarkdownBlock] {
         let (metadata, body) = splitFrontmatter(text)
-        guard let attributed = try? AttributedString(markdown: body, options: .init(
-            allowsExtendedAttributes: true,
-            interpretedSyntax: .full,
-            failurePolicy: .returnPartiallyParsedIfPossible
-        )) else {
+        guard let attributed = parseKeepingSurplusTableCells(body) else {
             var blocks: [MarkdownBlock] = []
             if let metadata {
                 blocks.append(MarkdownBlock(id: 0, kinds: [], frontmatter: metadata,
@@ -222,6 +219,53 @@ struct MarkdownBlock: Identifiable {
         return merged
     }
 
+    private static func parseAttributed(_ markdown: String) -> AttributedString? {
+        try? AttributedString(markdown: markdown, options: .init(
+            allowsExtendedAttributes: true,
+            interpretedSyntax: .full,
+            failurePolicy: .returnPartiallyParsedIfPossible
+        ))
+    }
+
+    /// GFM ignores body cells beyond the header's column count, and so does
+    /// the intent parser. To keep that content visible, tables with surplus
+    /// cells are widened (`MarkdownTableWidening`) with empty header cells
+    /// before parsing. The widened parse is only used when every non-table
+    /// run (text + intent kinds) and the table count match the original
+    /// parse, so code blocks, lists and paragraphs can never change.
+    private static func parseKeepingSurplusTableCells(_ body: String) -> AttributedString? {
+        guard let original = parseAttributed(body) else { return nil }
+        guard let widenedSource = MarkdownTableWidening.widen(body),
+              let widened = parseAttributed(widenedSource),
+              structureOutsideTables(widened) == structureOutsideTables(original)
+        else { return original }
+        return widened
+    }
+
+    private struct OutsideTables: Equatable {
+        var runs: [String] = []
+        var kinds: [[PresentationIntent.Kind]] = []
+        var tableCount = 0
+    }
+
+    private static func structureOutsideTables(_ attributed: AttributedString) -> OutsideTables {
+        var result = OutsideTables()
+        var tables = Set<Int>()
+        for run in attributed.runs {
+            let components = run.presentationIntent?.components ?? []
+            if let table = components.first(where: {
+                if case .table = $0.kind { return true }; return false
+            }) {
+                tables.insert(table.identity)
+                continue
+            }
+            result.runs.append(String(attributed[run.range].characters))
+            result.kinds.append(components.map(\.kind))
+        }
+        result.tableCount = tables.count
+        return result
+    }
+
     /// YAML frontmatter only counts at the very top of the document: first
     /// line `---`, closed by a later `---`/`...` line (same delimiters as
     /// `Frontmatter.parse`). Anything else stays in the body untouched.
@@ -268,8 +312,8 @@ struct MarkdownBlock: Identifiable {
     /// The intent parser emits one block per table cell; merge the run of
     /// blocks sharing a `.table` component identity into a single block
     /// carrying rows/columns/alignments. Sparse rows and missing cells are
-    /// padded empty; cells beyond the column count are already dropped by
-    /// the parser.
+    /// padded empty; surplus cells arrive as extra columns with an empty
+    /// header (see `parseKeepingSurplusTableCells`).
     private static func mergeTables(_ blocks: [MarkdownBlock]) -> [MarkdownBlock] {
         var merged: [MarkdownBlock] = []
         var index = 0
@@ -307,6 +351,155 @@ struct MarkdownBlock: Identifiable {
                 content: AttributedString()))
         }
         return merged
+    }
+}
+
+/// Source rewrite that keeps GFM body cells beyond the header's column
+/// count: the header and delimiter rows of such a table get as many empty,
+/// default-aligned columns as its widest body row needs. Nothing else in
+/// the text changes, and no cell text is invented. Line based and
+/// deliberately conservative: header, delimiter and body rows must share
+/// the same container prefix (indentation and `>` markers), lines inside
+/// fenced code are skipped, and a body ends at a blank line or at a line
+/// that starts another block. The caller still verifies the result.
+enum MarkdownTableWidening {
+    /// The widened text, or nil when no table has surplus cells.
+    static func widen(_ text: String) -> String? {
+        // Not `split(separator:)`: "\r\n" is a single Character and would
+        // never match "\n". Splitting UTF-16 keeps the "\r" on each line.
+        var lines = text.components(separatedBy: "\n")
+        var fence: (marker: Character, length: Int)?
+        var changed = false
+        var index = 0
+        while index < lines.count {
+            let (prefix, rest) = split(lines[index])
+            if let open = fence {
+                if closesFence(rest, open) { fence = nil }
+                index += 1; continue
+            }
+            if let open = opensFence(rest) {
+                fence = open
+                index += 1; continue
+            }
+            guard index + 1 < lines.count else { break }
+            let header = scan(rest)
+            let (delimiterPrefix, delimiter) = split(lines[index + 1])
+            guard header.pipes > 0, delimiterPrefix == prefix,
+                  let delimiterCells = delimiterCellCount(delimiter),
+                  delimiterCells == header.cells
+            else { index += 1; continue }
+            var widest = header.cells
+            var end = index + 2
+            while end < lines.count {
+                let (rowPrefix, row) = split(lines[end])
+                guard rowPrefix == prefix, !startsOtherBlock(row) else { break }
+                widest = max(widest, scan(row).cells)
+                end += 1
+            }
+            if widest > header.cells {
+                lines[index] = appending(cells: widest - header.cells, cell: " ", to: lines[index])
+                lines[index + 1] = appending(cells: widest - header.cells, cell: " --- ", to: lines[index + 1])
+                changed = true
+            }
+            index = end
+        }
+        return changed ? lines.joined(separator: "\n") : nil
+    }
+
+    /// Container prefix (spaces, tabs and `>` markers) and the rest of the
+    /// line without a trailing CR.
+    private static func split(_ line: String) -> (prefix: Substring, rest: Substring) {
+        var content = Substring(line)
+        if content.last == "\r" { content = content.dropLast() }
+        let start = content.firstIndex { $0 != " " && $0 != "\t" && $0 != ">" } ?? content.endIndex
+        return (content[..<start], content[start...])
+    }
+
+    /// Cells as GFM counts them: unescaped pipes split cells (also inside
+    /// code spans); a leading and a trailing pipe are borders.
+    private static func scan(_ row: Substring) -> (cells: Int, pipes: Int, trailingPipe: Bool) {
+        let text = row.trimmingCharacters(in: .whitespaces)
+        var pipes = 0
+        var escaped = false
+        var lastIsPipe = false
+        for character in text {
+            if escaped { escaped = false; lastIsPipe = false; continue }
+            if character == "\\" { escaped = true; lastIsPipe = false; continue }
+            lastIsPipe = character == "|"
+            if lastIsPipe { pipes += 1 }
+        }
+        let leading = text.first == "|"
+        var cells = pipes + 1
+        if leading { cells -= 1 }
+        if lastIsPipe && (pipes > 1 || !leading) { cells -= 1 }
+        return (max(cells, 1), pipes, lastIsPipe)
+    }
+
+    /// Cell count of a delimiter row (`| --- | :-: |`), nil for any other line.
+    private static func delimiterCellCount(_ row: Substring) -> Int? {
+        let text = row.trimmingCharacters(in: .whitespaces)
+        guard text.contains("|") else { return nil }
+        var parts = text.split(separator: "|", omittingEmptySubsequences: false)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+        if text.hasPrefix("|") { parts.removeFirst() }
+        if text.hasSuffix("|"), !parts.isEmpty { parts.removeLast() }
+        let valid = !parts.isEmpty && parts.allSatisfy { part in
+            var core = Substring(part)
+            if core.first == ":" { core = core.dropFirst() }
+            if core.last == ":" { core = core.dropLast() }
+            return !core.isEmpty && core.allSatisfy { $0 == "-" }
+        }
+        return valid ? parts.count : nil
+    }
+
+    private static func opensFence(_ rest: Substring) -> (marker: Character, length: Int)? {
+        guard let marker = rest.first, marker == "`" || marker == "~" else { return nil }
+        let length = rest.prefix { $0 == marker }.count
+        guard length >= 3 else { return nil }
+        if marker == "`", rest.dropFirst(length).contains("`") { return nil }
+        return (marker, length)
+    }
+
+    private static func closesFence(_ rest: Substring, _ open: (marker: Character, length: Int)) -> Bool {
+        let length = rest.prefix { $0 == open.marker }.count
+        return length >= open.length
+            && rest.dropFirst(length).allSatisfy { $0 == " " || $0 == "\t" }
+    }
+
+    /// Lines that end a table body instead of becoming a row: blank lines,
+    /// ATX headings, fences, list items and thematic breaks.
+    private static func startsOtherBlock(_ row: Substring) -> Bool {
+        let text = row.trimmingCharacters(in: .whitespaces)
+        guard let first = text.first else { return true }
+        if first == "#" {
+            let hashes = text.prefix { $0 == "#" }
+            return hashes.count <= 6 && (text.count == hashes.count || text.dropFirst(hashes.count).first == " ")
+        }
+        if opensFence(Substring(text)) != nil { return true }
+        if "-+*".contains(first), text.count == 1 || text.dropFirst().first == " " { return true }
+        let digits = text.prefix { $0.isASCII && $0.isNumber }
+        if (1...9).contains(digits.count) {
+            let after = text.dropFirst(digits.count)
+            if let marker = after.first, marker == "." || marker == ")",
+               after.count == 1 || after.dropFirst().first == " " { return true }
+        }
+        let compact = text.filter { $0 != " " && $0 != "\t" }
+        if compact.count >= 3, let mark = compact.first, "-*_".contains(mark),
+           compact.allSatisfy({ $0 == mark }) { return true }
+        return false
+    }
+
+    /// Appends `count` cells to a header or delimiter row, keeping its
+    /// trailing CR and closing it with a border pipe.
+    private static func appending(cells count: Int, cell: String, to line: String) -> String {
+        var content = Substring(line)
+        let carriageReturn = content.last == "\r"
+        if carriageReturn { content = content.dropLast() }
+        var widened = String(content)
+        while widened.last == " " || widened.last == "\t" { widened.removeLast() }
+        if !scan(Substring(widened)).trailingPipe { widened += " |" }
+        widened += String(repeating: cell + "|", count: count)
+        return widened + (carriageReturn ? "\r" : "")
     }
 }
 
