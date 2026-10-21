@@ -244,11 +244,33 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   `maskText` (JSON/TOML/shell) y `maskLine` (diffs por líneas).
 - `Sources/Services/AppSettings.swift` — preferencias (UserDefaults) usadas
   por watcher/snapshots/notifier; `AppSettings.defaults` es el seam de tests.
+- `Sources/Services/AppUpdates.swift` — actualización automática con Sparkle 2
+  (issue #7). `UpdaterPolicy.shouldStart` (pura, con tests) solo acepta el
+  bundle id de Release `com.tavodev.agentsconfig`, sin `AGENTSCONFIG_HOME`,
+  `AGENTSCONFIG_DEFAULTS_SUITE` ni variables de XCTest (cada una basta para
+  bloquear) y con `SUFeedURL` https + `SUPublicEDKey`. `AppUpdater`
+  (`@Observable`) expone toggles y «Buscar actualizaciones…» sobre el protocolo
+  `UpdaterBackend`; la única implementación con `import Sparkle`
+  (`SparkleUpdaterBackend`, que crea el `SPUStandardUpdaterController`) vive en
+  `AgentsConfigApp.swift`, así que el target de tests no enlaza Sparkle. El host
+  de UI lo enlaza (compila ese archivo) pero nunca lo arranca. Sin updater,
+  `AppSettingsView` (Ajustes → Actualizaciones) lo explica y el menú no muestra
+  el ítem. Configuración en `project.yml` → `Info.plist` (`SUFeedURL` =
+  `releases/latest/download/appcast.xml`, clave pública EdDSA, chequeo diario,
+  descarga e instalación automáticas, `SUVerifyUpdateBeforeExtraction`,
+  `SURequireSignedFeed`). Appcast: `scripts/make-appcast.py` y
+  `docs/RELEASING.md`.
 
 ## Convenciones
 
 - Debug usa bundle id `com.tavodev.agentsconfig.debug`; Release usa
   `com.tavodev.agentsconfig`. No deben compartir permisos TCC ni UserDefaults.
+- Red: la app no hace peticiones salvo Sparkle (appcast diario en GitHub
+  Releases y descarga de la actualización), solo en el build distribuido y
+  desactivable en Ajustes. No añadir otras peticiones sin actualizar la sección
+  de privacidad del README y `SECURITY.md`. Sparkle está fijado con
+  `exactVersion`; subirlo es una decisión revisada. La clave privada EdDSA vive
+  solo en el llavero del propietario: nunca en el repo, en archivos ni en logs.
 
 - Toda resolución de `~` y de Application Support pasa por
   `AppPaths` (Models.swift); `AGENTSCONFIG_HOME` los redirige.

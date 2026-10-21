@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Sparkle
 
 @main
 struct AgentsConfigApp: App {
@@ -25,6 +26,15 @@ struct AgentsConfigApp: App {
         limit.rlim_cur = target
         _ = setrlimit(RLIMIT_NOFILE, &limit)
     }
+    /// nil whenever `UpdaterPolicy` refuses (Debug, UI host, demos, isolated
+    /// runs): the Sparkle controller is then never created, so nothing checks
+    /// the appcast or touches the installed app.
+    @State private var updater: AppUpdater? = makeUpdater()
+
+    private static func makeUpdater() -> AppUpdater? {
+        guard UpdaterPolicy.currentProcess else { return nil }
+        return AppUpdater(backend: SparkleUpdaterBackend())
+    }
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @AppStorage("menuBarExtra", store: AppSettings.defaults) private var menuBarExtra = true
     @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
@@ -33,6 +43,7 @@ struct AgentsConfigApp: App {
         WindowGroup {
             ContentView()
                 .environment(store)
+                .environment(updater)
                 .frame(minWidth: 900, minHeight: 640)
                 .environment(\.previewReducedTransparency, AppSettings.isIsolatedRun && ProcessInfo.processInfo.environment["AGENTSCONFIG_DEMO_REDUCE_TRANSPARENCY"] == "1")
                 .onAppear {
@@ -45,6 +56,11 @@ struct AgentsConfigApp: App {
         .windowToolbarStyle(.unified)
         .defaultSize(width: 1280, height: 800)
         .commands {
+            CommandGroup(after: .appInfo) {
+                if let updater {
+                    CheckForUpdatesButton(updater: updater)
+                }
+            }
             CommandGroup(replacing: .saveItem) {
                 Button(L("Review and save…")) { store.saveSelected() }
                     .keyboardShortcut("s", modifiers: .command)
@@ -83,6 +99,7 @@ struct AgentsConfigApp: App {
             AppSettingsView()
                 .frame(width: 620, height: 620)
                 .environment(store)
+                .environment(updater)
         }
     }
 
@@ -130,4 +147,56 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return alert.runModal() == .alertFirstButtonReturn
             ? .terminateNow : .terminateCancel
     }
+}
+
+/// App menu item; disabled while Sparkle is already checking or installing.
+private struct CheckForUpdatesButton: View {
+    let updater: AppUpdater
+
+    var body: some View {
+        Button(L("Check for Updates…")) { updater.checkForUpdates() }
+            .disabled(!updater.canCheckForUpdates)
+    }
+}
+
+/// The only Sparkle-aware code. Created solely when `UpdaterPolicy` allows it
+/// (distributed Release build, normal launch); `SPUStandardUpdaterController`
+/// then schedules the daily appcast check and, with automatic downloads on,
+/// installs signed updates on quit.
+@MainActor
+final class SparkleUpdaterBackend: NSObject, UpdaterBackend {
+    private let controller: SPUStandardUpdaterController
+    private var observations: [NSKeyValueObservation] = []
+    var onStateChange: (() -> Void)?
+
+    override init() {
+        controller = SPUStandardUpdaterController(
+            startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        super.init()
+        let updater = controller.updater
+        let notify: @Sendable () -> Void = { [weak self] in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.onStateChange?() } }
+        }
+        observations = [
+            updater.observe(\.canCheckForUpdates, options: [.new]) { _, _ in notify() },
+            updater.observe(\.lastUpdateCheckDate, options: [.new]) { _, _ in notify() },
+            updater.observe(\.automaticallyChecksForUpdates, options: [.new]) { _, _ in notify() },
+            updater.observe(\.automaticallyDownloadsUpdates, options: [.new]) { _, _ in notify() },
+        ]
+    }
+
+    var automaticallyChecksForUpdates: Bool {
+        get { controller.updater.automaticallyChecksForUpdates }
+        set { controller.updater.automaticallyChecksForUpdates = newValue }
+    }
+
+    var automaticallyDownloadsUpdates: Bool {
+        get { controller.updater.automaticallyDownloadsUpdates }
+        set { controller.updater.automaticallyDownloadsUpdates = newValue }
+    }
+
+    var canCheckForUpdates: Bool { controller.updater.canCheckForUpdates }
+    var lastUpdateCheckDate: Date? { controller.updater.lastUpdateCheckDate }
+
+    func checkForUpdates() { controller.checkForUpdates(nil) }
 }

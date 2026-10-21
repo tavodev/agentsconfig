@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Automatic updates with Sparkle 2.10.0: the distributed build checks a signed appcast on GitHub Releases once a day and downloads and installs EdDSA-signed updates on its own. **AgentsConfig → Check for Updates…** checks on demand and Settings → Updates can turn off automatic checks or automatic installation. This is the app's only network traffic; Debug builds, the UI test host and isolated/demo runs never start the updater. Users of 0.1.0 must install the first release with Sparkle by hand.
 - Settings → Privacy can delete all local history (current, legacy and `.migrated` backups) after a confirmation that states what will be removed; symlinks are unlinked, never followed. Turning history off still keeps existing versions.
 - Claude Code instruction analysis models the `AGENTS.md` / `.claude/AGENTS.md` fallback when no CLAUDE file exists from the project root to the working folder, the "Project instructions" setting (user/managed scope only) and its version gates, and stops `@` imports at four hops.
 - Cursor and Copilot CLI skills in their home folders are grouped as personal, and those inside a project as project, instead of system.

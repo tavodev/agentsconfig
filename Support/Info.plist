@@ -34,5 +34,19 @@
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/tavodev/agentsconfig/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>v1274eekvza9EK0zoPPr6JpBvHi7AFvRcyueVxlcnA4=</string>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
 </dict>
 </plist>

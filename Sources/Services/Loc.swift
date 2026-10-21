@@ -198,6 +198,15 @@ final class Loc {
         "File exceeds the 16 MB limit.": "El archivo supera el límite de 16 MB.",
         "History changed during review. Review the removal again.": "El historial cambió durante la revisión. Revisa la eliminación de nuevo.",
 
+        // Automatic updates (Sparkle; app menu and Settings → Updates)
+        "Updates": "Actualizaciones",
+        "Check for Updates…": "Buscar actualizaciones…",
+        "Check for updates automatically": "Buscar actualizaciones automáticamente",
+        "Download and install updates automatically": "Descargar e instalar automáticamente",
+        "Last checked: %@": "Última comprobación: %@",
+        "Automatic updates are only available in the distributed build. This build never checks for updates.": "Las actualizaciones automáticas solo están disponibles en la versión distribuida. Esta compilación nunca busca actualizaciones.",
+        "Once a day AgentsConfig downloads the release feed (appcast.xml) from GitHub Releases of tavodev/agentsconfig, and the update itself when there is one. The request carries only the app and Sparkle versions; no configuration, path or history is sent. Updates must carry the project's signature before they are installed.": "Una vez al día AgentsConfig descarga el feed de versiones (appcast.xml) de los GitHub Releases de tavodev/agentsconfig y, si la hay, la actualización. La petición solo incluye las versiones de la app y de Sparkle; no se envía ninguna configuración, ruta ni historial. Una actualización debe llevar la firma del proyecto para instalarse.",
+
         // Global history purge (Settings → Privacy)
         "Delete all history…": "Borrar todo el historial…",
         "Delete all local history?": "¿Borrar todo el historial local?",

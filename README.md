@@ -136,8 +136,25 @@ and results.
 
 Everything happens locally. The app reads and writes your agent config
 files (`~/.claude/`, `~/.codex/`, etc.) and keeps snapshots under
-`~/Library/Application Support/AgentsConfig/History/`. No telemetry,
-no network calls.
+`~/Library/Application Support/AgentsConfig/History/`. No telemetry. The
+only network traffic is the update check described below.
+
+- **Update checks (Sparkle).** The distributed build checks for updates
+  automatically once a day (and when you choose **AgentsConfig → Check for
+  Updates…**): it downloads the release feed
+  `https://github.com/tavodev/agentsconfig/releases/latest/download/appcast.xml`
+  from GitHub and, when a newer version exists, the update archive from the same
+  GitHub Release. The request carries the app name and version and the Sparkle
+  version (User-Agent); GitHub sees your IP address as with any download. No
+  configuration, path, history or system profile is sent (Sparkle's system
+  profiling stays off). Updates are downloaded and installed automatically, on
+  quit, only if the feed and the archive carry the project's EdDSA signature;
+  the app's Developer ID signature is checked as well. **Settings → Updates**
+  turns off automatic checks or automatic download and install (Sparkle keeps
+  these choices in the app's own preferences). With automatic checks off the app
+  makes no network requests unless you check manually. Debug builds, the UI test
+  host and runs with `AGENTSCONFIG_HOME` or `AGENTSCONFIG_DEFAULTS_SUITE` never
+  start the updater.
 
 - **History is not encrypted.** Snapshots keep full file content —
   including any secrets inside them — in files with `0600` permissions
@@ -225,6 +242,10 @@ includes a Developer ID signed and notarized DMG for Apple Silicon and Intel Mac
 Open the DMG, drag AgentsConfig to Applications, then launch it from Applications.
 Checksums are included with the release. Keep independent backups of important
 agent configurations and review every save.
+
+0.1.0 predates automatic updates: to receive them, install the first release
+that includes Sparkle by hand (same steps as above). From then on the app
+updates itself; see [Privacy & data handling](#privacy--data-handling).
 
 ## Build & run
 

@@ -8,6 +8,8 @@ import AppKit
 /// window width — the caller sizes its own container.
 struct AppSettingsView: View {
     @Environment(ConfigStore.self) private var store
+    /// nil in Debug, the UI test host, demos and isolated runs (`UpdaterPolicy`).
+    @Environment(AppUpdater.self) private var updater: AppUpdater?
     @AppStorage("notificationsEnabled", store: AppSettings.defaults) private var notifications = true
     @AppStorage("maskSecrets", store: AppSettings.defaults) private var maskSecrets = true
     @AppStorage("watchDebounce", store: AppSettings.defaults) private var debounce = 0.35
@@ -109,6 +111,14 @@ struct AppSettingsView: View {
                     )
                 }
             }
+            Section(L("Updates")) {
+                if let updater {
+                    UpdateSettingsControls(updater: updater)
+                } else {
+                    Text(L("Automatic updates are only available in the distributed build. This build never checks for updates."))
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+            }
         }
         .onChange(of: debounce) { _, value in store.setWatchDebounce(value) }
         .onChange(of: mcpLoginShell) { _, _ in store.reloadMcpCheckEnvironment() }
@@ -144,5 +154,30 @@ struct AppSettingsView: View {
         } else if let notice = store.historyPurgeNotice {
             Text(notice).font(.callout).foregroundStyle(.secondary)
         }
+    }
+}
+
+/// Toggles bound to the Sparkle updater (via `AppUpdater`). Automatic
+/// installation only applies while automatic checks are on.
+private struct UpdateSettingsControls: View {
+    @Bindable var updater: AppUpdater
+
+    var body: some View {
+        Toggle(L("Check for updates automatically"), isOn: $updater.automaticallyChecksForUpdates)
+            .accessibilityIdentifier("updates-automatic-checks")
+        Toggle(L("Download and install updates automatically"), isOn: $updater.automaticallyDownloadsUpdates)
+            .disabled(!updater.automaticallyChecksForUpdates)
+            .accessibilityIdentifier("updates-automatic-install")
+        HStack {
+            Button(L("Check for Updates…")) { updater.checkForUpdates() }
+                .disabled(!updater.canCheckForUpdates)
+            Spacer()
+            if let date = updater.lastUpdateCheckDate {
+                Text(L("Last checked: %@", date.formatted(date: .abbreviated, time: .shortened)))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        Text(L("Once a day AgentsConfig downloads the release feed (appcast.xml) from GitHub Releases of tavodev/agentsconfig, and the update itself when there is one. The request carries only the app and Sparkle versions; no configuration, path or history is sent. Updates must carry the project's signature before they are installed."))
+            .font(.callout).foregroundStyle(.secondary)
     }
 }

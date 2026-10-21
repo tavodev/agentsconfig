@@ -9,6 +9,11 @@ packages:
   TOMLKit:
     url: https://github.com/LebJe/TOMLKit
     from: 0.6.0
+  # Auto-update (issue #7). Pinned exactly: the updater verifies and replaces
+  # the installed app, so a dependency bump must be a reviewed decision.
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
 targets:
   AgentsConfig:
     type: application
@@ -38,6 +43,18 @@ targets:
         NSHighResolutionCapable: true
         NSSupportsAutomaticTermination: true
         NSSupportsSuddenTermination: true
+        # Sparkle (issue #7). The feed is the appcast.xml asset of the latest
+        # GitHub Release; every update archive must carry an EdDSA signature
+        # from the matching private key (kept in the release owner's keychain).
+        SUFeedURL: https://github.com/tavodev/agentsconfig/releases/latest/download/appcast.xml
+        SUPublicEDKey: "v1274eekvza9EK0zoPPr6JpBvHi7AFvRcyueVxlcnA4="
+        SUEnableAutomaticChecks: true
+        SUAutomaticallyUpdate: true
+        SUScheduledCheckInterval: 86400
+        # Hardening: verify the EdDSA signature before extracting the archive
+        # and require a signed appcast (generate_appcast/sign_update sign it).
+        SUVerifyUpdateBeforeExtraction: true
+        SURequireSignedFeed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tavodev.agentsconfig
@@ -71,6 +88,8 @@ targets:
         product: TOMLKit
       - package: Yams
         product: Yams
+      - package: Sparkle
+        product: Sparkle
   # Hostless logic tests: the app sources are compiled into the test bundle
   # (minus the @main entry point), so `xcodebuild test` never launches the app
   # — no real-home scan, no watchers on personal paths, no notifications.
@@ -119,11 +138,15 @@ targets:
         CODE_SIGN_IDENTITY: "-"
         CODE_SIGN_STYLE: Automatic
         SWIFT_STRICT_CONCURRENCY: minimal
+    # Linked only because AgentsConfigApp.swift imports Sparkle; the updater
+    # never starts here (UpdaterPolicy only accepts the release bundle id).
     dependencies:
       - package: TOMLKit
         product: TOMLKit
       - package: Yams
         product: Yams
+      - package: Sparkle
+        product: Sparkle
   AgentsConfigUITests:
     type: bundle.ui-testing
     platform: macOS
