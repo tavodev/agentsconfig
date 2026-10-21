@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Settings → Privacy can delete all local history (current, legacy and `.migrated` backups) after a confirmation that states what will be removed; symlinks are unlinked, never followed. Turning history off still keeps existing versions.
+- Claude Code instruction analysis models the `AGENTS.md` / `.claude/AGENTS.md` fallback when no CLAUDE file exists from the project root to the working folder, the "Project instructions" setting (user/managed scope only) and its version gates, and stops `@` imports at four hops.
+- Cursor and Copilot CLI skills in their home folders are grouped as personal, and those inside a project as project, instead of system.
+- Markdown preview keeps GFM table cells beyond the header's column count as extra unnamed columns. A paragraph after a list now has tests pinning CommonMark behavior (lazy continuation joins the item; a blank line ends the list).
 - `docs/PRECEDENCE.md` documents, per agent and with official links, the settings layers and merge rules the analysis models, the instruction load order, the scope/version/trust assumptions and the cases left unresolved.
 - Export setup writes a redacted folder with a manifest (agent, relative path, SHA-256) of global and project configuration; Import setup previews each file and stages a diff review in which redacted values keep the local value or are left out. Redaction is documented as best-effort.
 - Analysis → Alignment detects instructions, skills and MCP definitions that differ between agents, with a redacted diff and reviewed actions (copy text, `@import`, copy a single-file skill, match an MCP definition). The comparator flags servers defined differently and the sidebar shows the divergence count.

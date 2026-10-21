@@ -59,6 +59,13 @@ reported no credential-pattern findings. MCP servers, hooks and login shells wer
 never executed by the tests: the login-shell read is opt-in and disabled in
 isolated runs.
 
+On 2026-10-21, after the work for issues #8, #9, #10, #16 and #27, the hostless
+suite ran from the working tree with macOS 26.6.2 and Xcode 26.1.1: **300 tests in
+31 suites passed**. The `AgentsConfigUI` test bundle compiled; the graphical suite
+was **not executed** for these changes. MCP servers, hooks and login shells were
+never executed by the tests, and the history purge was exercised only in
+temporary homes.
+
 ## Reproducing checks
 
 Use the build, hostless and UI commands in [README.md](../README.md), keeping the
