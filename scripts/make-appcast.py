@@ -18,6 +18,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import NoReturn
 
 REPO = "tavodev/agentsconfig"
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ RESOLVED = ROOT / "AgentsConfig.xcodeproj/project.xcworkspace/xcshareddata/swift
 SPARKLE_NS = "http://www.andymatuschak.org/xml-namespaces/sparkle"
 
 
-def fail(message):
+def fail(message) -> NoReturn:
     sys.exit("make-appcast: " + message)
 
 
@@ -51,7 +52,7 @@ def sparkle_bin(explicit, version):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--archive", type=Path, required=True,
                         help="Notarized and stapled DMG (preferred) or ZIP of the exported app")
     parser.add_argument("--version", required=True, help="CFBundleShortVersionString, e.g. 0.2.0")

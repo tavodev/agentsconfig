@@ -66,6 +66,14 @@ was **not executed** for these changes. MCP servers, hooks and login shells were
 never executed by the tests, and the history purge was exercised only in
 temporary homes.
 
+On 2026-10-21, after adding Sparkle 2.10.0 for issue #7, the hostless suite
+passed with **307 tests in 32 suites**; the Debug app and the `AgentsConfigUI`
+bundle compiled (UI suite **not executed**). A local ad hoc Release archive
+embedded `Sparkle.framework` with its helpers for arm64 and x86_64; Developer ID
+signing of those helpers and a real update from an appcast are **not yet
+verified** (see `RELEASING.md`). The publication guard reported no
+credential-pattern findings.
+
 ## Reproducing checks
 
 Use the build, hostless and UI commands in [README.md](../README.md), keeping the
