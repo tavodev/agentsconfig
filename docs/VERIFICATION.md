@@ -74,6 +74,39 @@ signing of those helpers and a real update from an appcast are **not yet
 verified** (see `RELEASING.md`). The publication guard reported no
 credential-pattern findings.
 
+On 2026-10-28, the compiled inputs committed as `8b7274e` (issues #28 and #29)
+were verified on macOS 26.6.2 (25G83), Xcode 26.1.1 (17B100) and XcodeGen
+2.46.0, with the committed TOMLKit 0.6.0, Yams 6.2.2 and Sparkle 2.10.0 pins:
+
+| Check | Result |
+| --- | --- |
+| Hostless Swift tests, arm64 | 312 tests in 32 suites passed |
+| Hostless Swift tests, x86_64 under Rosetta | 312 tests in 32 suites passed; no Intel hardware execution |
+| Isolated graphical suite | 29 tests executed and passed, zero failures; dedicated fixture host |
+| Universal Release archive and Developer ID export | Passed; local verification export, unchanged version 0.1.0 / build 3 |
+| Sparkle embedded code | App, framework, Autoupdate, Updater.app, Installer.xpc and Downloader.xpc all have valid Developer ID signatures, secure timestamps and hardened runtime; no debugging entitlement; all contain arm64 and x86_64 |
+| Signature verification | Individual strict checks and app deep/strict verification passed |
+| Updater configuration | HTTPS feed, public key, signed-feed requirement and verification before extraction present |
+| Dependency notices | Bundled notices identical to the repository copy |
+| Binary path review | No personal home paths or examined temporary/build-directory prefixes in the main executable |
+| Multiprocess history | Four writers; 120 writes plus legacy baseline; 121 unique readable versions |
+| Publication guard tests | 10 tests passed |
+| Publication scan | No credential-pattern findings in the working tree and reachable history |
+| Generated project | XcodeGen regeneration produced no project or Info.plist drift |
+
+All runtime checks used fictitious homes and exclusive preference suites; MCP
+servers, hooks and login shells were not executed. The x86_64 hostless run used
+the same test command with destination `platform=macOS,arch=x86_64`; it verifies
+Rosetta execution on Apple Silicon, not an Intel Mac. Archive/export and embedded
+signature checks follow [RELEASING.md](RELEASING.md).
+
+The verification export was not submitted for notarization or published. A real
+update from an appcast and installation/first launch in a clean macOS user or
+machine remain unverified. The demo isolation environment deliberately disables
+the updater, and the distributed 0.1.0 has no updater; the update check needs a
+separate test installation with two Sparkle-enabled versions. These distribution
+checks remain tracked in [#6](https://github.com/tavodev/agentsconfig/issues/6).
+
 ## Reproducing checks
 
 Use the build, hostless and UI commands in [README.md](../README.md), keeping the

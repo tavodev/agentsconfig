@@ -3,7 +3,7 @@
 What the **Configuration** analysis (`ConfigurationResolver` + `SettingMerger`)
 models for each agent, and what it cannot see. Official sources were checked on
 2026-10-16 (Claude Code's [Memory](https://code.claude.com/docs/en/memory) page
-again on 2026-10-21); the resolver's documented contract is dated
+again on 2026-10-28); the resolver's documented contract is dated
 `ConfigurationResolver.referenceDate` (2026-09-13).
 
 The analysis reads files on disk. It never runs a client, so it cannot observe
@@ -64,6 +64,9 @@ does not prove that a session loaded it.
 
 ## Cases left unresolved on purpose
 
+- Claude Code inline managed `claudeMd` instructions are not listed or counted
+  in the context estimate yet; tracked in
+  [#30](https://github.com/tavodev/agentsconfig/issues/30).
 - Claude Code managed drop-ins (`managed-settings.d/*.json`) and multiple
   managed sources: their composition depends on `managedSourcesBehavior` and on
   the delivery mechanism, so they are `Unresolved` / `Conditional`.
