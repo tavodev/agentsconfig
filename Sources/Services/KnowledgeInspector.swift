@@ -96,13 +96,13 @@ import Foundation
         let managedOnlyReason = "Project instructions is managed-only: only managed CLAUDE.md and auto memory load at launch."
         var consumed = 0
         var instructionSeen = Set<String>()
-        func add(_ path: String, state: String = "Candidate", reason: String = "", boundary: String, importedBy: String? = nil, depth: Int = 0) {
+        func add(_ path: String, state: String = "Candidate", reason: String = "", boundary: String, importedBy: String? = nil, depth: Int = 0, canExclude: Bool = true) {
             guard output.instructions.count < 100 else { return }
             guard let canonicalTarget = AppPaths.canonicalPath(path), let canonicalBoundary = AppPaths.canonicalPath(boundary),
                   canonicalTarget.hasPrefix(canonicalBoundary + "/") else {
                 output.instructions.append(.init(path: path, state: "Outside scope", reason: "Instruction path leaves its allowed root.", bytes: 0, includedBytes: 0, text: "", importedBy: importedBy)); return
             }
-            if exclusions.contains(where: { KnowledgeGlob.matches(path, pattern: $0) == true || KnowledgeGlob.matches(canonicalTarget, pattern: $0) == true }) {
+            if canExclude && exclusions.contains(where: { KnowledgeGlob.matches(path, pattern: $0) == true || KnowledgeGlob.matches(canonicalTarget, pattern: $0) == true }) {
                 output.instructions.append(.init(path: path, state: "Excluded", reason: "Matched claudeMdExcludes.", bytes: 0, includedBytes: 0, text: "", importedBy: importedBy)); return
             }
             guard let text = read(path) else {
@@ -153,6 +153,13 @@ import Foundation
             }
         }
         let user = AgentCatalog.root(for: context.agentID)
+        if context.agentID == "claude-code" {
+            // Managed memory loads before user/project memory, including in managed-only mode.
+            // Unlike other CLAUDE.md files, claudeMdExcludes cannot exclude this policy file.
+            let managed = AppPaths.systemPath("/Library/Application Support/ClaudeCode")
+            add(managed + "/CLAUDE.md", reason: "Managed instructions are read before user and project instructions.",
+                boundary: managed, canExclude: false)
+        }
         if context.agentID == "codex" {
             for directory in [user] + directories {
                 var names = ["AGENTS.override.md", "AGENTS.md"]

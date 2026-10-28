@@ -81,7 +81,8 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   a partir de ruta + `readOnly` + raíz de proyecto opcional. La lista de
   archivos y Configuración → Skills usan la misma regla; los tests no
   necesitan home, watchers ni UI. Orden: plugins (`/plugins/`,
-  `/extensions/`) → proyecto (bajo la raíz registrada, aunque sea
+  `/extensions/`, `/.copilot/installed-plugins/`, con el paquete como dueño)
+  → proyecto (bajo la raíz registrada, aunque sea
   `readOnly`) → personal (marcadores `/.agents|.claude|.codex|.gemini|
   .opencode|.cursor|.copilot/skills/`) → sistema (resto `readOnly`) →
   personal. Cursor y Copilot CLI son inventario `readOnly`, pero sus skills
@@ -133,7 +134,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Límites: frontmatter de 64 KiB, previews de 20 000 caracteres, 100 instrucciones
   e imports a 4 saltos en Claude Code (5 niveles en Gemini CLI, Copilot CLI y
   Antigravity). Claude Code lee `AGENTS.md` según "Project instructions"
-  (`claudeInstructionFiles`). Los globs no soportados quedan condicionados.
+  (`claudeInstructionFiles`). Su `CLAUDE.md` gestionado se lista antes de usuario
+  y proyecto, también bajo `managed-only`, y no admite `claudeMdExcludes`;
+  `AppPaths.systemPath` lo redirige a fixtures en aislamiento. Los globs no
+  soportados quedan condicionados.
 - `Sources/Models/Divergence.swift` — `DivergenceDetector` (puro) compara
   instrucciones raíz por familia (normaliza espacios; un archivo solo de
   `@imports` a otro miembro cuenta como alineado), skills escribibles por

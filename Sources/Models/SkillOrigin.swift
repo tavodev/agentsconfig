@@ -44,6 +44,7 @@ enum SkillGrouping {
 
     static func isPlugin(path: String) -> Bool {
         path.contains("/plugins/") || path.contains("/extensions/")
+            || path.contains("/.copilot/installed-plugins/")
     }
 
     /// Order matters: plugin folders live under agent roots too, and a
@@ -143,8 +144,9 @@ enum SkillGrouping {
     // MARK: - Owner labels
 
     /// Who a skill belongs to inside its origin. Pure path logic so the file
-    /// list and the Skills tab agree; never the skill folder itself (the
-    /// parent of SKILL.md is already the row's display name).
+    /// list and the Skills tab agree. The owner is normally distinct from
+    /// the skill folder itself; a plugin with a root SKILL.md still belongs
+    /// to its package.
     static func owner(path: String, origin: SkillOrigin,
                       projectRoot: String? = nil,
                       home: String = AppPaths.home) -> String {
@@ -167,9 +169,16 @@ enum SkillGrouping {
 
     /// `plugins/cache/<rest>` chains are marketplace / plugin / version /
     /// `skills` or `skills-*` wrapper folders; the owner is the plugin id.
+    /// Copilot's `.copilot/installed-plugins/<package>` keeps that package
+    /// as owner, including when the package has a root SKILL.md.
     /// Anywhere else under `plugins/`/`extensions/` the owner is the first
     /// package folder after the marker that isn't the cache.
     private static func pluginOwner(parts: [String], skillFolder: Int, home: String) -> String {
+        if let marker = parts.indices.first(where: {
+            $0 > 0 && parts[$0 - 1] == ".copilot" && parts[$0] == "installed-plugins"
+        }), marker + 1 <= skillFolder {
+            return parts[marker + 1]
+        }
         var marker = -1
         for i in 0..<skillFolder where parts[i] == "plugins" || parts[i] == "extensions" {
             marker = i

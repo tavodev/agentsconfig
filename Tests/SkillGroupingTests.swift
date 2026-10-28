@@ -77,11 +77,47 @@ struct SkillGroupingTests {
                                      readOnly: true, projectRoot: root) == .project)
     }
 
-    /// Plugin-packaged Copilot skills keep the rule they had: the personal
-    /// marker needs `/.copilot/skills/`, so `installed-plugins` never matches.
-    @Test func copilotInstalledPluginSkillsAreNotPersonal() {
-        let path = "/Users/fixture/.copilot/installed-plugins/mkt/plug/skills/s/SKILL.md"
-        #expect(SkillGrouping.origin(path: path, readOnly: true) == .system)
+    /// Issue #28: Copilot's installed packages are plugins, independently of
+    /// inventory read-only status or the selected project context.
+    @Test func copilotInstalledPluginSkillsBelongToTheirPackage() {
+        let home = "/Users/fixture"
+        for suffix in ["review-kit/skills/review/SKILL.md",
+                       "review-kit/1.0/skills-extra/review/SKILL.md",
+                       "review-kit/plugins/nested/skills/review/SKILL.md",
+                       "review-kit/SKILL.md"] {
+            let path = home + "/.copilot/installed-plugins/" + suffix
+            #expect(SkillGrouping.origin(path: path, readOnly: true) == .plugins, "\(path)")
+            #expect(SkillGrouping.origin(path: path, readOnly: false,
+                                         projectRoot: home) == .plugins, "\(path)")
+            #expect(owner(path, .plugins, home: home) == "review-kit", "\(path)")
+        }
+    }
+
+    @Test func copilotPluginMarkerRequiresTheExactAgentAndDirectory() {
+        for path in [
+            "/Users/fixture/.claude/installed-plugins/review-kit/skills/review/SKILL.md",
+            "/Users/fixture/.copilot-extra/installed-plugins/review-kit/skills/review/SKILL.md",
+            "/Users/fixture/.copilot/installed-plugins-backup/review-kit/skills/review/SKILL.md",
+            "/Users/fixture/installed-plugins/review-kit/skills/review/SKILL.md",
+        ] {
+            #expect(SkillGrouping.origin(path: path, readOnly: true) == .system, "\(path)")
+            #expect(SkillGrouping.origin(path: path, readOnly: false) == .personal, "\(path)")
+        }
+    }
+
+    @Test func copilotInstalledPluginsGroupByPackage() {
+        let base = "/Users/fixture/.copilot/installed-plugins"
+        let items = [
+            Item(path: base + "/review-kit/skills/zeta/SKILL.md", readOnly: true),
+            Item(path: base + "/build-kit/skills/build/SKILL.md", readOnly: true),
+            Item(path: base + "/review-kit/skills/alpha/SKILL.md", readOnly: true),
+        ]
+        let groups = SkillGrouping.group(items, path: \.path, readOnly: \.readOnly,
+                                         projectRoot: nil, home: "/Users/fixture")
+        #expect(groups.map(\.origin) == [.plugins])
+        #expect(groups.first?.owners.map(\.owner) == ["review-kit", "build-kit"])
+        #expect(groups.first?.owners.first?.items.map { SkillGrouping.skillFolderName($0.path) }
+                == ["alpha", "zeta"])
     }
 
     /// Regression: the new markers don't change other agents' origins.

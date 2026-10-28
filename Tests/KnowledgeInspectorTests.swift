@@ -209,6 +209,62 @@ struct KnowledgeInspectorTests {
         context.version = "2.1.285"
         #expect(analyze().instructions.contains { $0.path.hasSuffix("/AGENTS.md") && $0.state == "Excluded" })
     }
+    // Issue #29: managed memory is a read-only source even when other launch instructions are disabled.
+    @Test func claudeManagedOnlyIncludesManagedMemoryInContextBudget() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }
+        let managed = try env.write(".system/Library/Application Support/ClaudeCode/CLAUDE.md", "# Managed fixture\n")
+        try env.write(".claude/settings.json", #"{"pluginConfigs":{"cc-plugin-agents-md@builtin":{"options":{"instructionFiles":"managed-only"}}}}"#)
+        try env.write(".claude/CLAUDE.md", "# User fixture")
+        try env.write(".claude/rules/preferences.md", "# User rule fixture")
+        try env.write(root: project, "CLAUDE.md", "# Project fixture")
+        try env.write(root: project, ".claude/CLAUDE.md", "# Project config fixture")
+        try env.write(root: project, "CLAUDE.local.md", "# Local fixture")
+        try env.write(root: project, "AGENTS.md", "# Shared fixture")
+        let store = env.makeStore(); store.addProject(path: project.path)
+        let source = try #require(store.agents.flatMap(\.files).first { $0.path == managed.path })
+        #expect(source.exists && source.readOnly && source.role == .instructions)
+        #expect(AppPaths.systemPath("/Library/Application Support/ClaudeCode/CLAUDE.md") == managed.path)
+        let context = AnalysisContext(agentID: "claude-code", projectRoot: project.path, version: "2.1.285")
+        let report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        let first = try #require(report.instructions.first)
+        #expect(first.path == managed.path && first.state == "Candidate" && first.includedBytes == first.bytes && first.bytes > 0)
+        #expect(report.instructions.count == 7)
+        #expect(report.instructions.dropFirst().allSatisfy { $0.state == "Excluded" && $0.includedBytes == 0 && $0.reason.contains("managed-only") })
+        let budget = ContextBudget.build(knowledge: report, mcp: [], threshold: 8_000)
+        #expect(budget.items.contains { $0.path == managed.path && $0.inclusion == .counted && $0.bytes == first.bytes })
+        #expect(budget.tokens(.instruction) == ContextBudget.estimateTokens(bytes: first.bytes))
+        #expect(budget.items.filter { $0.path != managed.path }.allSatisfy { $0.inclusion == .excluded && $0.bytes == 0 })
+    }
+    @Test func claudeManagedMemoryAndImportsPrecedeUserAndProject() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }
+        let managed = try env.write(".system/Library/Application Support/ClaudeCode/CLAUDE.md", "@policy.md\n@../outside.md\n")
+        let policy = try env.write(".system/Library/Application Support/ClaudeCode/policy.md", "# Managed policy fixture")
+        let user = try env.write(".claude/CLAUDE.md", "# User fixture")
+        let local = try env.write(root: project, "CLAUDE.md", "# Project fixture")
+        let store = env.makeStore(); store.addProject(path: project.path)
+        let context = AnalysisContext(agentID: "claude-code", projectRoot: project.path)
+        let report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        #expect(report.instructions.filter { $0.importedBy == nil }.map(\.path) == [managed.path, user.path, local.path])
+        #expect(report.instructions.prefix(2).map(\.path) == [managed.path, policy.path])
+        #expect(report.instructions.contains { $0.path == policy.path && $0.state == "Candidate" && $0.importedBy == managed.path })
+        #expect(report.instructions.contains { $0.path == "../outside.md" && $0.state == "Outside scope" && $0.importedBy == managed.path })
+    }
+    @Test func claudeMdExcludesCannotExcludeManagedMemory() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }
+        let managed = try env.write(".system/Library/Application Support/ClaudeCode/CLAUDE.md", "# Managed fixture")
+        try env.write(".claude/settings.json", #"{"claudeMdExcludes":["**/CLAUDE.md"]}"#)
+        try env.write(".claude/CLAUDE.md", "# User fixture")
+        try env.write(root: project, "CLAUDE.md", "# Project fixture")
+        let store = env.makeStore(); store.addProject(path: project.path)
+        let context = AnalysisContext(agentID: "claude-code", projectRoot: project.path)
+        let report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        let first = try #require(report.instructions.first)
+        #expect(first.path == managed.path && first.state == "Candidate" && first.includedBytes > 0)
+        #expect(report.instructions.filter { $0.path != managed.path && $0.path.hasSuffix("/CLAUDE.md") }.allSatisfy { $0.state == "Excluded" && $0.text.isEmpty })
+    }
     @Test func claudeImportsStopAfterFourHops() throws {
         let env = try TestEnvironment(); defer { env.teardown() }
         let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }
