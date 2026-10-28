@@ -22,7 +22,10 @@ struct SkillPackage: Identifiable {
     var rank: Int
 }
 struct InstructionSource: Identifiable {
-    var id: String { path + "|" + state }
+    var id: String { path + "|" + keyPath.joined(separator: ".") + "|" + state }
+    var displayName: String {
+        URL(fileURLWithPath: path).lastPathComponent + (keyPath.isEmpty ? "" : " → " + keyPath.joined(separator: "."))
+    }
     let path: String
     var state: String
     var reason: String
@@ -30,6 +33,8 @@ struct InstructionSource: Identifiable {
     var includedBytes: Int
     var text: String
     var importedBy: String?
+    /// Empty for whole instruction files; preserves the real source path for inline settings.
+    var keyPath: [String] = []
 }
 struct KnowledgeAnalysis {
     var instructions: [InstructionSource] = []

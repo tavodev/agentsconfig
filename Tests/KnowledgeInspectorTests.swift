@@ -265,6 +265,106 @@ struct KnowledgeInspectorTests {
         #expect(first.path == managed.path && first.state == "Candidate" && first.includedBytes > 0)
         #expect(report.instructions.filter { $0.path != managed.path && $0.path.hasSuffix("/CLAUDE.md") }.allSatisfy { $0.state == "Excluded" && $0.text.isEmpty })
     }
+    @Test func claudeInlineManagedInstructionsUseOnlyObservedManagedLayer() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }
+        let raw = "# Managed inline fixture\napi_key = \"sk-test-INLINE-FAKE\"\n" + String(repeating: "á", count: 22_000)
+        let json = try JSONSerialization.data(withJSONObject: ["claudeMd": raw, "unrelated": "not instruction text"])
+        let managed = try env.write(".system/Library/Application Support/ClaudeCode/managed-settings.json", String(decoding: json, as: UTF8.self))
+        try env.write(".claude/settings.json", #"{"claudeMd":"USER-NOT-INCLUDED","pluginConfigs":{"cc-plugin-agents-md@builtin":{"options":{"instructionFiles":"managed-only"}}}}"#)
+        try env.write(root: project, ".claude/settings.json", #"{"claudeMd":"PROJECT-NOT-INCLUDED"}"#)
+        try env.write(root: project, ".claude/settings.local.json", #"{"claudeMd":"LOCAL-NOT-INCLUDED"}"#)
+        try env.write(".claude/CLAUDE.md", "# Excluded user fixture")
+        let store = env.makeStore(); store.addProject(path: project.path)
+        let context = AnalysisContext(agentID: "claude-code", projectRoot: project.path)
+        let report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        let inline = report.instructions.filter { $0.keyPath == ["claudeMd"] }
+        let source = try #require(inline.first)
+        #expect(inline.count == 1 && source.path == managed.path && source.state == "Candidate")
+        #expect(source.bytes == raw.utf8.count && source.includedBytes == source.bytes)
+        #expect(source.text.count <= 20_000 && source.text.contains("# Managed inline fixture"))
+        #expect(!source.text.contains("sk-test-INLINE-FAKE") && !source.text.contains("not instruction text"))
+        #expect(!report.instructions.contains { $0.text.contains("NOT-INCLUDED") })
+        #expect(report.instructions.contains { $0.path == env.path(".claude/CLAUDE.md") && $0.state == "Excluded" })
+        let budget = ContextBudget.build(knowledge: report, mcp: [], threshold: 8_000)
+        #expect(budget.items.contains { $0.path == managed.path && $0.label == "managed-settings.json → claudeMd" && $0.bytes == raw.utf8.count && $0.inclusion == .counted })
+        #expect(budget.tokens(.instruction) == ContextBudget.estimateTokens(bytes: raw.utf8.count))
+        var wholeFile = source; wholeFile.keyPath = []
+        #expect(wholeFile.id != source.id)
+    }
+    @Test func claudeInlineManagedCoexistenceIsConditionalAndImportsAreNotInferred() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let managedFile = try env.write(".system/Library/Application Support/ClaudeCode/CLAUDE.md", "# Managed file fixture")
+        let inline = "# Inline fixture\n@policy.md\n"
+        let json = try JSONSerialization.data(withJSONObject: ["claudeMd": inline])
+        let managedSettings = try env.write(".system/Library/Application Support/ClaudeCode/managed-settings.json", String(decoding: json, as: UTF8.self))
+        try env.write(".system/Library/Application Support/ClaudeCode/policy.md", "# Must not be read through an inferred inline import")
+        let user = try env.write(".claude/CLAUDE.md", "# User fixture")
+        let store = env.makeStore()
+        // Global scope exercises the system-path seam without a selected project.
+        let context = AnalysisContext(agentID: "claude-code")
+        let report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        #expect(report.instructions.map(\.path) == [managedFile.path, managedSettings.path, user.path])
+        #expect(report.instructions.prefix(2).allSatisfy { $0.state == "Conditional" && $0.bytes > 0 })
+        #expect(report.notices.contains { $0.contains("combined activation") })
+        #expect(report.notices.contains { $0.contains("Import expansion") && $0.contains("unresolved") })
+        #expect(!report.instructions.contains { $0.path.hasSuffix("/policy.md") })
+        let budget = ContextBudget.build(knowledge: report, mcp: [], threshold: 8_000)
+        #expect(budget.tokens(.instruction) == ContextBudget.estimateTokens(bytes: "# User fixture".utf8.count))
+        #expect(budget.tokens(.instruction, .conditional) == ContextBudget.estimateTokens(bytes: "# Managed file fixture".utf8.count) + ContextBudget.estimateTokens(bytes: inline.utf8.count))
+    }
+    @Test func claudeInlineManagedAmbiguityAndMismatchedContextStayUnresolved() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        try env.write(".system/Library/Application Support/ClaudeCode/managed-settings.json", ##"{"claudeMd":"# Main managed fixture"}"##)
+        try env.write(".system/Library/Application Support/ClaudeCode/managed-settings.d/team.json", ##"{"claudeMd":"# Managed drop-in fixture"}"##)
+        let store = env.makeStore()
+        let context = AnalysisContext(agentID: "claude-code")
+        let configuration = store.configurationAnalysis(context)
+        let report = store.knowledgeAnalysis(context, configuration: configuration)
+        let inline = report.instructions.filter { $0.keyPath == ["claudeMd"] }
+        #expect(inline.count == 2 && inline.allSatisfy { $0.state == "Unresolved" && $0.includedBytes == 0 && $0.bytes > 0 })
+        #expect(ContextBudget.build(knowledge: report, mcp: [], threshold: 8_000).total == 0)
+        var other = context; other.profile = "another-context"
+        let mismatched = store.knowledgeAnalysis(other, configuration: configuration)
+        #expect(!mismatched.instructions.contains { $0.keyPath == ["claudeMd"] })
+        #expect(mismatched.notices.contains { $0.contains("another context") })
+    }
+    @Test func claudeInlineManagedInvalidValuesAndByteLimitsAreExplicit() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let path = AppPaths.systemPath("/Library/Application Support/ClaudeCode/managed-settings.json")
+        let context = AnalysisContext(agentID: "claude-code")
+        var configuration = ConfigurationAnalysis(context: context)
+        configuration.sources = [.init(path: path, label: "Managed", state: "Applied", reason: "", tree: ["claudeMd": 42])]
+        var reads: [String] = []
+        func analyze() -> KnowledgeAnalysis {
+            KnowledgeInspector.build(context: context, agents: [], configuration: configuration) { reads.append($0); return nil }
+        }
+        let invalid = try #require(analyze().instructions.first { $0.keyPath == ["claudeMd"] })
+        #expect(invalid.state == "Unresolved" && invalid.bytes == 0 && invalid.includedBytes == 0 && invalid.reason.contains("must be a string"))
+        configuration.sources[0].tree = ["claudeMd": String(repeating: "x", count: 2_000_004)]
+        let limited = try #require(analyze().instructions.first { $0.keyPath == ["claudeMd"] })
+        #expect(limited.state == "Truncated" && limited.bytes == 2_000_004 && limited.includedBytes == 2_000_000 && limited.text.count == 20_000)
+        #expect(!reads.contains(path))
+    }
+    @Test func claudeInlineCoexistenceKeepsManagedFileImportsConditional() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        try env.write(".system/Library/Application Support/ClaudeCode/CLAUDE.md", "@policy.md\n")
+        try env.write(".system/Library/Application Support/ClaudeCode/policy.md", "# Managed import fixture")
+        let settings = try env.write(".system/Library/Application Support/ClaudeCode/managed-settings.json", #"{"claudeMd":"Inline fixture"}"#)
+        let store = env.makeStore()
+        let context = AnalysisContext(agentID: "claude-code")
+        var report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        #expect(report.instructions.count == 3)
+        #expect(report.instructions.allSatisfy { $0.state == "Conditional" })
+        #expect(ContextBudget.build(knowledge: report, mcp: [], threshold: 8_000).tokens(.instruction) == 0)
+
+        // A schema-invalid inline value cannot suppress a valid policy file.
+        try #"{"claudeMd":42}"#.write(to: settings, atomically: true, encoding: .utf8)
+        store.refresh()
+        report = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        #expect(report.instructions.filter { $0.keyPath.isEmpty }.allSatisfy { $0.state == "Candidate" })
+        #expect(report.instructions.first { $0.keyPath == ["claudeMd"] }?.state == "Unresolved")
+    }
     @Test func claudeImportsStopAfterFourHops() throws {
         let env = try TestEnvironment(); defer { env.teardown() }
         let project = try env.makeProjectRoot(); defer { try? FileManager.default.removeItem(at: project) }

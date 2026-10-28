@@ -136,7 +136,14 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Antigravity). Claude Code lee `AGENTS.md` según "Project instructions"
   (`claudeInstructionFiles`). Su `CLAUDE.md` gestionado se lista antes de usuario
   y proyecto, también bajo `managed-only`, y no admite `claudeMdExcludes`;
-  `AppPaths.systemPath` lo redirige a fixtures en aislamiento. Los globs no
+  `AppPaths.systemPath` lo redirige a fixtures en aislamiento. `claudeMd` inline
+  se obtiene del árbol de fuentes Managed observadas del mismo contexto, con
+  ruta real y `keyPath`; nunca se lee el JSON como Markdown ni se expanden
+  imports inline sin regla documentada. Coexistencia con el archivo gestionado
+  queda Conditional (también sus imports) y composición ambigua Unresolved.
+  La clasificación de plugins reutiliza `SkillGrouping.isPlugin`, como el
+  índice MCP; los plugins no participan en precedencia mientras su activación
+  no esté verificada. Los globs no
   soportados quedan condicionados.
 - `Sources/Models/Divergence.swift` — `DivergenceDetector` (puro) compara
   instrucciones raíz por familia (normaliza espacios; un archivo solo de

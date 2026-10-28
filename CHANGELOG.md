@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Claude Code instruction analysis includes observed inline managed `claudeMd` content with its JSON key path, redacted preview and context cost; uncertain coexistence and managed composition stay explicit.
+- Copilot installed-plugin skills and MCP sources retain unverified activation in analysis and comparisons; plugin skill context costs remain conditional even when user definitions share a name.
 - Claude Code instruction analysis includes the managed, read-only `CLAUDE.md` before user and project instructions, including in `managed-only` mode and the context estimate; `claudeMdExcludes` cannot exclude this policy file.
 - Copilot CLI skills under `.copilot/installed-plugins` are grouped as plugins with their package as owner.
 - Automatic updates with Sparkle 2.10.0: the distributed build checks a signed appcast on GitHub Releases once a day and downloads and installs EdDSA-signed updates on its own. **AgentsConfig → Check for Updates…** checks on demand and Settings → Updates can turn off automatic checks or automatic installation. This is the app's only network traffic; Debug builds, the UI test host and isolated/demo runs never start the updater. Users of 0.1.0 must install the first release with Sparkle by hand.

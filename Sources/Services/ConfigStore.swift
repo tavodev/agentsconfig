@@ -803,7 +803,7 @@ final class ConfigStore {
                 }
                 if let separator = agentID.range(of: "::") {
                     entry.projectPath = String(agentID[separator.upperBound...]); entry.scope = "Project"
-                } else if sourcePath.contains("/extensions/") || sourcePath.contains("/plugins/") { entry.scope = "Extension" }
+                } else if SkillGrouping.isPlugin(path: sourcePath) { entry.scope = "Extension" }
                 else if sourcePath.hasPrefix(AppPaths.systemPath("/etc/") ) || sourcePath.hasPrefix(AppPaths.systemPath("/Library/")) { entry.scope = "Managed" }
                 out.append(entry)
             }

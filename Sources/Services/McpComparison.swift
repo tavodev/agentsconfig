@@ -30,7 +30,9 @@ struct McpComparedSource: Identifiable {
             guard let high = ranked.map({ rank(rows[$0].entry) }).max() else { continue }
             let winners = ranked.filter { rank(rows[$0].entry) == high }
             let variants = Set(winners.map { signature(rows[$0].entry) })
-            for index in indices {
+            // Unverified plugin sources do not participate in precedence;
+            // another definition cannot establish whether their plugin loads.
+            for index in ranked {
                 if !winners.contains(index) { rows[index].state = "Shadowed"; rows[index].reason = "A more specific source defines this server name." }
                 else if variants.count > 1 { rows[index].state = "Ambiguous"; rows[index].reason = "Multiple definitions at the same scope disagree; no winner was inferred." }
             }

@@ -52,5 +52,62 @@ struct ContextBudgetTests {
         AppSettings.defaults.set(12_000, forKey: "contextBudgetThreshold")
         #expect(AppSettings.contextBudgetThreshold == 12_000)
     }
+
+    /// Issue #31: Copilot's plugin is present on disk, but activation is not
+    /// observed. Only its name and description enter the conditional budget.
+    @Test func copilotInstalledPluginSkillsHaveConditionalContextCost() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let plugin = try env.write(".copilot/installed-plugins/review-kit/skills/review/SKILL.md",
+                                   "---\nname: review\ndescription: Plugin fixture\n---\n" + String(repeating: "body", count: 500))
+        let personal = try env.write(".copilot/skills/personal/SKILL.md",
+                                     "---\nname: personal\ndescription: Personal fixture\n---\n# Instructions")
+        try env.write(".copilot/installed-plugins/review-kit/mcp.json", #"{"mcpServers":{"docs":{"command":"fixture-plugin-mcp"}}}"#)
+        try env.write(".copilot/mcp-config.json", #"{"mcpServers":{"docs":{"command":"fixture-user-mcp"}}}"#)
+        let store = env.makeStore()
+        let context = AnalysisContext(agentID: "copilot-cli")
+        let knowledge = store.knowledgeAnalysis(context, configuration: store.configurationAnalysis(context))
+        #expect(knowledge.skills.first { $0.path == plugin.path }?.state == "Activation not verified")
+        #expect(knowledge.skills.first { $0.path == personal.path }?.state == "Discovered")
+        let mcp = McpComparison.sources(store.mcpIndex.filter { McpComparison.family($0) == "copilot-cli" }, project: "")
+        let budget = ContextBudget.build(knowledge: knowledge, mcp: mcp, threshold: 8_000)
+        let pluginBytes = "review".utf8.count + "Plugin fixture".utf8.count
+        let personalBytes = "personal".utf8.count + "Personal fixture".utf8.count
+        #expect(budget.items.contains { $0.path == plugin.path && $0.kind == .skill && $0.inclusion == .conditional && $0.bytes == pluginBytes })
+        #expect(budget.items.contains { $0.path == personal.path && $0.kind == .skill && $0.inclusion == .counted && $0.bytes == personalBytes })
+        #expect(budget.tokens(.skill, .conditional) == ContextBudget.estimateTokens(bytes: pluginBytes))
+        #expect(budget.tokens(.skill) == ContextBudget.estimateTokens(bytes: personalBytes))
+        #expect(budget.mcpServers == 1)
+    }
+
+    @Test func pluginSkillActivationRequiresExactMarkersAndKeepsOtherAgents() throws {
+        let env = try TestEnvironment(); defer { env.teardown() }
+        let fixtures = [
+            ("copilot-cli", ".copilot/installed-plugins/kit/skills/review/SKILL.md", true),
+            ("copilot-cli", ".copilot/installed-plugins-backup/kit/skills/review/SKILL.md", false),
+            ("copilot-cli", ".copilot-extra/installed-plugins/kit/skills/review/SKILL.md", false),
+            ("claude-code", ".claude/installed-plugins/kit/skills/review/SKILL.md", false),
+            ("claude-code", ".claude/plugins/cache/kit/skills/review/SKILL.md", true),
+            ("codex", ".codex/plugins/cache/kit/skills/review/SKILL.md", true),
+            ("gemini-cli", ".gemini/extensions/kit/skills/review/SKILL.md", true),
+            ("windsurf", ".codeium/windsurf/skills/review/SKILL.md", false),
+        ]
+        for (family, relativePath, plugin) in fixtures {
+            let text = "---\nname: review\ndescription: Fixture\n---\n# Instructions"
+            let file = try env.write(relativePath, text)
+            let definition = AgentDefinition(id: family, name: family, symbol: "puzzlepiece", color: .gray,
+                                             detectionPaths: [], sources: [.init(path: file.path, role: .skills, readOnly: true)])
+            let agent = Agent(id: family, name: family, symbol: "puzzlepiece", color: .gray,
+                              files: AgentRegistry.resolveFiles(definition), detectionPath: env.home.path, notes: nil)
+            let context = AnalysisContext(agentID: family)
+            let knowledge = KnowledgeInspector.build(context: context, agents: [agent],
+                                                      configuration: ConfigurationAnalysis(context: context)) {
+                $0 == file.path ? text : nil
+            }
+            let skill = try #require(knowledge.skills.first)
+            #expect(skill.state == (plugin ? "Activation not verified" : "Discovered"), "\(relativePath)")
+            let budget = ContextBudget.build(knowledge: knowledge, mcp: [], threshold: 8_000)
+            #expect(budget.items.first?.inclusion == (plugin ? .conditional : .counted), "\(relativePath)")
+        }
+    }
 }
 }

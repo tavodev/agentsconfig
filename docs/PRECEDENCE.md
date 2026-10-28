@@ -37,11 +37,33 @@ does not prove that a session loaded it.
 
 | Agent | Order modelled | Limits and conditions | Official reference |
 | --- | --- | --- | --- |
-| Claude Code | `/Library/Application Support/ClaudeCode/CLAUDE.md` (managed, read-only), then `~/.claude/CLAUDE.md`, then from the project root down to the working folder: `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, and — when **Project instructions** lets it — that folder's `AGENTS.md` and `.claude/AGENTS.md`; rules in `.claude/rules/` are `Conditional` (`paths` frontmatter) | `@imports` followed inside the source's allowed root (managed directory, user directory or project) up to four hops (a fifth is `Not loaded`); `claudeMdExcludes` excludes matches, `AGENTS.md` included, but cannot exclude the managed `CLAUDE.md`. **Project instructions** (`pluginConfigs.<plugin>.options.instructionFiles`, read from user and managed settings only): `claude-md-or-agents-md` (default) makes `AGENTS.md` a `Candidate` only when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists from the project root to the working folder, otherwise `Replaced`; `claude-md-and-agents-md` lists both, an `AGENTS.md` already imported once is `Already included`; `claude-md` marks `AGENTS.md` `Excluded`; `managed-only` keeps the managed `CLAUDE.md` as a `Candidate` (its bytes count in the context estimate), and marks project, local and user `CLAUDE.md`, `AGENTS.md` and non-path-scoped rules `Excluded`. An undocumented value, or different values under the two plugin IDs, leaves `AGENTS.md` `Conditional`. Folders above the project root, `--settings`, `/plugin` disabling the built-in plugin and subfolder on-demand loading are not observed. Auto memory and inline managed `claudeMd` content are not listed. | [Memory](https://code.claude.com/docs/en/memory) |
+| Claude Code | `/Library/Application Support/ClaudeCode/CLAUDE.md` and observed managed `claudeMd` content (managed, read-only; see below), then `~/.claude/CLAUDE.md`, then from the project root down to the working folder: `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, and — when **Project instructions** lets it — that folder's `AGENTS.md` and `.claude/AGENTS.md`; rules in `.claude/rules/` are `Conditional` (`paths` frontmatter) | `@imports` followed inside the source's allowed root (managed directory, user directory or project) up to four hops (a fifth is `Not loaded`); `claudeMdExcludes` excludes matches, `AGENTS.md` included, but cannot exclude the managed `CLAUDE.md`. **Project instructions** (`pluginConfigs.<plugin>.options.instructionFiles`, read from user and managed settings only): `claude-md-or-agents-md` (default) makes `AGENTS.md` a `Candidate` only when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists from the project root to the working folder, otherwise `Replaced`; `claude-md-and-agents-md` lists both, an `AGENTS.md` already imported once is `Already included`; `claude-md` marks `AGENTS.md` `Excluded`; `managed-only` keeps the managed `CLAUDE.md` as a `Candidate` (its bytes count in the context estimate), and marks project, local and user `CLAUDE.md`, `AGENTS.md` and non-path-scoped rules `Excluded`. An undocumented value, or different values under the two plugin IDs, leaves `AGENTS.md` `Conditional`. Folders above the project root, `--settings`, `/plugin` disabling the built-in plugin and subfolder on-demand loading are not observed. Auto memory is not listed. | [Memory](https://code.claude.com/docs/en/memory) |
 | Codex | `~/.codex`: first non-empty of `AGENTS.override.md`, `AGENTS.md`; then each directory from the project root down: override, `AGENTS.md`, then `project_doc_fallback_filenames` — one file per directory | Concatenated root → working folder; stops at `project_doc_max_bytes` (32 KiB by default) and marks the rest `Truncated` | [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md) |
 | Gemini CLI | `~/.gemini/GEMINI.md`, then `GEMINI.md` (or the names in `context.fileName`) from the project root down | Concatenated; `@file` imports followed inside the project. Just-in-time loading in subfolders is not modelled. | [GEMINI.md](https://geminicli.com/docs/cli/gemini-md/) |
 | OpenCode | `~/.config/opencode/AGENTS.md`, then `AGENTS.md` from the project root down, plus the `instructions` option (paths and globs inside the project) | Remote `instructions` URLs are not fetched | [Rules](https://opencode.ai/docs/rules/) |
 | Copilot CLI | `~/.copilot/copilot-instructions.md`, `.github/copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/instructions/*.instructions.md` (`applyTo`) | Copilot combines sources without a general precedence order | [Repository instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions) |
+
+
+Claude Code's inline `claudeMd` is extracted from the raw structured tree of
+observed on-disk **Managed** sources for the selected analysis context:
+`managed-settings.json` and its `managed-settings.d/*.json` drop-ins. The row
+retains the real JSON file path and the `claudeMd` key path; the JSON document
+itself is not treated as Markdown. User, project and local values are ignored.
+Remote/MDM policy content is not invented: the resolver does not observe those
+sources. A standalone string from an applied managed layer is a `Candidate`,
+including under `managed-only`; its raw UTF-8 bytes count toward the approximate
+context budget, while its preview is redacted and capped at 20,000 characters.
+The 2 MB instruction byte budget still applies.
+
+The official memory reference gives inline `claudeMd` the same precedence as a
+managed `CLAUDE.md`, before user/project instructions, but does not establish how
+both combine. When both are observed, both rows are `Conditional` and their bytes
+appear in the conditional estimate, with a notice that their combined activation
+and relative order are unverified. Multiple managed layers or an unresolved
+source keep inline contributions `Unresolved`, with zero included bytes; an
+invalid non-string value is also `Unresolved`. Inline `@` imports are shown in
+the preview, but are not followed: their expansion and base directory are not
+established by the reference, and the analysis emits an explicit notice.
 
 ## Scope, version and trust assumptions
 
@@ -64,9 +86,6 @@ does not prove that a session loaded it.
 
 ## Cases left unresolved on purpose
 
-- Claude Code inline managed `claudeMd` instructions are not listed or counted
-  in the context estimate yet; tracked in
-  [#30](https://github.com/tavodev/agentsconfig/issues/30).
 - Claude Code managed drop-ins (`managed-settings.d/*.json`) and multiple
   managed sources: their composition depends on `managedSourcesBehavior` and on
   the delivery mechanism, so they are `Unresolved` / `Conditional`.

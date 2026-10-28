@@ -48,7 +48,7 @@ struct ContextBudget {
             default: inclusion = .excluded
             }
             let bytes = inclusion == .excluded ? 0 : source.state == "Conditional" ? source.bytes : source.includedBytes
-            budget.items.append(.init(kind: .instruction, path: source.path, label: URL(fileURLWithPath: source.path).lastPathComponent,
+            budget.items.append(.init(kind: .instruction, path: source.path, label: source.displayName,
                                       bytes: bytes, inclusion: inclusion,
                                       reason: source.importedBy == nil ? source.state : "Imported"))
         }

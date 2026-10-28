@@ -49,7 +49,7 @@ import Foundation
             }
             let consumers = Array(Set(agents.filter { $0.files.contains { $0.path == file.path } }
                 .map { $0.name.components(separatedBy: " (").first ?? $0.name })).sorted()
-            let plugin = file.path.contains("/plugins/") || file.path.contains("/extensions/")
+            let plugin = SkillGrouping.isPlugin(path: file.path)
             let system = file.readOnly && !plugin
             var metadata: [String: String] = [:]
             if let header {
@@ -157,8 +157,51 @@ import Foundation
             // Managed memory loads before user/project memory, including in managed-only mode.
             // Unlike other CLAUDE.md files, claudeMdExcludes cannot exclude this policy file.
             let managed = AppPaths.systemPath("/Library/Application Support/ClaudeCode")
-            add(managed + "/CLAUDE.md", reason: "Managed instructions are read before user and project instructions.",
+            let inlineSources = configuration.context == context ? configuration.sources.filter { source in
+                guard source.label == "Managed", !["Missing", "Excluded"].contains(source.state), source.tree?["claudeMd"] != nil else { return false }
+                return source.path == managed + "/managed-settings.json" ||
+                    ((source.path as NSString).deletingLastPathComponent == managed + "/managed-settings.d" && source.path.hasSuffix(".json"))
+            } : []
+            let coexist = inlineSources.contains { $0.tree?["claudeMd"] is String } && read(managed + "/CLAUDE.md") != nil
+            let coexistReason = "Managed CLAUDE.md and inline claudeMd coexist. Their relative order and combined activation are not established; both are conditional."
+            let managedStart = output.instructions.count
+            add(managed + "/CLAUDE.md", state: coexist ? "Conditional" : "Candidate",
+                reason: coexist ? coexistReason : "Managed instructions are read before user and project instructions.",
                 boundary: managed, canExclude: false)
+            if coexist {
+                // Imports share their parent's uncertain activation; they must
+                // not enter the counted budget through the recursive default.
+                for index in managedStart..<output.instructions.count
+                    where ["Candidate", "Truncated", "Conditional"].contains(output.instructions[index].state) {
+                    output.instructions[index].state = "Conditional"
+                    output.instructions[index].reason = coexistReason
+                }
+                output.notices.append(coexistReason)
+            }
+            for source in inlineSources {
+                guard output.instructions.count < 100 else { break }
+                let text = source.tree?["claudeMd"] as? String
+                var state = source.state == "Applied" && inlineSources.count == 1 ? (coexist ? "Conditional" : "Candidate") : "Unresolved"
+                var reason = state == "Unresolved" ? "Managed claudeMd composition is unresolved. " + source.reason :
+                    coexist ? coexistReason : "Observed Managed setting claudeMd; instructions load before user and project instructions. Session loading is not verified."
+                let inside = AppPaths.canonicalPath(source.path).flatMap { path in
+                    AppPaths.canonicalPath(managed).map { path.hasPrefix($0 + "/") }
+                } == true
+                if !inside { state = "Outside scope"; reason = "Managed claudeMd source leaves its allowed root." }
+                else if text == nil { state = "Unresolved"; reason = "Managed claudeMd must be a string." }
+                let bytes = text?.utf8.count ?? 0
+                let included = ["Candidate", "Conditional"].contains(state) ? min(bytes, max(0, byteLimit - consumed)) : 0
+                if state == "Candidate" && included < bytes { state = "Truncated"; reason = "Instruction byte budget reached." }
+                consumed += included
+                output.instructions.append(.init(path: source.path, state: state, reason: reason, bytes: bytes, includedBytes: included,
+                    text: inside ? Secrets.maskText(String((text ?? "").prefix(20_000)), format: .markdown, masking: true) : "",
+                    importedBy: nil, keyPath: ["claudeMd"]))
+                // The memory reference does not establish expansion rules or a base directory for inline imports.
+                if let text, !references(in: text, importsOnly: true).isEmpty {
+                    output.notices.append("Import expansion for inline managed claudeMd is unresolved; referenced files were not read.")
+                }
+            }
+            if configuration.context != context { output.notices.append("Inline managed instructions were not inspected because the configuration belongs to another context.") }
         }
         if context.agentID == "codex" {
             for directory in [user] + directories {

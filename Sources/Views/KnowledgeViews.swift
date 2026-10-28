@@ -12,12 +12,20 @@ struct InstructionListView: View {
                     Text(L(item.reason)).font(.callout).foregroundStyle(.secondary)
                     if let origin = item.importedBy { Text(L("Imported by") + ": " + origin).font(.caption.monospaced()) }
                     Text(item.path).font(.caption.monospaced()).textSelection(.enabled)
+                    if !item.keyPath.isEmpty {
+                        Text(item.keyPath.joined(separator: ".")).font(.caption.monospaced()).textSelection(.enabled)
+                    }
                     Text("\(item.includedBytes) / \(item.bytes) bytes").font(.caption.monospaced())
                     Text(item.text).font(.body.monospaced()).textSelection(.enabled)
                 } label: {
                     HStack {
                         Text("\(index + 1)").font(.caption.monospaced()).foregroundStyle(.secondary)
-                        Text(item.path).font(.body.monospaced()).lineLimit(2).truncationMode(.middle)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.path).font(.body.monospaced()).lineLimit(2).truncationMode(.middle)
+                            if !item.keyPath.isEmpty {
+                                Text(item.keyPath.joined(separator: ".")).font(.caption.monospaced()).foregroundStyle(.secondary)
+                            }
+                        }
                         Spacer()
                         Text(L(item.state)).font(.caption).foregroundStyle(.secondary)
                     }
