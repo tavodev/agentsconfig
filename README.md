@@ -36,8 +36,11 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   arbitrary version-to-version comparison.
 - **Structured editing** for JSON/JSONC (MCP servers,
   permissions, env vars, plugins…) on top of a syntax-highlighted
-  source editor with find bar. TOML uses Source editing; MCP add/copy uses
-  a separate reviewed operation preserving unrelated TOML types.
+  source editor with find bar. TOML can edit existing string, boolean, Int64
+  and finite floating-point values by patching just their source token,
+  preserving comments and surrounding formatting. Unsupported values use
+  Source; MCP add/copy remains a separate reviewed operation that preserves
+  unrelated TOML types but can normalize comments and formatting.
 - **Cross-agent MCP comparator**: a table of every configured MCP
   server × agent, with copy-to-agent to sync specs across tools.
 - **Secrets masking**: API keys and tokens render masked in the
@@ -156,23 +159,31 @@ only network traffic is the update check described below.
   host and runs with `AGENTSCONFIG_HOME` or `AGENTSCONFIG_DEFAULTS_SUITE` never
   start the updater.
 
-- **History is not encrypted.** Snapshots keep full file content —
-  including any secrets inside them — in files with `0600` permissions
-  inside `0700` directories. Files flagged `excludeFromHistory` in the
-  registry (e.g. `~/.gemini/config/config.json`) and volatile state files are
-  never snapshotted. Settings can disable new snapshots and save backups
-  globally; the History tab also allows per-file opt-out. Existing history
-  is retained. Individual versions or all indexed versions for one file can
-  be removed with confirmation; concurrent new versions invalidate that review.
-  Physical cleanup errors are visible and retriable. Legacy backups are retained
-  by those per-file removals. **Settings → Privacy → Delete all history…**
-  purges everything under the `History` folder (current, legacy and
-  `.migrated` backups) after a confirmation that shows how many files,
-  versions and bytes will go. It waits for each file's history lock, never
-  follows symbolic links (links are removed, their targets are not), keeps
-  config files untouched, clears the activity feed and leaves the recording
-  setting as it was; anything that cannot be deleted is reported and can be
-  retried. Turning recording off does not purge by itself.
+- **History encryption is optional, off by default.** Snapshots contain full
+  file content, including secrets, protected by `0600` files inside `0700`
+  directories. **Settings → Privacy → Encrypt history…** reviews and encrypts
+  existing indexes, snapshots and legacy backups, then encrypts future history
+  with AES-256-GCM. The key stays in this Mac's Keychain, separate for Debug and
+  distributed builds. **Decrypt history…** reviews the reverse conversion.
+  Interrupted mode changes are resumable and block history writes until they
+  finish. Lost keys or invalid authentication never trigger plaintext fallback
+  or a replacement key. Legacy folder names remain visible. Close older app
+  versions before using encrypted history; see the
+  [encryption and recovery boundaries](docs/HISTORY-ENCRYPTION.md).
+  Files flagged `excludeFromHistory` in the registry (e.g.
+  `~/.gemini/config/config.json`) and volatile state files are never snapshotted.
+  Settings can disable new snapshots and save backups globally; the History tab
+  also allows per-file opt-out. Existing history is retained. Individual versions
+  or all indexed versions for one file can be removed with confirmation;
+  concurrent new versions invalidate that review. Physical cleanup errors are
+  visible and retriable. Legacy backups are retained by those per-file removals.
+  **Settings → Privacy → Delete all history…** deletes history content (current,
+  legacy and `.migrated` backups) after reviewing its counts and size. It never
+  follows symbolic links, leaves configuration files untouched, clears activity
+  and preserves the recording setting. Encryption metadata and its Keychain key
+  remain so new snapshots retain the chosen mode. Purge can remove content with
+  damaged metadata or an unavailable key, but does not repair them; new writes
+  remain blocked. Turning recording off does not purge by itself.
   Retention removes older versions; a save temporarily keeps at least two
   versions, and a restore with unsaved edits keeps at least three. Later
   operations resume the configured retention limit.
@@ -190,7 +201,8 @@ only network traffic is the update check described below.
   without replacing the link. Resolution and replacement are separate
   operations; concurrent changes to links or directories are not atomic.
 - **Concurrency.** AgentsConfig is a single-instance app; its history
-  indexes are locked per file for concurrent access. Saves verify the
+  operations share a root mode lock and per-file index locks for concurrent
+  access. Saves verify the
   live disk state before writing and back it up first, but the
   check-then-replace window is not a compare-and-swap against other
   writers. An external change after the backup and before replacement may
@@ -207,6 +219,14 @@ with different meanings, authentication and expansion syntax) block the copy.
 Destinations and source references are in [MCP-SCHEMAS.md](docs/MCP-SCHEMAS.md).
 Automatic MCP edits target **Gemini CLI**; Antigravity files are inspected separately.
 
+TOML's Structured tab shows the first 200 supported scalar values. **Apply**
+updates the editor buffer; **Save** still requires its normal diff review and
+confirmation. Each replacement keeps the existing native type and leaves bytes
+outside that value unchanged. Arrays, inline tables, dates/times, array-of-table
+members, non-finite numbers, new keys and other unsupported syntax use Source.
+See [TOML editing](docs/TOML-EDITING.md) for the form's limits and the distinction
+from MCP add/copy, which may normalize the document.
+
 Files up to 2,000,000 bytes retain structured inspection. Files between 2 MB
 and 16 MB use background reading, validation and saving, with paginated Source
 editing. Each page is around 65,536 UTF-16 units, expands to whole characters,
@@ -217,12 +237,18 @@ Files over 16 MB still require an external editor. Large line diffs (over 2,000 
 omission notice. Semantic output is capped at 500 changes. Skills are
 scanned/watched up to eight directory levels and 1,000 directories, with a
 10,000-entry per-directory scan cap; directory symlinks and `.git` are skipped.
+Generic recursive discovery also caps collected files at 10,000 per scan,
+including when those files are spread across several smaller directories.
 
 Legacy history is migrated under a per-file lock. Original directories are
-renamed with `.migrated` only after a valid new index is published. To use an
-older app again, keep backups and restore the original directory name manually
-only when that destination is absent; older code does not automatically find
-the renamed directory. Ambiguous or corrupt history stays visible as an error.
+renamed with `.migrated` only after a valid new index is published. To prepare
+history for an older app, `scripts/export-legacy-history.py` exports indexed
+versions to a new, private folder in the original layout and preserves
+`.migrated` backups separately, without changing the source or replacing an
+existing destination. Encrypted history must first be decrypted in Settings.
+See [history recovery](docs/HISTORY-RECOVERY.md) for the explicit source/destination
+command, compatibility checks and installation limits. Ambiguous or corrupt
+history stays visible as an error.
 
 Known issues are tracked in [GitHub Issues](https://github.com/tavodev/agentsconfig/issues).
 Hook diagnostics can
@@ -300,7 +326,7 @@ baseline without touching real history.
 
 ### Opt-in UI regression tests
 
-The separate `AgentsConfigUI` scheme contains 29 XCUITest scenarios using
+The separate `AgentsConfigUI` scheme contains 31 XCUITest scenarios using
 fictitious homes, isolated preference suites and disabled notifications. Its
 `AgentsConfigUITestHost` has a distinct bundle identifier so it cannot terminate
 your normal app; the host refuses to start without the isolated environment.

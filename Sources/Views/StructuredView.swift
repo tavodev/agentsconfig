@@ -124,6 +124,12 @@ struct StructuredView: View {
 
     private var editable: Bool { !readOnly && canWriteStructured && root != nil }
 
+    private var editableTOMLPaths: Set<[String]> {
+        guard format == .toml, !readOnly,
+              let fields = try? TOMLScalarEditor.fields(in: store.text(for: path)) else { return [] }
+        return Set(fields.prefix(200).map(\.path))
+    }
+
     private var root: [String: Any]? {
         Parsers.parse(store.text(for: path), format: format).tree as? [String: Any]
     }
@@ -193,16 +199,12 @@ struct StructuredView: View {
                                 .foregroundStyle(.secondary)
                         }
                     } else if format == .toml {
-                        Card {
-                            Label(L("Structured editing rewrites the TOML — comments and formatting are normalized on save."),
-                                  systemImage: "info.circle")
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                        }
+                        TOMLScalarEditingView(path: path, text: store.text(for: path))
                     }
                     specialCards
                     GenericInspector(filePath: path, root: root ?? [:],
-                                     editable: editable, excludedKeys: handledTopLevelKeys, mutate: mutate)
+                                     editable: editable, excludedKeys: handledTopLevelKeys,
+                                     excludedPaths: editableTOMLPaths, mutate: mutate)
                 }
             }
             .padding(14)
@@ -660,6 +662,7 @@ struct GenericInspector: View {
     let root: [String: Any]
     let editable: Bool
     var excludedKeys: Set<String> = []
+    var excludedPaths: Set<[String]> = []
     let mutate: ((inout [String: Any]) -> Void) -> Void
 
     var body: some View {
@@ -679,9 +682,20 @@ struct GenericInspector: View {
     }
 
     private var nodes: [TreeNode] {
-        root.keys.sorted().filter { !excludedKeys.contains($0) }.map { k in
-            TreeNode.build(key: k, value: root[k] ?? NSNull(), segs: [.key(k)])
+        root.keys.sorted().filter { !excludedKeys.contains($0) }.compactMap { k in
+            pruned(TreeNode.build(key: k, value: root[k] ?? NSNull(), segs: [.key(k)]))
         }
+    }
+
+    private func pruned(_ node: TreeNode) -> TreeNode? {
+        let keys = node.segs.compactMap { if case .key(let key) = $0 { return key }; return nil }
+        if keys.count == node.segs.count && excludedPaths.contains(keys) { return nil }
+        guard let children = node.children, !children.isEmpty else { return node }
+        let kept = children.compactMap(pruned)
+        guard !kept.isEmpty else { return nil }
+        var copy = node
+        copy.children = kept
+        return copy
     }
 }
 

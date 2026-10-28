@@ -94,6 +94,7 @@ struct AppSettingsView: View {
                     Text(L("New snapshots and save backups are disabled. Existing history is retained; restore with unsaved edits is blocked."))
                         .font(.callout).foregroundStyle(.orange)
                 }
+                HistoryEncryptionControls()
                 purgeHistoryControls
                 if !store.permissionWarnings.isEmpty {
                     ForEach(store.permissionWarnings, id: \.self) { w in

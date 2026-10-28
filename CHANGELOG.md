@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Optional local history encryption in Settings → Privacy: AES-256-GCM protects existing indexes, snapshots and legacy backups, with a device-local Keychain key, reviewed encryption/decryption, resumable conversion and visible failures instead of plaintext fallback. Config files remain unchanged; old clients must be closed before conversion.
+- Structured TOML editing can patch existing text, boolean, Int64 and finite numeric values without rewriting comments or surrounding formatting. Apply updates the buffer and Save still requires review; unsupported types and new keys use Source.
+- `scripts/export-legacy-history.py` prepares a new history folder for older releases without changing the original, preserving current versions and legacy backups and rejecting collisions, symlinks, invalid content and existing destinations.
+- Synthetic resource-limit regression tests cover exact UTF-8 file-size thresholds, discovery depth/directory/entry/file bounds and redacted diff limits. The deliberate limits remain unchanged.
 - Claude Code instruction analysis includes observed inline managed `claudeMd` content with its JSON key path, redacted preview and context cost; uncertain coexistence and managed composition stay explicit.
 - Copilot installed-plugin skills and MCP sources retain unverified activation in analysis and comparisons; plugin skill context costs remain conditional even when user definitions share a name.
 - Claude Code instruction analysis includes the managed, read-only `CLAUDE.md` before user and project instructions, including in `managed-only` mode and the context estimate; `claudeMdExcludes` cannot exclude this policy file.

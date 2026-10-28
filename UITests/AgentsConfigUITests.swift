@@ -15,7 +15,7 @@ final class AgentsConfigUITests: XCTestCase {
             ".claude/settings.json": #"{"env":{"API_KEY":"FAKE-UI-SECRET"},"model":"fixture"}"#,
             ".claude/mcp.json": #"{"env":{"API_KEY":"FAKE-UI-OTHER"}}"#,
             ".claude.json": #"{"mcpServers":{}}"#,
-            ".codex/config.toml": "model = 'fixture'\n",
+            ".codex/config.toml": "# Codex fixture comment\nmodel = 'fixture' # keep model comment\n",
             ".codex/auth.json": #"{"OPENAI_API_KEY":"FAKE-UI-AUTH"}"#,
             ".config/opencode/opencode.json": "{}"
         ] {
@@ -60,6 +60,48 @@ final class AgentsConfigUITests: XCTestCase {
         XCTAssertTrue(app.buttons["save-diagnostic-report"].exists)
         app.typeKey(.escape, modifierFlags: [])
         XCTAssertFalse(app.buttons["save-diagnostic-report"].exists)
+    }
+
+    @MainActor func testTomlScalarEditPreservesCommentsAndRequiresSaveReview() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        let url = home.appendingPathComponent(".codex/config.toml")
+        let original = try String(contentsOf: url, encoding: .utf8)
+        open(".codex/config.toml", agent: "codex", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        let controlID = SHA256.hash(data: Data("model".utf8)).map { String(format: "%02x", $0) }.joined()
+        let input = app.descendants(matching: .any).matching(identifier: "toml-value:" + controlID).firstMatch
+        XCTAssertTrue(input.waitForExistence(timeout: 5))
+        input.click()
+        app.typeKey("a", modifierFlags: .command)
+        app.typeText("reviewed-toml-fixture")
+        click("toml-apply:" + controlID, in: app)
+        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), original)
+        app.typeKey("s", modifierFlags: .command)
+        XCTAssertTrue(app.buttons["confirm-save"].waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertEqual(try String(contentsOf: url, encoding: .utf8), original)
+        app.typeKey("s", modifierFlags: .command)
+        click("confirm-save", in: app)
+        let expected = "# Codex fixture comment\nmodel = \"reviewed-toml-fixture\" # keep model comment\n"
+        let saved = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            (try? String(contentsOf: url, encoding: .utf8)) == expected
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [saved], timeout: 5), .completed)
+    }
+
+    @MainActor func testHistoryEncryptionReviewCanCancelWithoutChangingHistory() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        let config = home.appendingPathComponent(".claude/settings.json")
+        let original = try Data(contentsOf: config)
+        let marker = home.appendingPathComponent("Library/Application Support/AgentsConfig/History/.encryption.json")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+        click("destination-settings", in: app)
+        click("history-encryption-change", in: app)
+        XCTAssertTrue(app.staticTexts["Encrypt all local history?"].waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertFalse(app.staticTexts["Encrypt all local history?"].exists)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertEqual(try Data(contentsOf: config), original)
     }
 
     @MainActor private func cleanup(_ app: XCUIApplication, _ home: URL, _ suite: String) {

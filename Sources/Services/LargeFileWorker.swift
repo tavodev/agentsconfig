@@ -8,9 +8,11 @@ actor LargeFileWorker {
         let boundary: URL
         let enabled: Bool
         let limit: Int
+        var keyProvider: (any HistoryKeyProvider)? = nil
         func store() -> SnapshotStore {
             SnapshotStore(root: root, permissionBoundary: boundary,
-                          historyLimit: { limit }, isPathTracked: { FileManager.default.fileExists(atPath: $0) })
+                          historyLimit: { limit }, keyProvider: keyProvider,
+                          isPathTracked: { FileManager.default.fileExists(atPath: $0) })
         }
     }
     enum Disk: Equatable, Sendable { case missing, content(String) }

@@ -93,10 +93,15 @@ struct SnapshotStore {
 
     private let root: URL
     private let permissionBoundary: URL
+    private let keyProvider: any HistoryKeyProvider
     var now: () -> Date
     var historyLimit: () -> Int
     var writeIndexFile: (Data, URL) throws -> Void = { try AtomicWriter.write($0, to: $1) }
     var removeContentFile: (URL) throws -> Void = { try FileManager.default.removeItem(at: $0) }
+    /// Failure-injection seam for resumable full-tree encryption migration.
+    var writeEncryptionFile: (Data, URL) throws -> Void = { try AtomicWriter.write($0, to: $1) }
+    var onEncryptionScan: () -> Void = {}
+    private var encryption: HistoryEncryption { .init(root: root, keyProvider: keyProvider, writeMigrationFile: writeEncryptionFile, onRepresentationScan: onEncryptionScan) }
     /// Whether a path is a known config file — used to detect legacy
     /// dir-name ambiguity during migration. Defaults to on-disk existence.
     var isPathTracked: (String) -> Bool
@@ -105,14 +110,90 @@ struct SnapshotStore {
          permissionBoundary: URL? = nil,
          now: @escaping () -> Date = Date.init,
          historyLimit: @escaping () -> Int = { AppSettings.historyLimit },
+         keyProvider: (any HistoryKeyProvider)? = nil,
          isPathTracked: ((String) -> Bool)? = nil) {
         self.root = root ?? AppPaths.applicationSupport
             .appendingPathComponent("AgentsConfig/History", isDirectory: true)
         self.permissionBoundary = permissionBoundary ?? AppPaths.applicationSupport
         self.now = now
         self.historyLimit = historyLimit
+        self.keyProvider = keyProvider ?? HistoryKeychain()
         self.isPathTracked = isPathTracked
             ?? { FileManager.default.fileExists(atPath: $0) }
+    }
+
+    struct EncryptionWorkerInput: Sendable {
+        let root: URL
+        let keyProvider: any HistoryKeyProvider
+        func setEncryption(enabled: Bool) throws -> HistoryEncryption.Status {
+            let encryption = HistoryEncryption(root: root, keyProvider: keyProvider)
+            try encryption.setEnabled(enabled)
+            return try encryption.status()
+        }
+        func resumeEncryption() throws -> HistoryEncryption.Status {
+            let encryption = HistoryEncryption(root: root, keyProvider: keyProvider)
+            try encryption.resume()
+            return try encryption.status()
+        }
+    }
+    func encryptionWorkerInput() -> EncryptionWorkerInput { .init(root: root, keyProvider: keyProvider) }
+    func encryptionStatus() throws -> HistoryEncryption.Status { try encryption.status() }
+    func setEncryption(enabled: Bool) throws { try encryption.setEnabled(enabled) }
+    func resumeEncryption() throws { try encryption.resume() }
+    @discardableResult
+    func secureExistingPermissions() -> [String] {
+        do { return try encryption.withRootLock(create: false) { secureExistingPermissionsUnlocked() } }
+        catch is HistoryEncryption.RootAbsent { return [] }
+        catch { return [root.path] }
+    }
+
+    func loadHistory(for path: String) throws -> [FileVersion] {
+        do {
+            return try encryption.withRootLock(create: false) {
+                try encryption.requireReadable()
+                return try loadHistoryUnlocked(for: path)
+            }
+        } catch is HistoryEncryption.RootAbsent { return [] }
+    }
+    func content(for path: String, version: FileVersion) -> String? {
+        try? encryption.withRootLock(create: false) {
+            try encryption.requireReadable()
+            return contentUnlocked(for: path, version: version)
+        }
+    }
+    func removeVersions(for path: String, ids: Set<String>, expectedIDs: Set<String>) throws {
+        try encryption.withRootLock(create: true) {
+            try encryption.requireWritable()
+            try removeVersionsUnlocked(for: path, ids: ids, expectedIDs: expectedIDs)
+            encryption.didWrite()
+        }
+    }
+    func cleanupOrphans(for path: String) throws {
+        try encryption.withRootLock(create: true) {
+            try encryption.requireWritable()
+            try cleanupOrphansUnlocked(for: path)
+            encryption.didWrite()
+        }
+    }
+    func purgeSummary() -> PurgeSummary {
+        (try? encryption.withRootLock(create: false) { purgeSummaryUnlocked() }) ?? PurgeSummary()
+    }
+    func purgeAll() throws {
+        do {
+            try encryption.withRootLock(create: false) {
+                try purgeAllUnlocked()
+                encryption.didWrite()
+            }
+        } catch is HistoryEncryption.RootAbsent { return }
+    }
+    @discardableResult
+    func record(path: String, content: String, origin: FileVersion.Origin, changes: [SemanticChange]) throws -> FileVersion? {
+        try encryption.withRootLock(create: true) {
+            try encryption.requireWritable()
+            let result = try recordUnlocked(path: path, content: content, origin: origin, changes: changes)
+            encryption.didWrite()
+            return result
+        }
     }
 
     private static let hexDigits = Array("0123456789abcdef".utf8)
@@ -154,13 +235,20 @@ struct SnapshotStore {
     /// (but not including) "Application Support", which other apps share.
     private func ensurePrivateTree(_ dir: URL) throws {
         let fm = FileManager.default
+        let stopPath = permissionBoundary.path
+        var inspect = dir
+        while inspect.path.hasPrefix(stopPath + "/") {
+            if let type = Self.fileType(inspect), type != S_IFDIR { throw HistoryError.unsafeHistoryRoot(inspect.path) }
+            inspect = inspect.deletingLastPathComponent()
+        }
         try fm.createDirectory(at: dir, withIntermediateDirectories: true,
                                attributes: [.posixPermissions: 0o700])
-        try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
-        var u = dir.deletingLastPathComponent()
-        let stopPath = permissionBoundary.path
+        var u = dir
         while u.path.hasPrefix(stopPath + "/") {
-            try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: u.path)
+            var info = stat()
+            guard lstat(u.path, &info) == 0, info.st_mode & S_IFMT == S_IFDIR else { throw HistoryError.unsafeHistoryRoot(u.path) }
+            // Avoid changing ctime on every snapshot: the root-mode cache depends on it.
+            if info.st_mode & 0o7777 != 0o700 { try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: u.path) }
             u = u.deletingLastPathComponent()
         }
     }
@@ -169,7 +257,7 @@ struct SnapshotStore {
     /// Only touches paths under this store's root; deletes nothing.
     /// Returns the paths it could not secure.
     @discardableResult
-    func secureExistingPermissions() -> [String] {
+    private func secureExistingPermissionsUnlocked() -> [String] {
         let fm = FileManager.default
         var failed: [String] = []
         guard fm.fileExists(atPath: root.path),
@@ -185,6 +273,8 @@ struct SnapshotStore {
         for t in targets {
             // Already private: skip the metadata write (this runs every launch).
             var info = stat()
+            // Permission hardening must not chmod a symlink's outside target.
+            if lstat(t.url.path, &info) == 0, info.st_mode & S_IFMT == S_IFLNK { continue }
             if lstat(t.url.path, &info) == 0, info.st_mode & S_IFMT != S_IFLNK,
                Int(info.st_mode & 0o777) == (t.isDir ? 0o700 : 0o600) { continue }
             do {
@@ -202,12 +292,13 @@ struct SnapshotStore {
 
     /// Newest first. Throws on a corrupt or foreign index — a corrupt index
     /// must never be treated as an empty history that may be overwritten.
-    func loadHistory(for path: String) throws -> [FileVersion] {
+    private func loadHistoryUnlocked(for path: String) throws -> [FileVersion] {
         let dir = dir(for: path)
         // Reads never create or chmod anything unless a legacy migration is
         // pending: a path without history stays without a history dir.
         if !FileManager.default.fileExists(atPath: dir.path) {
             guard hasLegacyDir(for: path) else { return [] }
+            try encryption.requireWritable()
             try ensurePrivateTree(dir)
         }
         let entries: [IndexEntry]
@@ -231,7 +322,7 @@ struct SnapshotStore {
         }
     }
 
-    func content(for path: String, version: FileVersion) -> String? {
+    private func contentUnlocked(for path: String, version: FileVersion) -> String? {
         // path-escape protection: only content-addressed blob names are read
         guard isValidBlobName(version.file), version.file == version.hash
         else { return nil }
@@ -241,14 +332,7 @@ struct SnapshotStore {
     }
 
     private func readRegularContent(_ url: URL) -> String? {
-        let fd = open(url.path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
-        guard fd >= 0 else { return nil }
-        let handle = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
-        defer { try? handle.close() }
-        var info = stat()
-        guard fstat(fd, &info) == 0, info.st_mode & S_IFMT == S_IFREG else { return nil }
-        // readToEnd() returns nil at EOF with no data: an empty blob is "", not unreadable.
-        guard let data = try? handle.readToEnd() ?? Data() else { return nil }
+        guard let data = try? encryption.read(url) else { return nil }
         return String(data: data, encoding: .utf8)
     }
 
@@ -264,7 +348,7 @@ struct SnapshotStore {
     /// Publish the reduced index before removing unreferenced objects. The
     /// reviewed ID set must still match; newly recorded versions are never
     /// removed under an earlier purge confirmation. Legacy backups stay intact.
-    func removeVersions(for path: String, ids: Set<String>, expectedIDs: Set<String>) throws {
+    private func removeVersionsUnlocked(for path: String, ids: Set<String>, expectedIDs: Set<String>) throws {
         let directory = dir(for: path)
         try ensurePrivateTree(directory)
         try withIndexLock(directory) {
@@ -280,7 +364,7 @@ struct SnapshotStore {
 
     /// Retry physical cleanup against the current locked index. New references
     /// remain protected even if more versions were recorded after an error.
-    func cleanupOrphans(for path: String) throws {
+    private func cleanupOrphansUnlocked(for path: String) throws {
         let directory = dir(for: path)
         try ensurePrivateTree(directory)
         try withIndexLock(directory) {
@@ -328,12 +412,12 @@ struct SnapshotStore {
         return lstat(url.path, &info) == 0 ? info.st_mode & S_IFMT : nil
     }
 
-    func purgeSummary() -> PurgeSummary {
+    private func purgeSummaryUnlocked() -> PurgeSummary {
         var summary = PurgeSummary()
         guard Self.fileType(root) == S_IFDIR,
               let names = try? FileManager.default.contentsOfDirectory(atPath: root.path)
         else { return summary }
-        for name in names {
+        for name in names where name != HistoryEncryption.markerName {
             let url = root.appendingPathComponent(name)
             guard Self.fileType(url) == S_IFDIR else {
                 summary.otherItems += 1
@@ -381,7 +465,7 @@ struct SnapshotStore {
     /// `.migrated` directories go first so a migration racing the purge
     /// cannot repopulate an already purged format-2 directory. Every
     /// failure is collected and reported; retrying removes what remains.
-    func purgeAll() throws {
+    private func purgeAllUnlocked() throws {
         switch Self.fileType(root) {
         case nil: return
         case S_IFDIR: break
@@ -390,13 +474,14 @@ struct SnapshotStore {
         let names = try FileManager.default.contentsOfDirectory(atPath: root.path)
         let hashed = Set(names.filter { isValidBlobName($0) && Self.fileType(root.appendingPathComponent($0)) == S_IFDIR })
         var failures: [String] = []
-        for name in names where !hashed.contains(name) {
+        for name in names where !hashed.contains(name) && name != HistoryEncryption.markerName {
             removeTree(root.appendingPathComponent(name), failures: &failures)
         }
         for name in hashed.sorted() {
             purgeHistoryDir(root.appendingPathComponent(name, isDirectory: true), failures: &failures)
         }
         if !failures.isEmpty { throw HistoryError.incompletePurge(failures) }
+        try encryption.didPurge()
     }
 
     private func purgeHistoryDir(_ dir: URL, failures: inout [String]) {
@@ -446,7 +531,7 @@ struct SnapshotStore {
     /// must be able to abort the caller's write (F2). Returns nil only when
     /// the content is identical to the newest snapshot.
     @discardableResult
-    func record(path: String, content: String, origin: FileVersion.Origin,
+    private func recordUnlocked(path: String, content: String, origin: FileVersion.Origin,
                 changes: [SemanticChange]) throws -> FileVersion? {
         let dir = dir(for: path)
         try ensurePrivateTree(dir)
@@ -460,7 +545,7 @@ struct SnapshotStore {
             try ensurePrivateTree(objects)
             let blob = objects.appendingPathComponent(hash)
             if !FileManager.default.fileExists(atPath: blob.path) {
-                try AtomicWriter.write(content, to: blob)
+                try AtomicWriter.write(encryption.encoded(Data(content.utf8), for: blob), to: blob)
             }
             guard readRegularContent(blob) == content else {
                 throw HistoryError.corruptIndex(indexURL(dir).path)
@@ -524,7 +609,8 @@ struct SnapshotStore {
     private func loadIndex(for path: String) throws -> [IndexEntry] {
         let url = indexURL(dir(for: path))
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        guard let data = try? Data(contentsOf: url),
+        let data = try encryption.read(url)
+        guard
               let idx = try? JSONDecoder().decode(IndexFile.self, from: data),
               idx.format == 2,
               idx.path == Self.canonicalPath(path)
@@ -535,7 +621,8 @@ struct SnapshotStore {
     private func saveIndex(_ entries: [IndexEntry], for path: String) throws {
         let idx = IndexFile(format: 2, path: Self.canonicalPath(path),
                             entries: entries)
-        try writeIndexFile(try JSONEncoder().encode(idx), indexURL(dir(for: path)))
+        let url = indexURL(dir(for: path))
+        try writeIndexFile(encryption.encoded(JSONEncoder().encode(idx), for: url), url)
     }
 
     private func isValidBlobName(_ name: String) -> Bool {
@@ -572,6 +659,7 @@ struct SnapshotStore {
         let (legacyName, legacyDir) = legacyLocation(for: path)
         guard fm.fileExists(atPath: legacyDir.path, isDirectory: &isDir),
               isDir.boolValue else { return nil }
+        try encryption.requireWritable()
 
         // Ambiguity: another existing/tracked spelling may share this dir.
         guard legacyName.components(separatedBy: "__").count <= 13 else {
@@ -585,8 +673,8 @@ struct SnapshotStore {
             }
         }
 
-        guard let data = try? Data(contentsOf:
-                                    legacyDir.appendingPathComponent("index.json")),
+        let data = try encryption.read(legacyDir.appendingPathComponent("index.json"))
+        guard
               let legacy = try? JSONDecoder().decode([IndexEntry].self, from: data)
         else {
             throw HistoryError.corruptIndex(
@@ -606,7 +694,7 @@ struct SnapshotStore {
             let hash = Self.sha256(text)
             let blob = objects.appendingPathComponent(hash)
             if !fm.fileExists(atPath: blob.path) {
-                try AtomicWriter.write(text, to: blob)
+                try AtomicWriter.write(encryption.encoded(Data(text.utf8), for: blob), to: blob)
             }
             guard readRegularContent(blob) == text else {
                 throw HistoryError.corruptIndex(indexURL(newDir).path)

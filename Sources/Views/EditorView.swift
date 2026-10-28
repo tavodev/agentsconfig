@@ -207,7 +207,7 @@ struct EditorView: View {
                 NonStructuredHint(format: format) { tab = .source }
             } else {
                 StructuredView(path: path, doc: doc, format: format,
-                               readOnly: store.isReadOnly(path) || format == .toml)
+                               readOnly: store.isReadOnly(path))
             }
         case .source:
             if store.usesBackgroundProcessing(path) {

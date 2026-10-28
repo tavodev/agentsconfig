@@ -107,6 +107,7 @@ final class ConfigStore {
 
     // MARK: internals
     private var snapshots: SnapshotStore
+    @ObservationIgnored private let historyKeyProvider: (any HistoryKeyProvider)?
     private let notifier: Notifier?
     private var selfWriteHashes: [String: String] = [:]
     private var fileOwners: [String: String] = [:]          // path → agentID
@@ -135,13 +136,15 @@ final class ConfigStore {
     /// constructing a store never touches the real notification center.
     /// `backgroundScan` (the app) returns before the first scan: the window
     /// appears at once and state is published when the scan lands.
-    init(notifier: Notifier? = .shared, backgroundScan: Bool = false) {
+    init(notifier: Notifier? = .shared, backgroundScan: Bool = false,
+         historyKeyProvider: (any HistoryKeyProvider)? = nil) {
         self.notifier = notifier
+        self.historyKeyProvider = historyKeyProvider
         var tracked = Set<String>()
         for def in AgentRegistry.definitions {
             for src in def.sources { tracked.insert(src.expandedPath) }
         }
-        snapshots = SnapshotStore(isPathTracked: {
+        snapshots = SnapshotStore(keyProvider: historyKeyProvider, isPathTracked: {
             tracked.contains($0) || FileManager.default.fileExists(atPath: $0)
         })
         watcher.onChange = { [weak self] path in
@@ -228,6 +231,7 @@ final class ConfigStore {
     private(set) var historyRemovalErrors: [String: String] = [:]
 
     func requestHistoryRemoval(path: String, version: FileVersion? = nil) {
+        guard !historyEncryptionBusy else { return }
         refreshHistory(path: path)
         guard historyErrors[path] == nil else { return }
         let all = Set(history(for: path).map(\.id))
@@ -239,6 +243,7 @@ final class ConfigStore {
     func cancelHistoryRemoval() { pendingHistoryRemoval = nil }
 
     func retryHistoryCleanup(path: String) {
+        guard !historyEncryptionBusy else { return }
         do {
             try snapshots.cleanupOrphans(for: path)
             historyRemovalErrors.removeValue(forKey: path)
@@ -246,6 +251,7 @@ final class ConfigStore {
     }
 
     func confirmHistoryRemoval() {
+        guard !historyEncryptionBusy else { return }
         guard let request = pendingHistoryRemoval else { return }
         pendingHistoryRemoval = nil
         do {
@@ -269,7 +275,91 @@ final class ConfigStore {
     /// Outcome of the last purge request when there is no error.
     private(set) var historyPurgeNotice: String?
     /// A save may depend on the backup it just recorded; purge waits for it.
-    var historyPurgeBlocked: Bool { !savingPaths.isEmpty }
+    var historyPurgeBlocked: Bool { !savingPaths.isEmpty || historyEncryptionBusy }
+
+    // MARK: history encryption
+
+    struct HistoryEncryptionReview: Identifiable {
+        let id = UUID()
+        let enabled: Bool
+    }
+    private(set) var pendingHistoryEncryption: HistoryEncryptionReview?
+    private(set) var historyEncryptionStatus: HistoryEncryption.Status?
+    private(set) var historyEncryptionError: String?
+    private(set) var historyEncryptionBusy = false
+    @ObservationIgnored private var historyEncryptionTask: Task<Void, Never>?
+    @ObservationIgnored private var lastEncryptionTarget: Bool?
+
+    func loadHistoryEncryptionStatus() {
+        guard !historyEncryptionBusy else { return }
+        do {
+            historyEncryptionStatus = try snapshots.encryptionStatus()
+            historyEncryptionError = nil
+        } catch {
+            historyEncryptionStatus = nil
+            historyEncryptionError = L(error.localizedDescription)
+        }
+    }
+
+    func requestHistoryEncryption(enabled: Bool) {
+        guard !historyPurgeBlocked else { return }
+        loadHistoryEncryptionStatus()
+        guard historyEncryptionError == nil, historyEncryptionStatus?.needsResume != true else { return }
+        pendingHistoryEncryption = .init(enabled: enabled)
+    }
+
+    func cancelHistoryEncryption() { pendingHistoryEncryption = nil }
+
+    func confirmHistoryEncryption() {
+        guard let review = pendingHistoryEncryption, !historyPurgeBlocked else { return }
+        pendingHistoryEncryption = nil
+        lastEncryptionTarget = review.enabled
+        changeHistoryEncryption(resume: false)
+    }
+
+    func retryHistoryEncryption() {
+        guard !historyPurgeBlocked else { return }
+        if historyEncryptionStatus?.needsResume == true {
+            changeHistoryEncryption(resume: true)
+        } else if lastEncryptionTarget != nil {
+            changeHistoryEncryption(resume: false)
+        } else {
+            loadHistoryEncryptionStatus()
+        }
+    }
+
+    /// Awaited by tests before tearing down their temporary home and keys.
+    func waitForHistoryEncryption() async { await historyEncryptionTask?.value }
+
+    private func changeHistoryEncryption(resume: Bool) {
+        guard !historyPurgeBlocked else { return }
+        let input = snapshots.encryptionWorkerInput()
+        let target = lastEncryptionTarget ?? historyEncryptionStatus?.enabled ?? false
+        cancelSaveReview()
+        cancelRestore()
+        pendingHistoryRemoval = nil
+        pendingHistoryPurge = nil
+        historyEncryptionBusy = true
+        historyEncryptionError = nil
+        historyEncryptionTask = Task { [weak self] in
+            let outcome = await Task.detached(priority: .userInitiated) { () -> (HistoryEncryption.Status?, String?) in
+                do {
+                    let status: HistoryEncryption.Status
+                    if resume { status = try input.resumeEncryption() }
+                    else { status = try input.setEncryption(enabled: target) }
+                    return (status, nil)
+                } catch { return (nil, error.localizedDescription) }
+            }.value
+            guard let self else { return }
+            self.historyEncryptionBusy = false
+            self.historyEncryptionStatus = outcome.0 ?? (try? self.snapshots.encryptionStatus())
+            self.historyEncryptionError = outcome.1.map { L($0) }
+            self.histories = [:]
+            self.historyErrors = [:]
+            self.historyRemovalErrors = [:]
+            self.scheduleRefresh()
+        }
+    }
 
     func requestHistoryPurge() {
         guard !historyPurgeBlocked else { return }
@@ -331,6 +421,7 @@ final class ConfigStore {
             var info = stat()
             return lstat($0, &info) == 0
         }
+        loadHistoryEncryptionStatus()
     }
 
     /// History reads that surface corrupt/ambiguous indexes instead of
@@ -505,6 +596,7 @@ final class ConfigStore {
     /// Synchronous scan: tests and model-level callers rely on the state
     /// being current when it returns. UI and watcher paths use `scheduleRefresh()`.
     func refresh() {
+        guard !historyEncryptionBusy else { return }
         let result = Self.scan(scanInput())
         measured("apply") { apply(result) }
     }
@@ -521,6 +613,7 @@ final class ConfigStore {
     /// arriving mid-scan coalesce into one follow-up pass; a result is dropped
     /// if a synchronous `refresh()` published newer state meanwhile.
     func scheduleRefresh() {
+        guard !historyEncryptionBusy else { return }
         guard refreshTask == nil else { refreshQueued = true; return }
         isScanning = true
         refreshTask = Task { [weak self] in
@@ -1338,7 +1431,8 @@ final class ConfigStore {
     private func backgroundHistory(_ path: String, minimum: Int = 1) -> LargeFileWorker.HistoryPolicy {
         let boundary = AppPaths.applicationSupport
         return .init(root: boundary.appendingPathComponent("AgentsConfig/History"), boundary: boundary,
-                     enabled: keepsHistory(trackedFile(for: path)), limit: max(minimum, AppSettings.historyLimit))
+                     enabled: keepsHistory(trackedFile(for: path)), limit: max(minimum, AppSettings.historyLimit),
+                     keyProvider: historyKeyProvider)
     }
 
     func loadLargeFile(_ path: String) {
@@ -1560,7 +1654,7 @@ final class ConfigStore {
 
     var canSaveSelected: Bool {
         guard let p = selectedPath else { return false }
-        return dirtyPaths.contains(p) && !savingPaths.contains(p)
+        return dirtyPaths.contains(p) && !savingPaths.contains(p) && !historyEncryptionBusy
     }
 
     func saveSelected() {
@@ -1583,6 +1677,7 @@ final class ConfigStore {
 
     /// UI entry point: capture a concrete, redacted preview before committing.
     func requestSave(path: String, overwrite: Bool = false) {
+        guard !historyEncryptionBusy else { return }
         cancelSaveReview()
         guard let proposed = edits[path], let file = trackedFile(for: path) else { return }
         guard !isReadOnly(path), !savingPaths.contains(path) else { saveErrors[path] = L("Read-only file"); return }
@@ -1840,6 +1935,7 @@ final class ConfigStore {
     }
 
     private func attemptSave(path: String, mode: WriteMode) {
+        guard !historyEncryptionBusy else { return }
         guard !savingPaths.contains(path) else { return }
         guard let text = edits[path] else { return }
         guard let tf = trackedFile(for: path) else { return }
@@ -2127,6 +2223,7 @@ final class ConfigStore {
     }
 
     func requestRestorePrevious(_ path: String) {
+        guard !historyEncryptionBusy else { return }
         let version = history(for: path).first { $0.hash != documents[path]?.hash }
         prepareRestore(RestoreRequest(kind: .previous, path: path, version: version))
     }
@@ -2136,6 +2233,7 @@ final class ConfigStore {
     }
 
     private func prepareRestore(_ request: RestoreRequest) {
+        guard !historyEncryptionBusy else { return }
         cancelRestore()
         guard !savingPaths.contains(request.path) else { return }
         pendingRestore = request
@@ -2178,6 +2276,7 @@ final class ConfigStore {
     /// The preview pins target content, disk and draft; watcher reloads cannot
     /// silently broaden what the user approved while the sheet was open.
     func confirmRestore() {
+        guard !historyEncryptionBusy else { return }
         guard let request = pendingRestore, !preparingRestore else { return }
         let target = restoreProposedText
         let expected = restoreDisk
@@ -2239,6 +2338,7 @@ final class ConfigStore {
 
     private func applyContent(path: String, text: String,
                               origin: FileVersion.Origin, mode: WriteMode) {
+        guard !historyEncryptionBusy else { return }
         guard !savingPaths.contains(path) else { return }
         guard let tf = trackedFile(for: path) else { return }
         guard !isReadOnly(path) else {
@@ -2296,18 +2396,21 @@ final class ConfigStore {
     }
 
     func history(for path: String) -> [FileVersion] {
+        if historyEncryptionBusy { return histories[path] ?? [] }
         if histories[path] == nil { histories[path] = safeLoadHistory(path) }
         return histories[path] ?? []
     }
 
     /// Re-read persisted history for a path (after external repairs/tests).
     func refreshHistory(path: String) {
+        guard !historyEncryptionBusy else { return }
         histories.removeValue(forKey: path)
         histories[path] = safeLoadHistory(path)
     }
 
     func versionContent(path: String, version: FileVersion) -> String? {
-        snapshots.content(for: path, version: version)
+        guard !historyEncryptionBusy else { return nil }
+        return snapshots.content(for: path, version: version)
     }
 
     // MARK: - file actions (context menus, notifications)

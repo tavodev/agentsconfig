@@ -115,6 +115,12 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   'subsystem == "com.tavodev.agentsconfig"'` o Points of Interest.
 - `Sources/Services/Parsers.swift` — JSON/JSONC via JSONSerialization,
   TOML via TOMLKit (`TOMLTable.convert(to: .json)` → árbol Foundation).
+- `Sources/Services/TOMLScalarEditor.swift` — edición de escalares TOML
+  existentes por rangos UTF-8, tipos nativos y validación del árbol completo.
+  Conserva todo byte ajeno al token editado; strings, booleanos, Int64 y floats
+  finitos. Arrays, tablas inline, fechas, no finitos y claves nuevas usan Fuente.
+  `TOMLScalarEditingView` muestra hasta 200 controles, máscara también por valor,
+  base de texto comprobada y Aplicar al buffer; guardado siempre con review.
 - `Sources/Models/WorkspaceAnalysis.swift` y `KnowledgeAnalysis.swift` — contexto,
   fuentes observadas, procedencia y estados del análisis.
   `ConfigurationResolver.swift` selecciona capas por agente, proyecto, CWD,
@@ -192,6 +198,22 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   (`index.json` formato 2 + `objects/<sha256(content)>` content-addressed,
   lock de índice `.index.lock`, migración perezosa no destructiva de
   directorios legado `a__b`). Dirs `0700`, archivos `0600`.
+- `HistoryEncryption.swift` / `HistoryKeychain.swift` — cifrado opcional del
+  historial completo (AES-256-GCM por archivo, HMAC de modo con HKDF), clave en
+  Keychain separada por bundle. Modo en `.encryption.json`, no en preferencias;
+  lock estable `.History.history.lock` junto a History antes de cada lock de
+  índice. Conversión reversible y reanudable fuera de MainActor; fases parciales
+  bloquean escrituras. Recupera temporales exactos AtomicWriter no publicados.
+  Claves/HMAC se verifican siempre; preflight de representación cacheado por
+  identidad/timestamps de raíz y marcador. Alteraciones manuales en otros nodos
+  se detectan al acceder, no mediante vigilancia global inmediata. Clientes
+  antiguos no deben coexistir contra ese historial. Pruebas con proveedor de
+  claves inyectado; Keychain real se rechaza con home alternativo o XCTest.
+- `scripts/export-legacy-history.py` — exportación explícita de historial a
+  carpeta NUEVA compatible con el lector legado; origen solo lectura, locks,
+  no symlinks ni sobrescrituras, hashes validados y colisiones rechazadas.
+  Respaldos `.migrated` aparte. Cifrado/transición requiere descifrar/reanudar
+  en la app antes. Uso y límites en `docs/HISTORY-RECOVERY.md`.
 - `Sources/Services/AtomicWriter.swift` — escritura atómica con preservación
   de permisos POSIX, escritura a través de symlinks, temporales `0600`
   exclusivos limpiados en éxito y en fallo.
@@ -288,8 +310,10 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `volatile: true` en un `ConfigSource` = se vigila en vivo pero sin historial
   ni badges (para `~/.claude.json` y otros archivos de estado ruidosos).
 - `excludeFromHistory: true` = nunca se hace snapshot (ficheros con secretos).
-- Escritura estructurada solo para JSON/JSONC. TOML se edita en la pestaña
-  Fuente; alta/copia MCP hacia Codex modifica el árbol TOML nativo y conserva
+- Escritura estructurada genérica para JSON/JSONC. TOML permite parches de
+  escalares existentes mediante `TOMLScalarEditor`, nunca serialización JSON
+  del documento; los demás tipos y claves nuevas usan Fuente.
+  Alta/copia MCP hacia Codex modifica el árbol TOML nativo y conserva
   tipos ajenos a MCP. Normaliza comentarios/formato, con revisión explícita
   de diff antes de modificar el buffer y guardado posterior por el usuario.
 - Guardado atómico preservando permisos POSIX originales; symlinks escriben
@@ -325,7 +349,11 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   los escritores recrean y reintentan; los lectores ven historial vacío). Se
   bloquea con guardados en curso, vacía `histories`, `historyErrors`,
   `historyRemovalErrors` y la actividad, y los fallos quedan en
-  `historyPurgeError` con Reintentar. No cifra nada (cifrado en reposo: #16).
+  `historyPurgeError` con Reintentar. El cifrado es opt-in en Ajustes → Privacidad:
+  incluye índices, blobs y backups legados, sin ocultar nombres de carpeta.
+  La purga conserva el modo y la clave; metadata dañada queda intacta y bloquea
+  nuevas escrituras, aunque se haya eliminado todo el contenido. No recupera
+  claves ni repara ciphertext. Ver `docs/HISTORY-ENCRYPTION.md`.
 - Guardados UI usan `requestSave` + review/confirmación (incluye Retry/Keep mine).
   `save(path:)` es primitiva para tests del modelo, no para controles UI.
   Restauración también muestra diff y fija el contenido/estado revisado.
