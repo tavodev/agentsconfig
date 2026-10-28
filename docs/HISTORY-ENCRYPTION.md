@@ -23,6 +23,10 @@ it to preferences, history files, reports or logs. Copying the history directory
 does not transfer its Keychain key. The app has no key-export or key-recovery
 feature.
 
+Use the bundle identity that created the key to decrypt that history. Debug and
+distributed builds use different Keychain services; a shared history folder does
+not give one build access to the other's key.
+
 The plaintext `.encryption.json` protocol marker contains a format version, a
 random key identifier, a phase and an authentication code. It contains no key or
 configuration values. HMAC-SHA256 authenticates the marker using a distinct key
@@ -37,7 +41,7 @@ Legacy directory names with repeated `.migrated` suffixes share their original
 directory identity, so the normal legacy-to-backup rename remains readable.
 File and directory names are not encrypted: legacy names can reveal tracked
 configuration paths, and content-addressed blob names still reveal equal content
-within the store.
+within the store and permit testing guesses of predictable file contents.
 
 ## Conversion and interruption
 

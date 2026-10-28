@@ -107,6 +107,39 @@ the updater, and the distributed 0.1.0 has no updater; the update check needs a
 separate test installation with two Sparkle-enabled versions. These distribution
 checks remain tracked in [#6](https://github.com/tavodev/agentsconfig/issues/6).
 
+Later on 2026-10-28, the compiled inputs committed as `663611b` (including
+`773dda1`) were verified in the same environment for issues #12, #14, #16, #30
+and #31, with additional synthetic boundary coverage for #15:
+
+| Check | Result |
+| --- | --- |
+| Hostless Swift tests, arm64 | 357 tests in 36 suites passed |
+| Hostless Swift tests, x86_64 under Rosetta | 357 tests in 36 suites passed |
+| Graphical suite | All 31 scenarios compiled with the dedicated fixture host; two new scenarios were attempted and failed during fixture activation because the macOS desktop was locked |
+| Legacy recovery export | 25 Python tests passed, including execution of the original Swift history reader against the exported fixtures |
+| Multiprocess history | Plaintext and encrypted runs each used four independent writers, preserving 121 unique readable versions per run, including the legacy baseline |
+| Encryption coverage | Full-tree conversion, metadata/content authentication, missing keys, interrupted encryption/decryption, reserved temporary recovery, per-file integrity, permissions, Unicode, retention, purge and reviewed save/restore flows passed with injected keys |
+| TOML coverage | Native scalar type preservation and exact surrounding text, quoted/dotted keys, multiline values, Int64 extremes, unsupported types and invalid edits |
+| Resource boundaries | Synthetic UTF-8 2/16 MB boundaries, discovery depth/directories/entries/files and redacted diff limits; limits unchanged |
+| Universal archive/export | Developer ID, secure timestamp and hardened runtime valid for app, Sparkle and all four helpers; all six contain arm64 and x86_64; unchanged local verification version 0.1.0 / build 3 |
+| Bundle checks | Licenses matched the repository; main executable contained none of the examined personal/build-directory prefixes; updater hardening configuration present |
+| Publication checks | 10 guard tests passed; no credential-pattern findings in working files or reachable history |
+| Generated project and whitespace | XcodeGen regeneration stable; `git diff --check` passed |
+
+An initial integrated run failed two performance assertions because redundant
+directory permission updates invalidated the encryption preflight cache on every
+snapshot. Skipping already-private directory updates fixed that behavior; the
+final 357-test runs passed on both architectures. Encryption and all runtime
+storage tests used fictitious homes and injected keys, with no production
+history-key access, MCP, hooks or login shells.
+
+The new UI flows have **not** been verified graphically: both attempted tests
+failed at launch before exercising their flow, and the session lock was confirmed
+separately. The earlier 29-test graphical result applies to `8b7274e`, not these
+later changes. A new unlocked graphical run remains required. The current
+verification export was not notarized or published; clean-user/Mac, real Intel
+hardware and actual appcast update checks also remain pending in #6.
+
 ## Reproducing checks
 
 Use the build, hostless and UI commands in [README.md](../README.md), keeping the
@@ -117,13 +150,16 @@ Run storage and publication checks separately:
 
 ```bash
 python3 scripts/verify-history-processes.py
+python3 scripts/test-export-legacy-history.py
 python3 scripts/test-audit-publication.py
 python3 scripts/audit-publication.py
 git diff --check
 ```
 
 The history probe compiles the production storage code and uses four independent
-processes with a fictitious legacy baseline. Publication-guard tests use disposable
+processes with a fictitious legacy baseline in each of plaintext and encrypted
+modes. The encrypted probe uses a deliberately public fixture key provider,
+never the production Keychain. Publication-guard tests use disposable
 Git repositories with synthetic tokens and disabled Git hooks/signing.
 
 The publication scan checks working files, reachable historical blobs, commit/tag
