@@ -63,6 +63,54 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   sin lógica especial. `Agent.submodulePath` (relativo al proyecto) distingue
   a estos agentes en el sidebar. `SubmoduleDiscovery.swift` valida sintaxis,
   pertenencia canónica, aliases y ciclos sin ejecutar Git.
+- `Sources/Services/OrcaIntegration.swift` — homes que Orca crea por cuenta
+  (`~/Library/Application Support/orca/claude-profiles/<id>/home`,
+  `codex-accounts/<id>/home`, `codex-runtime-home/home`) como agentes propios
+  (`id: "<claude-code|codex>:orca:<cuenta|runtime>"`), derivados de las
+  definiciones base antes de aplicar raíces personalizadas. Omite fuentes
+  enlazadas fuera del home (skills/plugins/`AGENTS.md` de Orca apuntan a
+  `~/.claude`/`~/.codex`), `auth.json` de Codex, MCP destino y fuentes locales.
+  `equivalentPath` mapea cada archivo a su equivalente en `~/.claude`/`~/.codex`
+  para docs, `settingsKind` y alcance usuario; `LayerNotes` lo excluye porque el
+  resolver no modela esos homes. No infiere qué home usa una terminal.
+  `UserDefaults["orcaIntegration"]` (Ajustes → Carpetas de configuración).
+  `OrcaMirror.swift` (API pura, verificada contra Orca 1.4.246) modela qué hace
+  Orca con cada archivo antes de cada lanzamiento: `relation(for:)`
+  (`.mirroredCopy` sobrescrito desde el origen — `settings.json` más los hooks
+  de estado de Orca, archivos sueltos compartidos, `AGENTS.md` copiado,
+  `rules/_orca-global-*.rules` —; `.importStub` para el `CLAUDE.md` del perfil
+  cuando la raíz es `~/.claude`; `.mergedState` para `.claude.json` y el
+  `config.toml` de Codex; `.accountOwned` para el resto) y `sourcePath(for:)`
+  sobre `AgentCatalog.root(for:)`. `resolveFiles` marca `readOnly` todo archivo
+  no propio de la cuenta con una `note` estática. `syncStatus(for:)` compara
+  copia y origen: sincronizado, pendiente (origen más reciente), difiere,
+  origen ausente, no determinado o no aplicable. `settings.json` ignora los
+  hooks que Orca reconoce como suyos (`agent-hooks/claude-hook.{sh,cmd,ps1}` o
+  el lanzador nativo, también en `-EncodedCommand`); `.claude.json` compara
+  solo claves compartidas; `config.toml` ignora `projects`, `hooks`,
+  `features.daemon_auto_start` y MCP solo del home, y cualquier otra diferencia
+  sin origen más reciente queda «no determinado» (Orca reescribe rutas y
+  promueve claves usando una línea base que no se lee). El inspector muestra el
+  estado y «Abrir origen» (`store.openFile`).
+  - `OrcaMcp.swift` (Fase 2): `mcpOrigins` clasifica cada MCP de un home Orca
+    (`.mirrored`, `.mirrorDiffers`, `.accountOnly`) contra la misma entrada del
+    origen en el índice; en `.claude.json` un proyecto del origen sustituye el
+    registro del perfil, y en Codex `.orca-config-settings-baseline.json`
+    (`mcpServers`/`mcpServerRoot`) marca lo que Orca copió. El índice lee
+    `projects.<ruta>.mcpServers` también de los perfiles Orca; el comparador
+    agrupa los espejos con su origen y los excluye de divergencias.
+    `promoteOrcaMcpServer` lleva un MCP solo-de-cuenta de usuario a
+    `~/.claude.json`/`~/.codex/config.toml` por `McpReview` (los homes Orca
+    siguen sin ser destino). `parseCodexBaseline` es puro y tolerante
+    (versión desconocida → no reconocido) y `Linter` añade al `config.toml`
+    del home avisos por clave en conflicto (sin valores) o baseline ilegible.
+  - Contrato completo en `docs/ORCA.md`. `OrcaDetection.swift`: carpeta de datos
+    (Ajustes `orcaDataPath` → `ORCA_USER_DATA_PATH` solo fuera de ejecuciones
+    aisladas → predeterminada), cuenta Claude seleccionada (`selected-host`),
+    hooks gestionados de Codex. Sin huérfanos ni cuenta Codex seleccionada (exigen
+    leer el almacén de ajustes de Orca). `OrcaLayerNotes.swift`: notas por clave
+    desde `ConfigStore.layerNotes` (`layerContext` sigue en nil). `HookMap` marca
+    cuenta y `OrcaHookRole` (gestionado/heredado/copia obsoleta/propio).
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación
@@ -237,9 +285,34 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `Sources/Services/DocsCatalog.swift` — doc por archivo (ⓘ junto al nombre)
   y por clave (ⓘ junto a cada fila en "Todas las claves"/tarjetas). Ambas
   búsquedas emparejan por **sufijo relativo** (`pathSuffixDocs`/
-  `keyTableSuffixes`), no por ruta absoluta exacta: así una copia local de
+  `keySources`), no por ruta absoluta exacta: así una copia local de
   proyecto (`.codex/config.toml`, `.claude/settings.json`, etc.) obtiene la
-  misma documentación que la global sin duplicar entradas.
+  misma documentación que la global sin duplicar entradas. Las claves de
+  Claude Code y Codex salen de las referencias oficiales
+  (`settings-reference`, `config-reference`) en
+  `scripts/docs-reference/{claude,codex}.json` (EN + ES); tras editarlas,
+  `python3 scripts/generate-docs-reference.py` regenera
+  `DocsCatalogReference.swift`. Orden: referencia exacta (conserva valores y
+  default curados) → curada exacta o con `<placeholder>` → patrón `<id>` de
+  la referencia → curada por último segmento. Toda clave enlaza a su
+  documentación (ancla por clave en Claude; el ancla del padre documentado
+  para subcampos). Cada entrada generada trae `SettingSpec`
+  (`Sources/Services/SettingSpec.swift`: tipo, opciones, si admite valores
+  propios, default, alcances, tema, obsoleta, rango);
+  `scripts/refresh-docs-reference.py` la actualiza desde las fuentes
+  oficiales sin perder el español y lista las claves que faltan traducir.
+  `DocsCatalog.settingsCatalog(filePath:)` filtra por alcance del archivo
+  (usuario/proyecto/local) para la hoja **Agregar ajuste**
+  (`Sources/Views/SettingEditingViews.swift`). En TOML,
+  `TOMLScalarEditor.inserting`/`removing`/`replacingStringList` editan el
+  texto y validan re-parseando: el árbol resultante debe diferir solo en esa
+  clave. Gemini y OpenCode salen de sus JSON Schema (`from_schema` en el
+  script; los mapas usan el segmento `<name>`). Los subcampos curados con
+  `spec:` (statusLine, voice, autoMode, modelSettings) entran al catálogo con
+  el alcance de su clave padre. `ConfigStore.layerNotes(for:)`
+  (`LayerNotes.swift`) reutiliza `ConfigurationResolver` para avisar, por
+  clave, cuando otra capa la sustituye, excluye o restringe; llega a las
+  filas por el entorno `\.layerNotes`.
 - `Sources/Views/` — navegación nativa por destino: tres columnas para
   archivos/Actividad y dos para Ajustes/MCP. En ventanas menores de 1180 pt
   la navegación de archivos inicia con sidebar oculta y permite recuperarla.
@@ -264,6 +337,11 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Las skills de la lista de archivos y de Configuración → Skills se agrupan
   por origen y, si hay más de un dueño, por carpeta o paquete; la fila de
   skill no repite el path largo (el dueño ya lo nombra).
+- `Sources/Models/SidebarGrouping.swift` — agrupación pura de agentes globales en el
+  sidebar (producto con cuentas Orca anidadas, tipo o lista), orden de arrastre y
+  ocultos. Persistencia en `AppSettings.defaults` (`sidebarGrouping`,
+  `sidebarAgentOrder`, `sidebarHiddenAgents`, `sidebarCollapsedAgents`; listas
+  separadas por saltos de línea). Ocultar solo afecta al sidebar, no al escaneo.
 - `Sources/Views/SettingsView.swift` — `AppSettingsView`, en archivo propio
   (no en `AgentsConfigApp.swift`) porque el target de tests excluye ese
   archivo por el `@main`; se reusa tal cual desde la escena `Settings`

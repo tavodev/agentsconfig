@@ -19,6 +19,8 @@ struct AppSettingsView: View {
     @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
     @AppStorage("mcpLoginShellEnvironment", store: AppSettings.defaults) private var mcpLoginShell = false
     @AppStorage("contextBudgetThreshold", store: AppSettings.defaults) private var budgetThreshold = 8_000
+    @AppStorage("orcaIntegration", store: AppSettings.defaults) private var orcaIntegration = true
+    @AppStorage(OrcaIntegration.dataPathKey, store: AppSettings.defaults) private var orcaDataPath = ""
 
     var body: some View {
         Form {
@@ -67,6 +69,30 @@ struct AppSettingsView: View {
                             Button(L("Use default")) { store.setConfigurationRoot(agentID: agent.id, path: nil) }
                         }
                     }
+                }
+                Toggle(L("Show configuration folders managed by Orca"), isOn: Binding(
+                    get: { orcaIntegration },
+                    set: { store.setOrcaIntegration(enabled: $0) }))
+                Text(L("Orca launches Claude Code and Codex with one configuration folder per account. Each one is listed as its own agent; which folder a terminal uses is not inferred."))
+                    .font(.callout).foregroundStyle(.secondary)
+                if orcaIntegration {
+                    let resolution = OrcaIntegration.dataRootResolution
+                    VStack(alignment: .leading) {
+                        Text(L("Orca data folder")).font(.headline)
+                        Text(resolution.path).font(.caption.monospaced()).textSelection(.enabled)
+                        if resolution.origin == .environment {
+                            Text(L("From ORCA_USER_DATA_PATH in the app's environment."))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Button(L("Choose folder…")) { store.pickOrcaDataFolder() }
+                                .accessibilityIdentifier("orca-data-folder-choose")
+                            Button(L("Use default")) { store.setOrcaDataFolder(path: nil) }
+                                .disabled(resolution.origin != .chosen)
+                                .accessibilityIdentifier("orca-data-folder-default")
+                        }
+                    }
+                    .id(orcaDataPath)  // re-read the resolution after a change
                 }
             }
             Section(L("Context budget")) {

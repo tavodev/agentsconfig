@@ -7,6 +7,32 @@ struct HookMapSource {
     let agentName: String
     let path: String
     let tree: [String: Any]
+    /// Set for files inside an Orca home (see `OrcaHookSource`).
+    var orca: OrcaHookSource? = nil
+}
+
+/// Orca account a hooks file belongs to, and the original it is copied from.
+struct OrcaHookSource {
+    /// Short account label (`OrcaIntegration.accountLabel`) or "runtime".
+    let account: String
+    let selected: Bool
+    /// File Orca copies these hooks from (`OrcaIntegration.sourcePath`), nil
+    /// when the file belongs to the account (Codex `hooks.json`).
+    let originPath: String?
+    /// `HookMap.commandKeys` of the origin; nil when it could not be read.
+    let originCommands: Set<String>?
+}
+
+/// Why a hook appears in an Orca home (or is Orca's in a regular home).
+enum OrcaHookRole: Equatable {
+    /// Status hook Orca installs (`agent-hooks/claude-hook.*`, `codex-hook.*`).
+    case managed
+    /// Copied from the original file: the same hook as in `origin`, not a new one.
+    case inherited(origin: String)
+    /// In Orca's copy but no longer in the original: Orca drops it on its next launch.
+    case staleCopy(origin: String)
+    /// Declared only in this account's own file.
+    case accountOwned
 }
 
 /// A single hook command as declared on disk. `command` keeps the raw text
@@ -22,6 +48,11 @@ struct HookMapEntry: Identifiable {
     let layer: Layer
     let declarationIndex: Int
     let missingPaths: [String]
+    /// Orca account of the file (nil outside Orca homes).
+    var orcaAccount: String? = nil
+    var orcaSelected = false
+    /// Orca's relation to this hook; nil for ordinary hooks of regular homes.
+    var orcaRole: OrcaHookRole? = nil
 
     enum Layer: String, CaseIterable, Comparable {
         case managed = "Managed", user = "User", project = "Project", local = "Local"
@@ -63,7 +94,10 @@ struct HookMapGroup: Identifiable {
                                      agentID: source.agentID, agentName: source.agentName,
                                      sourcePath: source.path, layer: layer, declarationIndex: index,
                                      missingPaths: Linter.referencedPaths(in: command)
-                                        .filter { !FileManager.default.fileExists(atPath: $0) }))
+                                        .filter { !FileManager.default.fileExists(atPath: $0) },
+                                     orcaAccount: source.orca?.account,
+                                     orcaSelected: source.orca?.selected ?? false,
+                                     orcaRole: orcaRole(event: event, command: command, source: source)))
                     index += 1
                 }
             }
@@ -73,6 +107,29 @@ struct HookMapGroup: Identifiable {
                 < ($1.event, $1.matcher ?? "", $1.agentName, $1.layer, $1.sourcePath, $1.declarationIndex)
         }
     }
+
+    /// Orca managed hooks are recognized in every Claude Code / Codex file;
+    /// the rest only get a role inside Orca homes. A hook of a copied file
+    /// is inherited when its origin declares the same event and command.
+    static func orcaRole(event: String, command: String, source: HookMapSource) -> OrcaHookRole? {
+        if OrcaIntegration.isManagedHook(command, agentID: source.agentID) { return .managed }
+        guard let orca = source.orca else { return nil }
+        guard let origin = orca.originPath else { return .accountOwned }
+        guard let known = orca.originCommands else { return .inherited(origin: origin) }
+        return known.contains(commandKey(event: event, command: command)) ? .inherited(origin: origin) : .staleCopy(origin: origin)
+    }
+
+    /// `event + NUL + command` for every hook command of a parsed tree.
+    static func commandKeys(in tree: [String: Any]) -> Set<String> {
+        guard let hooks = tree["hooks"] as? [String: Any] else { return [] }
+        var keys = Set<String>()
+        for (event, value) in hooks where !nonEventKeys.contains(event) {
+            for (_, command) in commands(in: value) { keys.insert(commandKey(event: event, command: command)) }
+        }
+        return keys
+    }
+
+    private static func commandKey(event: String, command: String) -> String { event + "\u{0}" + command }
 
     static func grouped(_ entries: [HookMapEntry]) -> [HookMapGroup] {
         var groups: [HookMapGroup] = []

@@ -10,6 +10,7 @@ enum ConfigFileContext {
     }
 
     static func settingsKind(for path: String) -> SettingsKind? {
+        if let equivalent = OrcaIntegration.equivalentPath(for: path) { return settingsKind(for: equivalent) }
         if matches(path, suffix: ".claude/settings.json") || matches(path, suffix: ".claude/settings.local.json") { return .claude }
         if matches(path, suffix: ".codex/config.toml") { return .codex }
         if matches(path, suffix: ".gemini/settings.json") { return .gemini }

@@ -1,0 +1,2556 @@
+{
+  "agent": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Agent configuration, see https://opencode.ai/docs/agents.",
+    "es": "Configuración de agentes, consulta https://opencode.ai/docs/agents.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "agent.<name>.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.<name>.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.build.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.compaction.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.explore.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.general.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.plan.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.summary.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agent.title.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agent"
+  },
+  "agents": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Named built-in agent overrides and custom agent definitions.",
+    "es": "Sobrescrituras con nombre de agentes integrados y definiciones de agentes personalizados.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "attachment": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Attachment processing configuration, including image size limits and resizing behavior.",
+    "es": "Configuración del procesamiento de adjuntos, incluidos los límites de tamaño de imagen y el comportamiento de redimensionado.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "attachment.image": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Image attachment configuration.",
+    "es": "Configuración de adjuntos de imagen.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "attachment"
+  },
+  "attachment.image.auto_resize": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Resize images before sending them to the model when they exceed configured limits (default: true)",
+    "es": "Redimensiona las imágenes antes de enviarlas al modelo cuando exceden los límites configurados (predeterminado: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "attachment"
+  },
+  "attachment.image.max_base64_bytes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum base64 payload bytes for an image attachment (default: 5242880)",
+    "es": "Máximo de bytes de carga base64 para un adjunto de imagen (predeterminado: 5242880).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "attachment"
+  },
+  "attachment.image.max_height": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum image height before resizing or rejecting the attachment (default: 2000)",
+    "es": "Altura máxima de la imagen antes de redimensionar o rechazar el adjunto (predeterminado: 2000).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "attachment"
+  },
+  "attachment.image.max_width": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum image width before resizing or rejecting the attachment (default: 2000)",
+    "es": "Ancho máximo de la imagen antes de redimensionar o rechazar el adjunto (predeterminado: 2000).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "attachment"
+  },
+  "autoshare": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'share' field instead. Share newly created sessions automatically.",
+    "es": "Obsoleto: usa el campo 'share' en su lugar. Comparte automáticamente las sesiones recién creadas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "autoupdate": {
+    "custom": false,
+    "default": null,
+    "deprecated": true,
+    "en": "Check for new versions and show an update notice. Updates are never installed automatically; run /update or `opencode upgrade`. Set to false to disable update checks. true and 'notify' behave the same.",
+    "es": "Busca nuevas versiones y muestra un aviso de actualización. Las actualizaciones nunca se instalan automáticamente; ejecuta /update o `opencode upgrade`. Establécelo en false para desactivar la búsqueda de actualizaciones. true y 'notify' se comportan igual.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [
+      "notify"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "command": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Command configuration, see https://opencode.ai/docs/commands.",
+    "es": "Configuración de comandos, consulta https://opencode.ai/docs/commands.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "commands": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Named slash command definitions.",
+    "es": "Definiciones de comandos de barra diagonal con nombre.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "commands.<name>.subtask": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Deprecated alias for subagent.",
+    "es": "Alias obsoleto de subagent.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "commands"
+  },
+  "compaction": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Conversation compaction behavior.",
+    "es": "Comportamiento de la compactación de la conversación.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "compaction.auto": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable automatic compaction when context is full (default: true)",
+    "es": "Activa la compactación automática cuando el contexto está lleno (predeterminado: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "compaction"
+  },
+  "compaction.preserve_recent_tokens": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Maximum number of tokens from recent turns to preserve verbatim after compaction.",
+    "es": "Número máximo de tokens de los turnos recientes que se conservan textualmente tras la compactación.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": 0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "compaction"
+  },
+  "compaction.prune": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Enable pruning of old tool outputs (default: false)",
+    "es": "Activa la poda de salidas antiguas de herramientas (predeterminado: false).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "compaction"
+  },
+  "compaction.reserved": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Token buffer for compaction. Leaves enough window to avoid overflow during compaction.",
+    "es": "Búfer de tokens para la compactación. Deja suficiente ventana para evitar desbordamientos durante la compactación.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": 0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "compaction"
+  },
+  "compaction.tail_turns": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Maximum number of recent user turns, including their following assistant/tool responses, to keep verbatim during compaction. By default retention is limited only by the preserved token budget.",
+    "es": "Número máximo de turnos recientes del usuario, incluidas sus respuestas posteriores del asistente o de herramientas, que se conservan textualmente durante la compactación. De forma predeterminada, la retención solo está limitada por el presupuesto de tokens conservados.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": 0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "compaction"
+  },
+  "default_agent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default primary agent to use when no session agent is selected.",
+    "es": "Agente principal predeterminado que se usa cuando no se selecciona un agente de sesión.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "disabled_providers": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Disable providers that are loaded automatically.",
+    "es": "Desactiva los providers que se cargan automáticamente.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "enabled_providers": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "When set, ONLY these providers will be enabled. All other providers will be ignored.",
+    "es": "Si se establece, SOLO estos providers estarán activados. Todos los demás providers se ignorarán.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "enterprise": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enterprise sharing service configuration.",
+    "es": "Configuración del servicio de uso compartido empresarial.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "enterprise.url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enterprise URL.",
+    "es": "URL empresarial.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "enterprise"
+  },
+  "experimental.batch_tool": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Enable the batch tool.",
+    "es": "Activa la herramienta batch.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.continue_loop_on_deny": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Continue the agent loop when a tool call is denied.",
+    "es": "Continúa el bucle del agente cuando se deniega una llamada a herramienta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.mcp_timeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Timeout in milliseconds for model context protocol (MCP) requests.",
+    "es": "Tiempo de espera en milisegundos para las solicitudes de model context protocol (MCP).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.openTelemetry": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Enable OpenTelemetry spans for AI SDK calls (using the 'experimental_telemetry' flag)",
+    "es": "Activa los spans de OpenTelemetry para las llamadas al AI SDK (mediante el indicador 'experimental_telemetry').",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.policies": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Policy statements applied to supported resources, such as provider access.",
+    "es": "Declaraciones de políticas aplicadas a los recursos compatibles, como el acceso a providers.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.primary_tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Tools that should only be available to primary agents.",
+    "es": "Herramientas que solo deben estar disponibles para los agentes principales.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "experimental"
+  },
+  "formatter": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable built-in formatters or configure formatter overrides.",
+    "es": "Activa los formateadores integrados o configura sobrescrituras de formateadores.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "instructions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional paths or URLs supplying ambient instructions.",
+    "es": "Rutas o URLs adicionales que proporcionan instrucciones de contexto.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "layout": {
+    "custom": false,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Always uses stretch layout.",
+    "es": "Obsoleto: siempre usa el diseño stretch.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "stretch"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "logLevel": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Log level.",
+    "es": "Nivel de registro.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "DEBUG",
+      "INFO",
+      "WARN",
+      "ERROR"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "lsp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable built-in language servers or configure server overrides.",
+    "es": "Activa los servidores de lenguaje integrados o configura sobrescrituras de servidores.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "MCP server configuration.",
+    "es": "Configuración de servidores MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "media": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Media processing configuration.",
+    "es": "Configuración del procesamiento de medios.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mode": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use `agent` field instead.",
+    "es": "Obsoleto: usa el campo `agent` en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mode.<name>.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.<name>.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.build.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.color": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hex color code (e.g., #FF5733) or theme color (e.g., primary)",
+    "es": "Código de color hexadecimal (p. ej., #FF5733) o color del tema (p. ej., primary).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "primary",
+      "secondary",
+      "accent",
+      "success",
+      "warning",
+      "error",
+      "info"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Description of when to use the agent.",
+    "es": "Descripción de cuándo usar el agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.hidden": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide this subagent from the @ autocomplete menu (default: false, only applies to mode: subagent)",
+    "es": "Oculta este subagente del menú de autocompletado de @ (predeterminado: false, solo aplica a mode: subagent).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.maxSteps": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'steps' field instead.",
+    "es": "Obsoleto: usa el campo 'steps' en su lugar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.steps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of agentic iterations before forcing text-only response.",
+    "es": "Número máximo de iteraciones del agente antes de forzar una respuesta solo de texto.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'permission' field instead.",
+    "es": "Obsoleto: usa el campo 'permission' en su lugar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "mode.plan.variant": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model variant for this agent (applies only when using the agent's configured model).",
+    "es": "Variante de modelo predeterminada para este agente (solo aplica al usar el modelo configurado del agente).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mode"
+  },
+  "model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model to use when no session or agent model is selected.",
+    "es": "Modelo predeterminado que se usa cuando no se selecciona un modelo de sesión ni de agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "permissions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Ordered tool permission rules applied to agent tool use.",
+    "es": "Reglas ordenadas de permisos de herramientas aplicadas al uso de herramientas por el agente.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "plugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Ordered plugin enablement directives and external package declarations.",
+    "es": "Directivas ordenadas de activación de plugins y declaraciones de paquetes externos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "policies": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Ordered policies controlling access to providers, tools, and integrations.",
+    "es": "Políticas ordenadas que controlan el acceso a providers, herramientas e integraciones.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "provider": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Custom provider configurations and model overrides.",
+    "es": "Configuraciones de providers personalizados y sobrescrituras de modelos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "provider.<name>.models.<name>.variants": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Variant-specific configuration.",
+    "es": "Configuración específica de la variante.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.models.<name>.variants.<name>.disabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Disable this variant for the model.",
+    "es": "Desactiva esta variante para el modelo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.options.chunkTimeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds between streamed SSE chunks for this provider (default: 300000). If no chunk arrives within this window, the request is aborted. Set to false to disable timeout.",
+    "es": "Tiempo de espera en milisegundos entre fragmentos SSE transmitidos para este provider (predeterminado: 300000). Si no llega ningún fragmento dentro de esta ventana, la solicitud se cancela. Establécelo en false para desactivar el tiempo de espera.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.options.enterpriseUrl": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "GitHub Enterprise URL for copilot authentication.",
+    "es": "URL de GitHub Enterprise para la autenticación de copilot.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.options.headerTimeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds to wait for response headers (default: 300000). Set to false to disable timeout.",
+    "es": "Tiempo de espera en milisegundos para recibir los encabezados de respuesta (predeterminado: 300000). Establécelo en false para desactivar el tiempo de espera.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.options.setCacheKey": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable promptCacheKey for this provider (default false)",
+    "es": "Activa promptCacheKey para este provider (predeterminado: false).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "provider.<name>.options.timeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds for full requests to this provider. Set to false to disable timeout.",
+    "es": "Tiempo de espera en milisegundos para las solicitudes completas a este provider. Establécelo en false para desactivar el tiempo de espera.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "provider"
+  },
+  "providers.<name>.models.<name>.releaseDate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Release date as YYYY-MM-DD or YYYY-MM.",
+    "es": "Fecha de lanzamiento como YYYY-MM-DD o YYYY-MM.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "providers"
+  },
+  "reference": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "@deprecated Use 'references' field instead. Named git or local directory references.",
+    "es": "Obsoleto: usa el campo 'references' en su lugar. Referencias con nombre a repositorios git o directorios locales.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "references": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Named local directories or Git repositories available as external context.",
+    "es": "Directorios locales o repositorios Git con nombre disponibles como contexto externo.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "server": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Server configuration for opencode serve and web commands.",
+    "es": "Configuración del servidor para los comandos opencode serve y web.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "server.cors": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional domains to allow for CORS.",
+    "es": "Dominios adicionales que se permiten para CORS.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "server"
+  },
+  "server.hostname": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hostname to listen on.",
+    "es": "Nombre de host en el que escuchar.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "server"
+  },
+  "server.mdns": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable mDNS service discovery.",
+    "es": "Activa el descubrimiento de servicios mDNS.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "server"
+  },
+  "server.mdnsDomain": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom domain name for mDNS service (default: opencode.local)",
+    "es": "Nombre de dominio personalizado para el servicio mDNS (predeterminado: opencode.local).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "server"
+  },
+  "server.port": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Port to listen on.",
+    "es": "Puerto en el que escuchar.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "server"
+  },
+  "share": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Control whether sessions may be shared manually, automatically, or not at all.",
+    "es": "Controla si las sesiones pueden compartirse manualmente, de forma automática o no compartirse en absoluto.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "manual",
+      "auto",
+      "disabled"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "shell": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default shell to use for terminal and shell tool execution.",
+    "es": "Shell predeterminado que se usa para el terminal y la ejecución de la herramienta shell.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "skills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional paths or URLs to discover skills from.",
+    "es": "Rutas o URLs adicionales desde las que descubrir skills.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "small_model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Small model to use for tasks like title generation in the format of provider/model.",
+    "es": "Modelo pequeño que se usa para tareas como la generación de títulos, en el formato provider/model.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "snapshot": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Enable or disable snapshot tracking. When false, filesystem snapshots are not recorded and undoing or reverting will not undo/redo file changes. Defaults to true.",
+    "es": "Activa o desactiva el seguimiento de snapshots. Si es false, no se registran snapshots del sistema de archivos y deshacer o revertir no deshará ni rehará cambios en los archivos. Predeterminado: true.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "snapshots": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable snapshots used for undo and revert behavior.",
+    "es": "Activa los snapshots usados para deshacer y revertir.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "subagent_depth": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Maximum subagent nesting depth. Defaults to 1, which prevents subagents from launching subagents.",
+    "es": "Profundidad máxima de anidamiento de subagentes. Predeterminado: 1, lo que impide que los subagentes lancen otros subagentes.",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": 0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "timezone": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "IANA time zone for schedules, e.g. America/Los_Angeles. Defaults to the server's local zone.",
+    "es": "Zona horaria IANA para las programaciones, p. ej. America/Los_Angeles. Predeterminado: la zona local del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "tool_output": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool output truncation thresholds.",
+    "es": "Umbrales de truncamiento de la salida de herramientas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "tool_output.max_bytes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum bytes of tool output before it is truncated and saved to disk (default: 51200)",
+    "es": "Máximo de bytes de salida de herramienta antes de truncarla y guardarla en disco (predeterminado: 51200).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tool_output"
+  },
+  "tool_output.max_lines": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum lines of tool output before it is truncated and saved to disk (default: 2000)",
+    "es": "Máximo de líneas de salida de herramienta antes de truncarla y guardarla en disco (predeterminado: 2000).",
+    "kind": "integer",
+    "max": 9007199254740991,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tool_output"
+  },
+  "update": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Disable updates, notify when one is available, or install updates automatically.",
+    "es": "Desactiva las actualizaciones, avisa cuando haya una disponible o las instala automáticamente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "disable",
+      "notify",
+      "auto"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "username": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Username displayed in conversations and used for telemetry identity.",
+    "es": "Nombre de usuario que se muestra en las conversaciones y se usa para la identidad de telemetría.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "warming": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Keep recently active sessions warm with transient model requests (default: false)",
+    "es": "Mantiene activas las sesiones usadas recientemente mediante solicitudes transitorias al modelo (predeterminado: false).",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "watcher": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Filesystem watcher configuration.",
+    "es": "Configuración del observador del sistema de archivos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "websearch": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Web search provider selection.",
+    "es": "Selección del provider de búsqueda web.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "worktree": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Directory defaults for local worktree creation.",
+    "es": "Directorios predeterminados para la creación de worktrees locales.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  }
+}

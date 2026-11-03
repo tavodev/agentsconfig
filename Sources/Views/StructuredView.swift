@@ -104,6 +104,11 @@ func removeAt(_ root: inout [String: Any], _ segs: [Seg]) {
     if let d = any as? [String: Any] { root = d }
 }
 
+/// Plain lists of text (empty lists included), editable as one field.
+func isStringList(_ list: [Any]) -> Bool {
+    list.count <= 500 && list.allSatisfy { $0 is String }
+}
+
 func isBool(_ v: Any) -> Bool {
     (v as? NSNumber).map { CFGetTypeID($0) == CFBooleanGetTypeID() } ?? (v is Bool)
 }
@@ -117,6 +122,8 @@ struct StructuredView: View {
     var readOnly: Bool
 
     @Environment(ConfigStore.self) private var store
+    @State private var showingAddSetting = false
+    @State private var layerNotes: [String: LayerNote] = [:]
 
     private var canWriteStructured: Bool {
         format == .json || format == .jsonc
@@ -127,7 +134,8 @@ struct StructuredView: View {
     private var editableTOMLPaths: Set<[String]> {
         guard format == .toml, !readOnly,
               let fields = try? TOMLScalarEditor.fields(in: store.text(for: path)) else { return [] }
-        return Set(fields.prefix(200).map(\.path))
+        let lists = (try? TOMLScalarEditor.stringLists(in: store.text(for: path))) ?? []
+        return Set(fields.prefix(200).map(\.path) + lists.prefix(100).map(\.path))
     }
 
     private var root: [String: Any]? {
@@ -198,17 +206,95 @@ struct StructuredView: View {
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
-                    } else if format == .toml {
+                    }
+                    addSettingBar
+                    if !readOnly && format == .toml {
                         TOMLScalarEditingView(path: path, text: store.text(for: path))
                     }
                     specialCards
                     GenericInspector(filePath: path, root: root ?? [:],
                                      editable: editable, excludedKeys: handledTopLevelKeys,
-                                     excludedPaths: editableTOMLPaths, mutate: mutate)
+                                     excludedPaths: editableTOMLPaths, mutate: mutate,
+                                     addContext: addContext)
                 }
             }
             .padding(14)
         }
+        .environment(\.layerNotes, layerNotes)
+        .task(id: path + "|" + (doc?.hash ?? "") + "|" + store.preferredAnalysisProject) {
+            layerNotes = store.layerNotes(for: path)
+        }
+    }
+
+    // MARK: add setting
+
+    private var addContext: AddSettingContext? {
+        guard canAddSettings, let catalog = DocsCatalog.settingsCatalog(filePath: path) else { return nil }
+        return AddSettingContext(catalog: catalog,
+                                 isDefined: { keys in getAt(root, keys.map(Seg.key)) != nil },
+                                 add: { keys, entry, value in addSetting(keys, entry: entry, value: value) })
+    }
+
+    private var canAddSettings: Bool {
+        !readOnly && root != nil && (canWriteStructured || format == .toml)
+            && !store.isReadOnly(path) && !store.savingPaths.contains(path) && !store.loadingPaths.contains(path)
+    }
+
+    @ViewBuilder
+    private var addSettingBar: some View {
+        if canAddSettings, let catalog = DocsCatalog.settingsCatalog(filePath: path) {
+            HStack {
+                Button {
+                    showingAddSetting = true
+                } label: {
+                    Label(L("Add setting"), systemImage: "plus.circle")
+                }
+                .pointerStyle(.link)
+                .accessibilityIdentifier("add-setting")
+                Text(L("%@ documented settings available", String(catalog.count)))
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+            }
+            .sheet(isPresented: $showingAddSetting) {
+                AddSettingSheet(entries: catalog,
+                                isDefined: { keys in getAt(root, keys.map(Seg.key)) != nil },
+                                add: { keys, entry, value in addSetting(keys, entry: entry, value: value) })
+                    .environment(store)
+            }
+        }
+    }
+
+    /// Writes a new key into the edit buffer. JSON goes through the tree;
+    /// TOML is inserted as text so comments and formatting survive.
+    private func addSetting(_ keys: [String], entry: SettingCatalogEntry, value: Any) -> String? {
+        guard canAddSettings else { return L("This file can't be edited right now.") }
+        let segs = keys.map(Seg.key)
+        guard getAt(root, segs) == nil else { return L("This setting is already set in this file.") }
+        for length in 1..<keys.count {
+            if let parent = getAt(root, Array(segs.prefix(length))), !(parent is [String: Any]) {
+                return L("“%@” isn't a table, so this setting can't go inside it. Use Source.",
+                         keys.prefix(length).joined(separator: "."))
+            }
+        }
+        if format == .toml {
+            let newValue: TOMLScalarEditor.NewValue
+            switch value {
+            case let b as Bool: newValue = .scalar(.bool(b))
+            case let s as String: newValue = .scalar(.string(s))
+            case let i as Int: newValue = .scalar(.integer(Int64(i)))
+            case let d as Double: newValue = .scalar(.float(d))
+            case is [Any]: newValue = .emptyArray
+            default: newValue = .table
+            }
+            do {
+                store.updateEdit(path: path, text: try TOMLScalarEditor.inserting(in: store.text(for: path), path: keys, value: newValue))
+            } catch {
+                return L(error.localizedDescription)
+            }
+        } else {
+            mutate { r in setAt(&r, segs, value) }
+        }
+        return nil
     }
 
     // MARK: special sections
@@ -302,11 +388,13 @@ struct KeyDocButton: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
-        .help(doc.localizedSummary)
-        .accessibilityLabel(doc.localizedSummary)
+        .pointerStyle(.link)
+        .help(doc.plainSummary)
+        .accessibilityLabel(doc.plainSummary)
+        .accessibilityIdentifier("key-doc")
         .popover(isPresented: $show, arrowEdge: .trailing) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(doc.localizedSummary)
+                Text(doc.attributedSummary)
                     .font(.callout)
                     .fixedSize(horizontal: false, vertical: true)
                 if let values = doc.localizedValues, !values.isEmpty {
@@ -328,6 +416,14 @@ struct KeyDocButton: View {
                     Text(L("Default: %@", def))
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                }
+                if let url = doc.docsURL {
+                    Divider()
+                    Link(L("Official docs") + " ↗", destination: url)
+                        .font(.callout)
+                        .pointerStyle(.link)
+                        .help(url.absoluteString)
+                        .accessibilityIdentifier("key-doc-link")
                 }
             }
             .padding(12)
@@ -657,6 +753,13 @@ struct StringMapCard: View {
 
 // MARK: - Generic inspector
 
+/// What a row needs to add documented keys below an existing object.
+struct AddSettingContext {
+    let catalog: [SettingCatalogEntry]
+    let isDefined: ([String]) -> Bool
+    let add: (_ path: [String], _ entry: SettingCatalogEntry, _ value: Any) -> String?
+}
+
 struct GenericInspector: View {
     let filePath: String
     let root: [String: Any]
@@ -664,6 +767,7 @@ struct GenericInspector: View {
     var excludedKeys: Set<String> = []
     var excludedPaths: Set<[String]> = []
     let mutate: ((inout [String: Any]) -> Void) -> Void
+    var addContext: AddSettingContext? = nil
 
     var body: some View {
         // Top-level keys a special card above already displays (MCP servers,
@@ -674,7 +778,8 @@ struct GenericInspector: View {
                 Card {
                     CardHeader(title: L("All keys"), icon: "list.bullet.indent")
                     OutlineGroup(nodes, children: \.children) { node in
-                        NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate)
+                        NodeRow(node: node, filePath: filePath, editable: editable, mutate: mutate,
+                                addContext: addContext)
                     }
                 }
             }
@@ -713,6 +818,10 @@ struct TreeNode: Identifiable {
             }
             return TreeNode(label: key, segs: segs, value: value, children: kids)
         }
+        // Lists of text are edited in place as one row (StringListField).
+        if let a = value as? [Any], isStringList(a) {
+            return TreeNode(label: key, segs: segs, value: value, children: nil)
+        }
         if let a = value as? [Any] {
             let kids = a.enumerated().map {
                 TreeNode.build(key: "[\($0.offset)]", value: $0.element, segs: segs + [.idx($0.offset)])
@@ -729,7 +838,15 @@ struct NodeRow: View {
     let filePath: String
     let editable: Bool
     let mutate: ((inout [String: Any]) -> Void) -> Void
+    var addContext: AddSettingContext? = nil
+    @Environment(\.layerNotes) private var layerNotes
     @State private var draft: String = ""
+    @State private var numberProblem: String?
+
+    private var keyPath: [String]? {
+        let keys = node.segs.compactMap { if case .key(let k) = $0 { return k }; return nil }
+        return keys.count == node.segs.count ? keys : nil
+    }
 
     private var doc: DocsCatalog.KeyDoc? {
         DocsCatalog.keyDoc(filePath: filePath, keyPath: node.segs.compactMap {
@@ -745,13 +862,27 @@ struct NodeRow: View {
                     .foregroundStyle(.secondary)
                 if let doc {
                     KeyDocButton(doc: doc)
+                    DefaultBadge(spec: doc.spec)
                 }
                 Spacer(minLength: 0)
+                if let addContext, let keyPath, node.value is [String: Any] {
+                    AddChildSettingButton(prefix: keyPath, catalog: addContext.catalog,
+                                          isDefined: addContext.isDefined, add: addContext.add)
+                }
+                if editable, let doc, doc.spec != nil, keyPath != nil {
+                    ResetToDefaultButton(spec: doc.spec) {
+                        mutate { r in removeAt(&r, node.segs) }
+                    }
+                }
             }
             if let doc {
-                Text(doc.localizedSummary)
+                Text(doc.attributedSummary)
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let keyPath, let note = layerNotes[keyPath.joined(separator: ".")] {
+                LayerNoteView(note: note)
             }
             valueView
                 .padding(.top, 4)
@@ -772,6 +903,11 @@ struct NodeRow: View {
             ))
             .toggleStyle(.switch).controlSize(.small).labelsHidden()
             .disabled(!editable)
+        } else if let list = v as? [Any], isStringList(list) {
+            StringListField(label: pathLabel(node.segs), values: list.compactMap { $0 as? String },
+                            doc: doc, editable: editable) { updated in
+                mutate { r in setAt(&r, node.segs, updated) }
+            }
         } else if v is NSNull {
             Text("null").font(.system(size: 13, design: .monospaced)).foregroundStyle(.secondary)
         } else if let s = v as? String {
@@ -780,28 +916,34 @@ struct NodeRow: View {
                     mutate { r in setAt(&r, node.segs, n) }
                 }
             } else {
-                TextField(Secrets.displayText(pathLabel(node.segs), masking: maskSecrets), text: Binding(
-                    get: { s },
-                    set: { n in mutate { r in setAt(&r, node.segs, n) } }
-                ))
-                .font(.system(size: 13, design: .monospaced))
-                .textFieldStyle(.roundedBorder)
-                .frame(maxWidth: 380)
+                SettingChoiceField(label: Secrets.displayText(pathLabel(node.segs), masking: maskSecrets),
+                                   doc: doc,
+                                   text: Binding(
+                                       get: { s },
+                                       set: { n in mutate { r in setAt(&r, node.segs, n) } }
+                                   ))
                 .disabled(!editable)
             }
         } else if let n = v as? NSNumber {
             TextField(Secrets.displayText(pathLabel(node.segs), masking: maskSecrets), text: Binding(
                 get: { n.stringValue },
                 set: { txt in
-                    if let v = NodeRow.parseNumber(txt) {
-                        mutate { r in setAt(&r, node.segs, v) }
+                    guard let v = NodeRow.parseNumber(txt) else { return }
+                    if let problem = doc?.spec?.rangeProblem((v as? NSNumber)?.doubleValue ?? 0) {
+                        numberProblem = problem
+                        return
                     }
+                    numberProblem = nil
+                    mutate { r in setAt(&r, node.segs, v) }
                 }
             ))
             .font(.system(size: 13, design: .monospaced))
             .textFieldStyle(.roundedBorder)
             .frame(maxWidth: 140)
             .disabled(!editable)
+            if let numberProblem {
+                Text(numberProblem).font(.caption).foregroundStyle(.red)
+            }
         } else {
             Text(DiffEngine.display(v))
                 .font(.system(size: 13, design: .monospaced))

@@ -1,0 +1,4378 @@
+{
+  "advisorModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Pick which model answers when Claude asks the advisor tool.",
+    "es": "Elige qué modelo responde cuando Claude consulta la herramienta advisor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "fable",
+      "opus",
+      "sonnet",
+      "claude-opus-5-5"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "agent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Start every session as a named subagent with its prompt, tools, and model.",
+    "es": "Inicia cada sesión como un subagent con nombre, con su prompt, herramientas y modelo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "agentPushNotifEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let Claude send a push notification to your phone when it decides to.",
+    "es": "Permite que Claude envíe una notificación push a tu teléfono cuando lo decida.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "allowAllClaudeAiMcps": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Load the claude.ai connectors Claude Code fetches itself alongside a deployed `managed-mcp.json`.",
+    "es": "Carga los conectores de claude.ai que Claude Code obtiene por sí mismo junto con un `managed-mcp.json` desplegado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "allowClaudeInChromeWithManagedMcp": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let the built-in Claude in Chrome server run alongside a deployed `managed-mcp.json`.",
+    "es": "Permite que el servidor integrado de Claude in Chrome se ejecute junto con un `managed-mcp.json` desplegado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "allowManagedHooksOnly": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run only the hooks your organization deploys.",
+    "es": "Ejecuta solo los hooks que despliega tu organización.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "allowManagedMcpServersOnly": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Make the managed MCP allowlist the only one that applies.",
+    "es": "Hace que la lista de permitidos de MCP administrada sea la única que se aplica.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "allowManagedPermissionRulesOnly": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Make managed settings the only settings source of permission rules.",
+    "es": "Hace que la configuración administrada sea la única fuente de reglas de permisos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "allowedChannelPlugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Replace the default allowlist of channel plugins that can push messages.",
+    "es": "Reemplaza la lista de permitidos predeterminada de plugins de canal que pueden enviar mensajes.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "allowedHttpHookUrls": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit which URLs HTTP hooks can target.",
+    "es": "Limita a qué URL pueden dirigirse los hooks HTTP.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "allowedMcpServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allowlist which MCP servers users can add.",
+    "es": "Define la lista de permitidos de servidores MCP que los usuarios pueden agregar.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "allowedProviders": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit which API providers a machine may use.",
+    "es": "Limita qué proveedores de API puede usar una máquina.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "alwaysThinkingEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn extended thinking off for every session.",
+    "es": "Desactiva el pensamiento extendido en todas las sesiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "apiKeyHelper": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Generate the API credential with your own command.",
+    "es": "Genera la credencial de la API con tu propio comando.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "appendPlugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run your organization's mods after every mod a user installs.",
+    "es": "Ejecuta los mods de tu organización después de todos los mods que instale un usuario.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "askUserQuestionTimeout": {
+    "custom": false,
+    "default": "\"never\"",
+    "deprecated": false,
+    "en": "Let an unanswered question auto-continue after idle time.",
+    "es": "Permite que una pregunta sin respuesta continúe automáticamente tras un tiempo de inactividad.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "60s",
+      "5m",
+      "10m",
+      "never"
+    ],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "attribution": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Customize the attribution Claude Code adds to commits and pull requests.",
+    "es": "Personaliza la atribución que Claude Code agrega a los commits y pull requests.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "attribution.commit": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Change or hide the trailer Claude Code adds to commits.",
+    "es": "Cambia u oculta el trailer que Claude Code agrega a los commits.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "attribution.pr": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Change or hide the attribution line in pull request descriptions.",
+    "es": "Cambia u oculta la línea de atribución en las descripciones de pull requests.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "attribution.sessionUrl": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Omit the claude.ai session link from cloud and Remote Control commits.",
+    "es": "Omite el enlace de sesión de claude.ai en los commits de la nube y de Remote Control.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "autoCompactEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn automatic compaction off or on.",
+    "es": "Activa o desactiva la compactación automática.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "autoCompactWindow": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set how full the context gets before Claude Code compacts.",
+    "es": "Define qué tan lleno debe estar el contexto antes de que Claude Code lo compacte.",
+    "kind": "number",
+    "max": 1000000.0,
+    "min": 100000.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "autoConnectIde": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Connect to a running VS Code or JetBrains IDE automatically from an external terminal.",
+    "es": "Se conecta automáticamente a un IDE de VS Code o JetBrains en ejecución desde una terminal externa.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "autoContinueAtUsageLimit": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Wait in the open session and continue the task automatically after a claude.ai usage limit resets.",
+    "es": "Espera en la sesión abierta y continúa la tarea automáticamente cuando se restablece el límite de uso de claude.ai.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "autoInstallIdeExtension": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off automatic install of the IDE extension from a VS Code terminal.",
+    "es": "Desactiva la instalación automática de la extensión del IDE desde una terminal de VS Code.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "autoMemoryDirectory": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Store auto memory in a directory you choose.",
+    "es": "Guarda la memoria automática en un directorio que elijas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "autoMemoryEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn auto memory off or on.",
+    "es": "Activa o desactiva la memoria automática.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "autoMode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add your own allow and deny rules to the auto mode classifier.",
+    "es": "Agrega tus propias reglas de permitir y denegar al clasificador del modo automático.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "autoMode.classifyAllShell": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Send every shell command through the auto mode classifier, even ones a narrow allow rule matches.",
+    "es": "Envía cada comando de shell al clasificador del modo automático, incluso los que coincidan con una regla de permiso específica.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "autoScrollEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Follow new output to the bottom in fullscreen rendering.",
+    "es": "Sigue la salida nueva hasta el final en el renderizado de pantalla completa.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "autoUpdatesChannel": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Follow the stable release channel instead of latest.",
+    "es": "Sigue el canal de versiones estable en lugar de latest.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "stable",
+      "latest"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Updates and versioning"
+  },
+  "availableModels": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Restrict which models people can pick.",
+    "es": "Restringe qué modelos pueden elegir las personas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "availableModelsMatch": {
+    "custom": false,
+    "default": "\"prefix\"",
+    "deprecated": false,
+    "en": "Make each `availableModels` model ID entry permit only the version it names.",
+    "es": "Hace que cada ID de modelo en `availableModels` permita solo la versión que nombra.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "prefix",
+      "exact"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "awaySummaryEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn off the session recap shown when you come back to the terminal.",
+    "es": "Desactiva el resumen de sesión que se muestra al volver a la terminal.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "awsAuthRefresh": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Refresh expired Bedrock credentials in `.aws` with your own command.",
+    "es": "Renueva las credenciales vencidas de Bedrock en `.aws` con tu propio comando.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "awsCredentialExport": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Supply Bedrock credentials as JSON from your own command.",
+    "es": "Proporciona las credenciales de Bedrock como JSON desde tu propio comando.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "axScreenReader": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Render screen-reader friendly output.",
+    "es": "Genera una salida compatible con lectores de pantalla.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "bashEditDiffEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Record the files that changed while a Bash command ran in every permission mode.",
+    "es": "Registra los archivos que cambiaron mientras se ejecutaba un comando Bash en cada modo de permisos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "bashOutputMaxChars": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set how much of a successful command's output Claude receives inline.",
+    "es": "Define cuánta salida de un comando exitoso recibe Claude en línea.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "blockedMarketplaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block plugin marketplace sources for your organization.",
+    "es": "Bloquea fuentes de marketplaces de plugins para tu organización.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "browserExternalPageTools": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Keep Claude's tools off external pages in the desktop Browser pane.",
+    "es": "Mantiene las herramientas de Claude fuera de las páginas externas en el panel Browser de escritorio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "disabled"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Tools"
+  },
+  "channelsEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow channels for your organization.",
+    "es": "Permite los canales para tu organización.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "claudeInChromeDefaultEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn on Chrome integration when a session starts, in the interactive CLI and the VS Code extension.",
+    "es": "Activa la integración con Chrome al iniciar una sesión, en la CLI interactiva y en la extensión de VS Code.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "claudeMd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Inject organization-wide CLAUDE.md instructions from managed settings.",
+    "es": "Inyecta instrucciones de CLAUDE.md para toda la organización desde la configuración administrada.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "claudeMdExcludes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Skip specific CLAUDE.md files when memory loads.",
+    "es": "Omite archivos CLAUDE.md específicos al cargar la memoria.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "cleanupPeriodDays": {
+    "custom": true,
+    "default": "30",
+    "deprecated": false,
+    "en": "Choose how many days Claude Code keeps transcripts before deleting them.",
+    "es": "Elige cuántos días conserva Claude Code las transcripciones antes de eliminarlas.",
+    "kind": "number",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Privacy and telemetry"
+  },
+  "companyAnnouncements": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Show your organization's announcements at startup.",
+    "es": "Muestra los anuncios de tu organización al iniciar.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "copyFullResponse": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Make `/copy` copy the full response without showing the picker.",
+    "es": "Hace que `/copy` copie la respuesta completa sin mostrar el selector.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "copyOnSelect": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off automatic copying of text you select with the mouse in fullscreen rendering and agent view.",
+    "es": "Desactiva la copia automática del texto que seleccionas con el mouse en el renderizado de pantalla completa y en la vista de agentes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "crossSessionInbound": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose whether Claude Code delivers messages from your other sessions, shows a notice without delivering them, or refuses them.",
+    "es": "Elige si Claude Code entrega los mensajes de tus otras sesiones, muestra un aviso sin entregarlos o los rechaza.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "accept",
+      "hold",
+      "refuse"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "defaultShell": {
+    "custom": false,
+    "default": "\"bash\"",
+    "deprecated": false,
+    "en": "Choose whether Bash or PowerShell runs the shell commands you type with the `!` prefix.",
+    "es": "Elige si Bash o PowerShell ejecuta los comandos de shell que escribes con el prefijo `!`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "bash",
+      "powershell"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "defaultToAgentsView": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Open agent view instead of a new conversation when you run `claude` with no arguments.",
+    "es": "Abre la vista de agentes en lugar de una conversación nueva al ejecutar `claude` sin argumentos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "deniedMcpServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block specific MCP servers by URL, command, or name.",
+    "es": "Bloquea servidores MCP específicos por URL, comando o nombre.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "deniedModels": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block specific models, even ones `availableModels` permits.",
+    "es": "Bloquea modelos específicos, incluso los que `availableModels` permite.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "desktopSessionCleanupPeriodDays": {
+    "custom": true,
+    "default": "0",
+    "deprecated": false,
+    "en": "Set an age limit in days for Claude Desktop and Cowork transcripts.",
+    "es": "Define un límite de antigüedad en días para las transcripciones de Claude Desktop y Cowork.",
+    "kind": "number",
+    "max": null,
+    "min": 0.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Privacy and telemetry"
+  },
+  "dialogExpiry": {
+    "custom": false,
+    "default": "\"5m\"",
+    "deprecated": false,
+    "en": "Set how long Claude Code waits for Remote Control or an SDK host to answer a forwarded dialog before it cancels the dialog.",
+    "es": "Define cuánto espera Claude Code a que Remote Control o un host del SDK responda un diálogo reenviado antes de cancelarlo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "60s",
+      "5m",
+      "10m",
+      "never"
+    ],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "diffTool": {
+    "custom": false,
+    "default": "\"auto\"",
+    "deprecated": false,
+    "en": "Choose whether Claude's proposed file changes open in the VS Code or JetBrains diff viewer or stay in the terminal.",
+    "es": "Elige si los cambios de archivos propuestos por Claude se abren en el visor de diferencias de VS Code o JetBrains o se quedan en la terminal.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "terminal"
+    ],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "disableAgentView": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn off background agents and agent view.",
+    "es": "Desactiva los agentes en segundo plano y la vista de agentes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "disableAllHooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn off hooks, a custom status line, and a custom `@` file suggestion command at once.",
+    "es": "Desactiva a la vez los hooks, una línea de estado personalizada y un comando personalizado de sugerencias de archivos con `@`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "disableArtifact": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Deprecated; use `enableArtifact` to turn the Artifact tool off.",
+    "es": "Obsoleto; usa `enableArtifact` para desactivar la herramienta Artifact.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "disableAutoMode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Remove auto mode from the permission mode cycle.",
+    "es": "Quita el modo automático del ciclo de modos de permisos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "disable"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "disableBrowserExternalNavigation": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit the desktop Browser pane to localhost for people and Claude.",
+    "es": "Limita el panel Browser de escritorio a localhost, tanto para las personas como para Claude.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Tools"
+  },
+  "disableBundledSkills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn off the skills and workflows included with Claude Code.",
+    "es": "Desactiva los skills y flujos de trabajo incluidos con Claude Code.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "disableClaudeAiConnectors": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn off claude.ai connectors so Claude Code doesn't fetch them.",
+    "es": "Desactiva los conectores de claude.ai para que Claude Code no los obtenga.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "disableCommandPluginSources": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block plugins that install by running a marketplace-declared command.",
+    "es": "Bloquea los plugins que se instalan ejecutando un comando declarado por el marketplace.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "disableDeepLinkRegistration": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Stop Claude Code from registering the `claude-cli://` handler.",
+    "es": "Evita que Claude Code registre el manejador `claude-cli://`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "disable"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "disableDesktopLocalSessions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn off Desktop Code sessions that run on the device, leaving SSH to other hosts and cloud.",
+    "es": "Desactiva las sesiones de Desktop Code que se ejecutan en el dispositivo, dejando SSH a otros hosts y la nube.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "disableMobileSimulatorTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block Claude's tools in the desktop iOS Simulator pane.",
+    "es": "Bloquea las herramientas de Claude en el panel del simulador de iOS de escritorio.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Tools"
+  },
+  "disableRemoteControl": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn off Remote Control everywhere it can start.",
+    "es": "Desactiva Remote Control en todos los lugares donde puede iniciarse.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "disableSideloadFlags": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Reject the CLI flags that sideload plugins, subagents, and MCP servers.",
+    "es": "Rechaza las banderas de la CLI que cargan plugins, subagents y servidores MCP de forma externa.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "disableSkillShellExecution": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Stop skills and custom commands from running inline shell.",
+    "es": "Evita que los skills y comandos personalizados ejecuten shell en línea.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "disableWorkflows": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn dynamic workflows off for everyone; use `enableWorkflows` for yourself.",
+    "es": "Desactiva los flujos de trabajo dinámicos para todos; usa `enableWorkflows` para ti.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "disabledMcpjsonServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Reject specific servers from a project's `.mcp.json`.",
+    "es": "Rechaza servidores específicos del `.mcp.json` de un proyecto.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "editorMode": {
+    "custom": false,
+    "default": "\"normal\"",
+    "deprecated": false,
+    "en": "Use vim key bindings in the input prompt.",
+    "es": "Usa atajos de teclado de vim en el prompt de entrada.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "normal",
+      "vim"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "effortLevel": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Set a default effort level for models without a saved level of their own.",
+    "es": "Define un nivel de esfuerzo predeterminado para los modelos sin un nivel guardado propio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "low",
+      "medium",
+      "high",
+      "xhigh"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "emojiCompletionEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off `:shortcode:` emoji suggestions and replacement in the prompt input.",
+    "es": "Desactiva las sugerencias y el reemplazo de emojis con `:shortcode:` en el prompt de entrada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "enableAllProjectMcpServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Approve every server in project `.mcp.json` files without a prompt.",
+    "es": "Aprueba sin preguntar todos los servidores de los archivos `.mcp.json` del proyecto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "enableArtifact": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn the Artifact tool off with a `false` in any file; no file can turn it back on.",
+    "es": "Desactiva la herramienta Artifact con un `false` en cualquier archivo; ningún archivo puede volver a activarla.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "enableWorkflows": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn dynamic workflows on or off against your plan's default.",
+    "es": "Activa o desactiva los flujos de trabajo dinámicos respecto al valor predeterminado de tu plan.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "enabledMcpjsonServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Approve specific servers from a project's `.mcp.json`.",
+    "es": "Aprueba servidores específicos del `.mcp.json` de un proyecto.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "enabledPlugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn individual plugins on or off per scope.",
+    "es": "Activa o desactiva plugins individuales por ámbito.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "enforceAvailableModels": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Keep the `/model` Default choice inside your `availableModels` allowlist.",
+    "es": "Mantiene la opción Default de `/model` dentro de tu lista de permitidos `availableModels`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "env": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set environment variables for every session and its subprocesses.",
+    "es": "Define variables de entorno para cada sesión y sus subprocesos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "externalEditorContext": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show Claude's last response as comments when you press Ctrl+G to edit.",
+    "es": "Muestra la última respuesta de Claude como comentarios al presionar Ctrl+G para editar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "extraKnownMarketplaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Register marketplaces for a repository or an organization.",
+    "es": "Registra marketplaces para un repositorio o una organización.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "fallbackModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Name backup models for when the primary is overloaded.",
+    "es": "Nombra modelos de respaldo para cuando el principal esté sobrecargado.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "fastMode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn fast mode on for sessions where it's available.",
+    "es": "Activa el modo rápido en las sesiones donde esté disponible.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "fastModePerSessionOptIn": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Require people to turn fast mode on each session.",
+    "es": "Exige que las personas activen el modo rápido en cada sesión.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "feedbackDrafts": {
+    "custom": false,
+    "default": "\"notify\"",
+    "deprecated": false,
+    "en": "Control whether Claude queues feedback drafts for you to review.",
+    "es": "Controla si Claude pone en cola borradores de comentarios para que los revises.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "notify",
+      "quiet",
+      "off"
+    ],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Privacy and telemetry"
+  },
+  "feedbackSurveyRate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Change how often the session quality survey appears.",
+    "es": "Cambia con qué frecuencia aparece la encuesta de calidad de la sesión.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Privacy and telemetry"
+  },
+  "fileCheckpointingEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off or on the file snapshots that `/rewind` restores.",
+    "es": "Activa o desactiva las instantáneas de archivos que restaura `/rewind`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "fileSuggestion": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Supply `@` file autocomplete from your own command.",
+    "es": "Proporciona el autocompletado de archivos con `@` desde tu propio comando.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "footerLinksRegexes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Make issue or review IDs in output into clickable links below the input box.",
+    "es": "Convierte los IDs de issues o revisiones de la salida en enlaces en los que se puede hacer clic debajo del cuadro de entrada.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "forceLoginGatewayUrl": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set the gateway URL the login screen connects to.",
+    "es": "Define la URL del gateway a la que se conecta la pantalla de inicio de sesión.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "forceLoginMethod": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Restrict login to claude.ai, Claude Console, or a cloud gateway.",
+    "es": "Restringe el inicio de sesión a claude.ai, Claude Console o un gateway en la nube.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "claudeai",
+      "console",
+      "gateway"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "forceLoginOrgUUID": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Pin claude.ai logins to your organization; only a managed source enforces it.",
+    "es": "Fija los inicios de sesión de claude.ai a tu organización; solo una fuente administrada lo aplica.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "forceRemoteSettingsRefresh": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Block startup until server-managed settings are freshly fetched.",
+    "es": "Bloquea el inicio hasta que la configuración administrada por el servidor se obtenga de nuevo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "gatewayInternalNetworks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Let `/login` reach a cloud gateway on public IPv4 space your organization uses internally.",
+    "es": "Permite que `/login` llegue a un gateway en la nube en espacio IPv4 público que tu organización usa internamente.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "gcpAuthRefresh": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Refresh Google Cloud credentials with your own command.",
+    "es": "Renueva las credenciales de Google Cloud con tu propio comando.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run your own commands as hooks at points in Claude Code's lifecycle.",
+    "es": "Ejecuta tus propios comandos como hooks en puntos del ciclo de vida de Claude Code.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "httpHookAllowedEnvVars": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit which env vars HTTP hooks can put in headers.",
+    "es": "Limita qué variables de entorno pueden poner los hooks HTTP en los encabezados.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "idleCompaction": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Stop Claude Code from compacting a long conversation that you've stepped away from.",
+    "es": "Evita que Claude Code compacte una conversación larga de la que te has alejado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "includeCoAuthoredBy": {
+    "custom": true,
+    "default": "true",
+    "deprecated": true,
+    "en": "Deprecated; use `attribution` to hide or change commit and PR attribution.",
+    "es": "Obsoleto; usa `attribution` para ocultar o cambiar la atribución de commits y PR.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "includeGitInstructions": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Remove the built-in commit and PR instructions from Claude's context.",
+    "es": "Quita del contexto de Claude las instrucciones integradas de commits y PR.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "inputNeededNotifEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Get a push notification when Claude is waiting on you.",
+    "es": "Recibe una notificación push cuando Claude esté esperando tu respuesta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "isolatePeerMachines": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Ask you before Claude messages one of your sessions on another machine.",
+    "es": "Te pregunta antes de que Claude envíe un mensaje a una de tus sesiones en otra máquina.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "keybindingFlavor": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Deprecated and has no effect; the word-editing shortcuts always follow readline conventions.",
+    "es": "Obsoleto y sin efecto; los atajos de edición de palabras siempre siguen las convenciones de readline.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "classic",
+      "readline"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "language": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Have Claude respond in a language other than English.",
+    "es": "Haz que Claude responda en un idioma distinto del inglés.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "japanese",
+      "spanish",
+      "french"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "leftArrowOpensAgents": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off the `←` shortcut that backgrounds the session and opens agent view.",
+    "es": "Desactiva el atajo `←` que pasa la sesión a segundo plano y abre la vista de agentes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "managedMcpServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Provide remote MCP servers to every user alongside the ones they add.",
+    "es": "Proporciona servidores MCP remotos a todos los usuarios junto con los que ellos agregan.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "MCP"
+  },
+  "managedSourcesBehavior": {
+    "custom": false,
+    "default": "\"first-wins\"",
+    "deprecated": false,
+    "en": "Compose every managed source you deploy instead of using the highest-priority one alone.",
+    "es": "Combina todas las fuentes administradas que despliegues en lugar de usar solo la de mayor prioridad.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "first-wins",
+      "merge"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "maxEffortLevel": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Cap the effort level for every model or per model, on every provider.",
+    "es": "Limita el nivel de esfuerzo para todos los modelos o por modelo, en cualquier proveedor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+      "max",
+      "max"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "maxProseWidth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Cap how wide the prose in Claude's responses runs in a wide terminal.",
+    "es": "Limita qué tan ancho llega el texto de las respuestas de Claude en una terminal ancha.",
+    "kind": "number",
+    "max": null,
+    "min": 40.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "minimumVersion": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Keep auto-updates from installing anything below a version.",
+    "es": "Evita que las actualizaciones automáticas instalen cualquier versión inferior a una dada.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "2.1.100"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Updates and versioning"
+  },
+  "model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Change the model Claude Code starts with.",
+    "es": "Cambia el modelo con el que inicia Claude Code.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "modelOverrides": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Map model IDs to your provider's IDs, such as Bedrock ARNs.",
+    "es": "Asigna IDs de modelo a los IDs de tu proveedor, como los ARN de Bedrock.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "modelPicker": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose which models the `/model` picker lists, in your own order and with your own labels.",
+    "es": "Elige qué modelos lista el selector de `/model`, en tu propio orden y con tus propias etiquetas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "modelPricing": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Report spend at your organization's contracted rates instead of list price.",
+    "es": "Reporta el gasto con las tarifas contratadas por tu organización en lugar del precio de lista.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "modelSettings": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Keep a saved effort level or auto-compact window per model, or cap one model's effort.",
+    "es": "Conserva un nivel de esfuerzo o ventana de compactación automática guardados por modelo, o limita el esfuerzo de un modelo.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "otelHeadersHelper": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Generate rotating OpenTelemetry headers with your own command.",
+    "es": "Genera encabezados rotativos de OpenTelemetry con tu propio comando.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Authentication and providers"
+  },
+  "outputStyle": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Change Claude's role, tone, and output format with an output style.",
+    "es": "Cambia el rol, el tono y el formato de salida de Claude con un estilo de salida.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "parentSettingsBehavior": {
+    "custom": false,
+    "default": "\"first-wins\"",
+    "deprecated": false,
+    "en": "Apply or drop restrictions an SDK or IDE host passes when you deploy managed settings.",
+    "es": "Aplica o descarta las restricciones que pasa un host de SDK o IDE cuando despliegas configuración administrada.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "first-wins",
+      "merge"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "permissionExplainerEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Removed in v2.1.257, together with the `Ctrl+E` command explanation on shell permission prompts.",
+    "es": "Eliminado en la v2.1.257, junto con la explicación de comandos con `Ctrl+E` en los avisos de permisos de shell.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "permissions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set allow, ask, and deny rules and the starting permission mode.",
+    "es": "Define reglas de permitir, preguntar y denegar, y el modo de permisos inicial.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.additionalDirectories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Give Claude file access to directories outside the current one.",
+    "es": "Da a Claude acceso a archivos en directorios fuera del actual.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.allow": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Approve listed tool uses without a prompt.",
+    "es": "Aprueba sin preguntar los usos de herramientas listados.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.ask": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Always prompt before listed tool uses.",
+    "es": "Pregunta siempre antes de los usos de herramientas listados.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.blockReadsOutsideWorkingDirectories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Make the file tools refuse reads outside the working directories in every permission mode.",
+    "es": "Hace que las herramientas de archivos rechacen lecturas fuera de los directorios de trabajo en todos los modos de permisos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.blockWritesOutsideWorkingDirectories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Make the `Write`, `Edit`, and `NotebookEdit` tools refuse paths outside the working directories in every permission mode, apart from some of Claude Code's own files.",
+    "es": "Hace que las herramientas `Write`, `Edit` y `NotebookEdit` rechacen rutas fuera de los directorios de trabajo en todos los modos de permisos, salvo algunos archivos propios de Claude Code.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.defaultMode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Set the permission mode new sessions start in.",
+    "es": "Define el modo de permisos con el que inician las sesiones nuevas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "default",
+      "acceptEdits",
+      "plan",
+      "auto",
+      "dontAsk",
+      "bypassPermissions",
+      "manual"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.deny": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block listed tool uses, including reads of files that hold secrets.",
+    "es": "Bloquea los usos de herramientas listados, incluidas las lecturas de archivos que contienen secretos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "permissions.disableBypassPermissionsMode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Prevent anyone from entering bypassPermissions mode.",
+    "es": "Impide que cualquiera entre al modo bypassPermissions.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "disable"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "plansDirectory": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose where plan mode writes plan files.",
+    "es": "Elige dónde escribe el modo de planificación los archivos de plan.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "pluginConfigs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Store the answers you gave a plugin's configuration dialog.",
+    "es": "Guarda las respuestas que diste en el diálogo de configuración de un plugin.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "pluginSuggestionMarketplaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose which marketplaces can surface plugin install suggestions in `/plugin`.",
+    "es": "Elige qué marketplaces pueden mostrar sugerencias de instalación de plugins en `/plugin`.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "pluginTrustMessage": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add your own text to the plugin trust warning.",
+    "es": "Agrega tu propio texto a la advertencia de confianza de plugins.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "policyHelper": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run an executable that computes managed settings at startup.",
+    "es": "Ejecuta un ejecutable que calcula la configuración administrada al iniciar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "policyHelper.path": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Name the helper executable Claude Code runs.",
+    "es": "Indica el ejecutable auxiliar que ejecuta Claude Code.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "policyHelper.refreshIntervalMs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Re-run the helper in the background on an interval.",
+    "es": "Vuelve a ejecutar el auxiliar en segundo plano a intervalos.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "policyHelper.timeoutMs": {
+    "custom": true,
+    "default": "10000",
+    "deprecated": false,
+    "en": "Set how long Claude Code waits for the helper.",
+    "es": "Define cuánto espera Claude Code al auxiliar.",
+    "kind": "integer",
+    "max": null,
+    "min": 1000.0,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  },
+  "prStatusFooterEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off the prompt footer's PR review status badge and the pull request check behind it.",
+    "es": "Desactiva la insignia de estado de revisión de PR del pie del prompt y la verificación del pull request que hay detrás.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "prUrlTemplate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Point PR links at an internal code-review tool instead of github.com.",
+    "es": "Dirige los enlaces de PR a una herramienta interna de revisión de código en lugar de github.com.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Git and attribution"
+  },
+  "preferredNotifChannel": {
+    "custom": false,
+    "default": "\"auto\"",
+    "deprecated": false,
+    "en": "Choose a terminal bell or desktop notification for task completion.",
+    "es": "Elige una campana de terminal o una notificación de escritorio al completar una tarea.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "terminal_bell",
+      "iterm2",
+      "iterm2_with_bell",
+      "kitty",
+      "ghostty",
+      "notifications_disabled"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "prefersReducedMotion": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Reduce or turn off spinner, shimmer, and flash animations.",
+    "es": "Reduce o desactiva las animaciones del indicador de carga, el brillo y los destellos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "prependPlugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run your organization's mods before every mod a user installs.",
+    "es": "Ejecuta los mods de tu organización antes de todos los mods que instale un usuario.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "processWrapper": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run Claude Code's background processes through a corporate launcher on macOS and Linux.",
+    "es": "Ejecuta los procesos en segundo plano de Claude Code a través de un lanzador corporativo en macOS y Linux.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "promptCacheTtl": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose the prompt cache lifetime for the main conversation.",
+    "es": "Elige la duración de la caché de prompts para la conversación principal.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "5m",
+      "1h"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "promptSuggestionEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Hide the grayed-out prompt suggestions in the input box.",
+    "es": "Oculta las sugerencias de prompt en gris del cuadro de entrada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "remote.defaultEnvironmentId": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Pick the default cloud environment for `claude --cloud`; a self-hosted `ccpool_` ID is read only from user and managed settings and `--settings`.",
+    "es": "Elige el entorno de nube predeterminado para `claude --cloud`; un ID `ccpool_` autoalojado solo se lee de la configuración de usuario y administrada y de `--settings`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "remoteControlAtStartup": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Connect Remote Control automatically when a session starts.",
+    "es": "Conecta Remote Control automáticamente al iniciar una sesión.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "requiredMaximumVersion": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Refuse to start on a version newer than your organization allows.",
+    "es": "Se niega a iniciar en una versión más nueva de la que permite tu organización.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "2.1.150"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Updates and versioning"
+  },
+  "requiredMinimumVersion": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Refuse to start on a version older than your organization requires.",
+    "es": "Se niega a iniciar en una versión más antigua de la que exige tu organización.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "2.1.150"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Updates and versioning"
+  },
+  "respectGitignore": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Keep gitignored files out of the `@` file picker.",
+    "es": "Mantiene los archivos ignorados por git fuera del selector de archivos `@`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "respondToBashCommands": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Stop Claude from responding after a `!` shell command runs.",
+    "es": "Evita que Claude responda después de ejecutar un comando de shell con `!`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "sandbox": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Isolate Bash commands from your filesystem and network on macOS, Linux, and WSL2.",
+    "es": "Aísla los comandos Bash de tu sistema de archivos y de la red en macOS, Linux y WSL2.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.allowAppleEvents": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let sandboxed commands send Apple Events on macOS.",
+    "es": "Permite que los comandos en sandbox envíen Apple Events en macOS.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.allowNestedUserNamespaces": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let sandboxed commands create user namespaces on Linux and WSL2.",
+    "es": "Permite que los comandos en sandbox creen espacios de nombres de usuario en Linux y WSL2.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.allowUnsandboxedCommands": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Let Claude retry a blocked command outside the sandbox, or forbid it.",
+    "es": "Permite que Claude reintente un comando bloqueado fuera del sandbox, o lo prohíbe.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.autoAllowBashIfSandboxed": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Run sandboxed commands without a permission prompt.",
+    "es": "Ejecuta los comandos en sandbox sin aviso de permiso.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.bwrapPath": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Point the sandbox at a bubblewrap binary outside `PATH`.",
+    "es": "Apunta el sandbox a un binario de bubblewrap fuera de `PATH`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide or mask credential files and variables inside the sandbox.",
+    "es": "Oculta o enmascara archivos y variables de credenciales dentro del sandbox.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials.allowPlaintextInject": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let masked credentials reach plain HTTP services on trusted test networks.",
+    "es": "Permite que las credenciales enmascaradas lleguen a servicios HTTP sin cifrar en redes de prueba de confianza.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials.awsPairs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Link custom-named AWS key variables into one credential for re-signing.",
+    "es": "Vincula variables de claves de AWS con nombres personalizados en una sola credencial para volver a firmar.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials.envVars": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Unset or mask an environment variable inside the sandbox.",
+    "es": "Elimina o enmascara una variable de entorno dentro del sandbox.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials.files": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block or mask reads of a credential file inside the sandbox.",
+    "es": "Bloquea o enmascara las lecturas de un archivo de credenciales dentro del sandbox.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.credentials.sigv4": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose whether streaming, presigned, or SigV4A AWS requests fail or pass through.",
+    "es": "Elige si las solicitudes de AWS de streaming, prefirmadas o SigV4A fallan o pasan sin cambios.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.enableWeakerNestedSandbox": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Run the Linux sandbox inside an unprivileged container.",
+    "es": "Ejecuta el sandbox de Linux dentro de un contenedor sin privilegios.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.enableWeakerNetworkIsolation": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let `gh`, `gcloud`, and `terraform` verify TLS behind a MITM proxy inside the sandbox on macOS.",
+    "es": "Permite que `gh`, `gcloud` y `terraform` verifiquen TLS detrás de un proxy MITM dentro del sandbox en macOS.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn on Bash sandboxing on macOS, Linux, and WSL2.",
+    "es": "Activa el sandbox de Bash en macOS, Linux y WSL2.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.excludedCommands": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Name commands Claude Code can run outside the sandbox.",
+    "es": "Indica los comandos que Claude Code puede ejecutar fuera del sandbox.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.failIfUnavailable": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Refuse to start when the sandbox can't, instead of running unsandboxed.",
+    "es": "Se niega a iniciar cuando el sandbox no puede, en lugar de ejecutarse sin sandbox.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Control which paths sandboxed commands can read and write.",
+    "es": "Controla qué rutas pueden leer y escribir los comandos en sandbox.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.allowManagedReadPathsOnly": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Stop developers from re-opening read paths your organization blocked.",
+    "es": "Evita que los desarrolladores vuelvan a abrir rutas de lectura que tu organización bloqueó.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.allowRead": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Re-open reading inside a region `denyRead` blocks.",
+    "es": "Vuelve a permitir la lectura dentro de una región que `denyRead` bloquea.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.allowWrite": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add paths sandboxed commands can write to.",
+    "es": "Agrega rutas en las que los comandos en sandbox pueden escribir.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.denyRead": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block sandboxed commands from reading specific paths.",
+    "es": "Impide que los comandos en sandbox lean rutas específicas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.denyWrite": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block sandboxed commands from writing to specific paths.",
+    "es": "Impide que los comandos en sandbox escriban en rutas específicas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.filesystem.disabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn off filesystem isolation while keeping network isolation.",
+    "es": "Desactiva el aislamiento del sistema de archivos manteniendo el aislamiento de red.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.ignoreViolations": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Silence violation reports for paths a command is expected to probe.",
+    "es": "Silencia los reportes de violaciones para rutas que se espera que un comando sondee.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Control which hosts, ports, and sockets sandboxed commands reach.",
+    "es": "Controla a qué hosts, puertos y sockets acceden los comandos en sandbox.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowAllUnixSockets": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let sandboxed commands connect to every Unix socket.",
+    "es": "Permite que los comandos en sandbox se conecten a cualquier socket Unix.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowLocalBinding": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Let sandboxed commands listen on network ports and connect to localhost on macOS.",
+    "es": "Permite que los comandos en sandbox escuchen en puertos de red y se conecten a localhost en macOS.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowMachLookup": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Let macOS sandboxed tools like the iOS Simulator or Playwright reach their XPC services.",
+    "es": "Permite que herramientas en sandbox de macOS, como el simulador de iOS o Playwright, lleguen a sus servicios XPC.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowManagedDomainsOnly": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Lock the network allowlist to managed settings.",
+    "es": "Fija la lista de permitidos de red a la configuración administrada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowUnixSockets": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List Unix socket paths sandboxed commands can use on macOS.",
+    "es": "Lista las rutas de sockets Unix que los comandos en sandbox pueden usar en macOS.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.allowedDomains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Pre-allow domains so sandboxed commands don't prompt for them.",
+    "es": "Permite de antemano dominios para que los comandos en sandbox no pregunten por ellos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.deniedDomains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block domains for sandboxed commands, even inside an allowed wildcard.",
+    "es": "Bloquea dominios para los comandos en sandbox, incluso dentro de un comodín permitido.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.httpProxyPort": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Route sandbox HTTP traffic through your own proxy.",
+    "es": "Enruta el tráfico HTTP del sandbox por tu propio proxy.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.socksProxyPort": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Route sandbox SOCKS traffic through your own proxy.",
+    "es": "Enruta el tráfico SOCKS del sandbox por tu propio proxy.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.strictAllowlist": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Deny hosts outside the allowlist instead of prompting.",
+    "es": "Deniega los hosts fuera de la lista de permitidos en lugar de preguntar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.network.tlsTerminate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Have the sandbox proxy terminate TLS so it can read HTTPS requests.",
+    "es": "Hace que el proxy del sandbox termine TLS para poder leer las solicitudes HTTPS.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.ripgrep": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Use your own ripgrep binary inside the sandbox.",
+    "es": "Usa tu propio binario de ripgrep dentro del sandbox.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "sandbox.socatPath": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Point the sandbox proxy at a `socat` binary outside `PATH`.",
+    "es": "Apunta el proxy del sandbox a un binario de `socat` fuera de `PATH`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Sandbox settings"
+  },
+  "showClearContextOnPlanAccept": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show a \"clear context\" option on the plan accept screen.",
+    "es": "Muestra una opción de \"borrar contexto\" en la pantalla de aceptación del plan.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "showThinkingSummaries": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "See summaries of Claude's thinking instead of a collapsed stub.",
+    "es": "Muestra resúmenes del pensamiento de Claude en lugar de un fragmento contraído.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "showTurnDuration": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Hide the \"Cooked for\" duration after each response.",
+    "es": "Oculta la duración \"Cooked for\" después de cada respuesta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "skillListingBudgetFraction": {
+    "custom": true,
+    "default": "0.01",
+    "deprecated": false,
+    "en": "Reserve more or less context for the skill listing.",
+    "es": "Reserva más o menos contexto para el listado de skills.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "skillListingMaxDescChars": {
+    "custom": true,
+    "default": "1536",
+    "deprecated": false,
+    "en": "Cap each skill's description length in the skill listing.",
+    "es": "Limita la longitud de la descripción de cada skill en el listado de skills.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "skillOverrides": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hide or collapse a skill without editing its SKILL.md.",
+    "es": "Oculta o contrae un skill sin editar su SKILL.md.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "skipAutoPermissionPrompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Skip the one-time notice Claude Code shows when you first enter auto mode yourself rather than through the built-in default.",
+    "es": "Omite el aviso único que Claude Code muestra cuando entras al modo automático por tu cuenta en lugar de usar el valor predeterminado integrado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "skipDangerousModePermissionPrompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Skip the confirmation dialog before bypassPermissions mode.",
+    "es": "Omite el diálogo de confirmación antes del modo bypassPermissions.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "skipWebFetchPreflight": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Skip the WebFetch hostname check when Anthropic is unreachable.",
+    "es": "Omite la verificación de nombre de host de WebFetch cuando Anthropic no es accesible.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Privacy and telemetry"
+  },
+  "spellcheck": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Underline misspelled words in the prompt input with a spell checker you install.",
+    "es": "Subraya las palabras mal escritas en el prompt de entrada con un corrector ortográfico que instales.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "spinnerTipsEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Hide tips in the spinner while Claude works.",
+    "es": "Oculta los consejos del indicador de carga mientras Claude trabaja.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "spinnerTipsOverride": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add your own tips to the spinner rotation, or replace the built-in tips.",
+    "es": "Agrega tus propios consejos a la rotación del indicador de carga, o reemplaza los integrados.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "spinnerVerbs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add or replace the verbs shown while a turn runs.",
+    "es": "Agrega o reemplaza los verbos que se muestran mientras se ejecuta un turno.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "sshConfigs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add SSH connections to the Desktop environment selector.",
+    "es": "Agrega conexiones SSH al selector de entorno de Desktop.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "sshHostAllowlist": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit which hosts Desktop SSH sessions can reach.",
+    "es": "Limita a qué hosts pueden acceder las sesiones SSH de Desktop.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "sshHostCommands": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add SSH connections whose host comes from a command to the Desktop environment selector.",
+    "es": "Agrega al selector de entorno de Desktop conexiones SSH cuyo host proviene de un comando.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Remote, desktop, and notifications"
+  },
+  "statusLine": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run your own command to render a status line below the prompt.",
+    "es": "Ejecuta tu propio comando para mostrar una statusline debajo del prompt.",
+    "kind": "object",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "strictKnownMarketplaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allowlist the marketplace sources users can add and install from.",
+    "es": "Define la lista de permitidos de fuentes de marketplace desde las que los usuarios pueden agregar e instalar.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "strictPluginOnlyCustomization": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Block skills, agents, hooks, and MCP servers from user and project sources.",
+    "es": "Bloquea skills, agentes, hooks y servidores MCP de fuentes de usuario y de proyecto.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "strictPluginOnlyCustomization.agents": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Lock agents to plugin and managed sources.",
+    "es": "Restringe los agentes a fuentes de plugins y administradas.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [
+      "agents"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "strictPluginOnlyCustomization.hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Lock hooks to plugin and managed sources.",
+    "es": "Restringe los hooks a fuentes de plugins y administradas.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [
+      "hooks"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "strictPluginOnlyCustomization.mcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Lock MCP servers to plugin and managed sources.",
+    "es": "Restringe los servidores MCP a fuentes de plugins y administradas.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [
+      "mcp"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "strictPluginOnlyCustomization.skills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Lock skills to plugin and managed sources.",
+    "es": "Restringe los skills a fuentes de plugins y administradas.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [
+      "skills"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "subagentPromptCacheTtl": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose the prompt cache lifetime for subagents and other requests outside the main conversation.",
+    "es": "Elige la duración de la caché de prompts para los subagents y otras solicitudes fuera de la conversación principal.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "5m",
+      "1h"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "subagentStatusLine": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Rewrite rows in the subagent task display with your own command.",
+    "es": "Reescribe las filas de la vista de tareas de subagents con tu propio comando.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "switchModelsOnFlag": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Switch models automatically or pause when a safety classifier flags a request.",
+    "es": "Cambia de modelo automáticamente o pausa cuando un clasificador de seguridad marca una solicitud.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "syncClaudeAiPlugins": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Stop loading the plugins enabled on your claude.ai account and stop downloading new ones.",
+    "es": "Deja de cargar los plugins activados en tu cuenta de claude.ai y de descargar nuevos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "syncClaudeAiSkills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Stop loading the skills enabled on your claude.ai account and stop downloading new ones.",
+    "es": "Deja de cargar los skills activados en tu cuenta de claude.ai y de descargar nuevos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "local",
+      "managed"
+    ],
+    "topic": "Plugins and skills"
+  },
+  "syntaxHighlightingDisabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Turn off syntax highlighting in diffs and code blocks.",
+    "es": "Desactiva el resaltado de sintaxis en diferencias y bloques de código.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "taskOutputMaxChars": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Removed in v2.1.277, together with the `TaskOutput` tool it sized.",
+    "es": "Eliminado en la v2.1.277, junto con la herramienta `TaskOutput` que dimensionaba.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Memory and context"
+  },
+  "teammateDefaultModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Removed in v2.1.234; see Specify teammates and models for how Claude Code picks a teammate's model.",
+    "es": "Eliminado en la v2.1.234; consulta Specify teammates and models para saber cómo elige Claude Code el modelo de un compañero.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "globalConfig"
+    ],
+    "topic": "Global config settings"
+  },
+  "teammateMode": {
+    "custom": false,
+    "default": "\"in-process\"",
+    "deprecated": false,
+    "en": "Choose how agent team teammates display.",
+    "es": "Elige cómo se muestran los compañeros del equipo de agentes.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "in-process",
+      "tmux",
+      "iterm2"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "terminalProgressBarEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Hide the terminal progress bar in terminals that support it.",
+    "es": "Oculta la barra de progreso de la terminal en las terminales que la admiten.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "terminalTitleFromRename": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Stop `/rename` and `--name` from changing the terminal tab title.",
+    "es": "Evita que `/rename` y `--name` cambien el título de la pestaña de la terminal.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "theme": {
+    "custom": true,
+    "default": "\"dark\"",
+    "deprecated": false,
+    "en": "Pick the interface color theme, built-in or custom.",
+    "es": "Elige el tema de colores de la interfaz, integrado o personalizado.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "dark",
+      "light",
+      "dark-daltonized",
+      "light-daltonized",
+      "dark-ansi",
+      "light-ansi"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "timeFormat": {
+    "custom": false,
+    "default": "\"auto\"",
+    "deprecated": false,
+    "en": "Show the times in the interface on a 12-hour or 24-hour clock, in UTC, or with a strftime pattern.",
+    "es": "Muestra las horas de la interfaz en formato de 12 o 24 horas, en UTC o con un patrón strftime.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "12-hour",
+      "24-hour",
+      "24-hour-utc"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "timeZone": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Show the times in the interface in a time zone other than your system's.",
+    "es": "Muestra las horas de la interfaz en una zona horaria distinta de la de tu sistema.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "tui": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose the fullscreen or classic terminal renderer.",
+    "es": "Elige el renderizador de terminal de pantalla completa o el clásico.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "fullscreen",
+      "default"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "ultracode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Have Claude plan a workflow for each substantive task without being asked.",
+    "es": "Haz que Claude planifique un flujo de trabajo para cada tarea sustancial sin que se lo pidas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Model and responses"
+  },
+  "useAutoModeDuringPlan": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Let the auto mode classifier review shell commands in plan mode; set `false` to get prompts instead.",
+    "es": "Permite que el clasificador del modo automático revise comandos de shell en el modo de planificación; usa `false` para recibir avisos en su lugar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "local",
+      "managed"
+    ],
+    "topic": "Permission settings"
+  },
+  "verbose": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show full tool output instead of truncated summaries; `viewMode` takes precedence when both are set.",
+    "es": "Muestra la salida completa de las herramientas en lugar de resúmenes truncados; `viewMode` tiene prioridad si ambos están definidos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "viewMode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Start every session in default, verbose, or focus view.",
+    "es": "Inicia cada sesión en la vista predeterminada, detallada o de enfoque.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "default",
+      "verbose",
+      "focus"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "vimInsertModeRemaps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Map a two-key INSERT-mode sequence such as `jj` to Escape.",
+    "es": "Asigna una secuencia de dos teclas en modo INSERT, como `jj`, a Escape.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "voice": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Turn on voice dictation and pick hold or tap mode.",
+    "es": "Activa el dictado por voz y elige el modo de mantener o tocar.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "voiceEnabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Turn on voice dictation with the older single-key form.",
+    "es": "Activa el dictado por voz con la forma anterior de una sola tecla.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "wheelScrollAccelerationEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Turn off mouse-wheel acceleration in fullscreen rendering.",
+    "es": "Desactiva la aceleración de la rueda del mouse en el renderizado de pantalla completa.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Interface and terminal"
+  },
+  "workflowKeywordTriggerEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Let the word `ultracode` in a prompt start a workflow; set `false` to type it without starting one.",
+    "es": "Permite que la palabra `ultracode` en un prompt inicie un flujo de trabajo; usa `false` para escribirla sin iniciar uno.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "workflowSizeGuideline": {
+    "custom": false,
+    "default": "\"medium\"",
+    "deprecated": false,
+    "en": "Set the agent count Claude aims for in dynamic workflows.",
+    "es": "Define la cantidad de agentes que Claude busca usar en los flujos de trabajo dinámicos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "unrestricted",
+      "small",
+      "medium",
+      "large"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Hooks and automation"
+  },
+  "worktree": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Configure how Claude Code creates git worktrees.",
+    "es": "Configura cómo crea Claude Code los worktrees de git.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "worktree.baseRef": {
+    "custom": false,
+    "default": "\"fresh\"",
+    "deprecated": false,
+    "en": "Branch new worktrees from the remote default branch or your local HEAD.",
+    "es": "Crea los worktrees nuevos a partir de la rama predeterminada remota o de tu HEAD local.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "fresh",
+      "head"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "worktree.bgIsolation": {
+    "custom": false,
+    "default": "\"worktree\"",
+    "deprecated": false,
+    "en": "Let background sessions edit the working copy without a worktree.",
+    "es": "Permite que las sesiones en segundo plano editen la copia de trabajo sin un worktree.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "worktree",
+      "none"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "worktree.location": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Choose where Desktop SSH sessions create their worktrees on a remote machine.",
+    "es": "Elige dónde crean sus worktrees las sesiones SSH de Desktop en una máquina remota.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "worktree.sparsePaths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Check out only the directories you need in each worktree.",
+    "es": "Extrae solo los directorios que necesitas en cada worktree.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "worktree.symlinkDirectories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Symlink large directories into each worktree instead of duplicating them.",
+    "es": "Enlaza simbólicamente directorios grandes a cada worktree en lugar de duplicarlos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "local",
+      "managed"
+    ],
+    "topic": "Agents, sessions, and worktrees"
+  },
+  "wslInheritsWindowsSettings": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Have WSL read managed settings from the Windows policy chain.",
+    "es": "Hace que WSL lea la configuración administrada de la cadena de políticas de Windows.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "Enterprise and managed settings"
+  }
+}

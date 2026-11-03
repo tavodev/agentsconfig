@@ -18,28 +18,51 @@ enum DocsCatalog {
 
     struct KeyDoc {
         let summary: String
-        let values: [String: String]?   // value → explanation
-        let defaultValue: String?
+        var values: [String: String]?   // value → explanation
+        var defaultValue: String?
         var summaryES: String? = nil
         var valuesES: [String: String]? = nil
+        /// Official page (ideally the key's own anchor) with the full details.
+        var docsURL: URL? = nil
+        /// Accepted values from the official reference, when it documents them.
+        var spec: SettingSpec? = nil
 
         init(_ s: String, es: String? = nil,
              values: [String: String]? = nil, valuesES: [String: String]? = nil,
-             def: String? = nil) {
+             def: String? = nil, docsURL: URL? = nil, spec: SettingSpec? = nil) {
             summary = s; summaryES = es
             self.values = values; self.valuesES = valuesES
             defaultValue = def
+            self.docsURL = docsURL
+            self.spec = spec
         }
 
         @MainActor var localizedSummary: String { Loc.shared.lang == .es ? (summaryES ?? summary) : summary }
+        /// Summary without Markdown code ticks, for native tooltips and VoiceOver.
+        @MainActor var plainSummary: String { localizedSummary.replacingOccurrences(of: "`", with: "") }
+        /// Summary rendered as inline Markdown so `code` spans show as code.
+        @MainActor var attributedSummary: AttributedString {
+            (try? AttributedString(markdown: localizedSummary,
+                                   options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+                ?? AttributedString(localizedSummary)
+        }
         @MainActor var localizedValues: [String: String]? {
             Loc.shared.lang == .es ? (valuesES ?? values) : values
+        }
+
+        /// Values to offer in a picker or suggestion menu: the reference's
+        /// options, plus curated examples unless the list is closed.
+        var suggestedValues: [String] {
+            let options = spec?.options ?? []
+            if spec?.isEnum == true { return options }
+            return options + (values?.keys.sorted() ?? []).filter { !options.contains($0) }
         }
     }
 
     // MARK: - File docs
 
     static func fileDoc(for path: String) -> FileDoc? {
+        if let equivalent = OrcaIntegration.equivalentPath(for: path) { return fileDoc(for: equivalent) }
         let home = AppPaths.home
         let name = URL(fileURLWithPath: path).lastPathComponent
         // Home-only files: no project-local equivalent exists for these.
@@ -374,32 +397,174 @@ enum DocsCatalog {
 
     // MARK: - Key docs
 
+    /// Resolution order: the official reference entry for the exact key
+    /// (keeping curated value lists and defaults), the curated entry for the
+    /// exact key, a reference `<id>` placeholder pattern, and finally the
+    /// curated entry for the last segment. Every result links to the docs.
     static func keyDoc(filePath: String, keyPath: [String]) -> KeyDoc? {
-        guard let table = keyTableSuffixes.first(where: { ConfigFileContext.matches(filePath, suffix: $0.0) })?.1 else { return nil }
-        let dotted = keyPath.joined(separator: ".")
-        return table[dotted] ?? keyPath.last.flatMap { table[$0] }
+        if let equivalent = OrcaIntegration.equivalentPath(for: filePath) { return keyDoc(filePath: equivalent, keyPath: keyPath) }
+        guard let source = keySources.first(where: { ConfigFileContext.matches(filePath, suffix: $0.suffix) }) else { return nil }
+        let curated = source.curated[keyPath.joined(separator: ".")]
+            ?? matchReferenceKey(keyPath, in: source.curatedPatterns).flatMap { source.curated[$0.key] }
+        if let ref = source.reference(keyPath), ref.exact || curated == nil {
+            var doc = ref.doc
+            if let curated {
+                doc.values = curated.values
+                doc.valuesES = curated.valuesES
+                doc.defaultValue = curated.defaultValue
+            }
+            return doc
+        }
+        guard var doc = curated ?? keyPath.last.flatMap({ source.curated[$0] }) else { return nil }
+        if doc.docsURL == nil { doc.docsURL = source.url(keyPath) }
+        return doc
     }
+
+    private struct KeySource: Sendable {
+        let suffix: String
+        let curated: [String: KeyDoc]
+        /// Entry from the generated official reference, already linked.
+        var reference: @Sendable ([String]) -> (doc: KeyDoc, exact: Bool)? = { _ in nil }
+        /// Best official link for a curated key.
+        let url: @Sendable ([String]) -> URL?
+
+        /// Curated keys with `<name>` placeholders (e.g. `modelSettings.<model>`).
+        var curatedPatterns: [(key: String, segs: [String])] {
+            curated.keys.filter { $0.contains("<") }.map { ($0, $0.split(separator: ".").map(String.init)) }
+        }
+    }
+
+    private static let claudeSource = KeySource(
+        suffix: ".claude/settings.json", curated: claudeKeys,
+        reference: { claudeReferenceDoc($0) },
+        url: { claudeReferenceURL($0) ?? URL(string: "https://code.claude.com/docs/en/settings") })
+    private static let codexSource = KeySource(
+        suffix: ".codex/config.toml", curated: codexKeys,
+        reference: { codexReferenceDoc($0) },
+        url: { _ in codexReferenceURL })
+    private static let opencodeURL = URL(string: "https://opencode.ai/docs/config/")
+    private static let geminiURL = URL(string: "https://geminicli.com/docs/reference/configuration/")
 
     /// (relative suffix, key table) pairs — same suffix-matching rationale
     /// as `pathSuffixDocs`, so per-key docs apply to project-local files too.
-    private static let keyTableSuffixes: [(String, [String: KeyDoc])] = [
-        (".claude/settings.json", claudeKeys),
-        (".claude/settings.local.json", claudeKeys),
-        (".codex/config.toml", codexKeys),
-        ("opencode.json", opencodeKeys),
-        ("opencode.jsonc", opencodeKeys),
-        (".gemini/settings.json", geminiKeys),
+    private static let keySources: [KeySource] = [
+        claudeSource,
+        KeySource(suffix: ".claude/settings.local.json", curated: claudeKeys,
+                  reference: claudeSource.reference, url: claudeSource.url),
+        codexSource,
+        KeySource(suffix: "opencode.json", curated: opencodeKeys,
+                  reference: { patternReferenceDoc($0, table: opencodeReference, patterns: opencodePatterns, url: opencodeURL) },
+                  url: { _ in opencodeURL }),
+        KeySource(suffix: "opencode.jsonc", curated: opencodeKeys,
+                  reference: { patternReferenceDoc($0, table: opencodeReference, patterns: opencodePatterns, url: opencodeURL) },
+                  url: { _ in opencodeURL }),
+        KeySource(suffix: ".gemini/settings.json", curated: geminiKeys,
+                  reference: { patternReferenceDoc($0, table: geminiReference, patterns: geminiPatterns, url: geminiURL) },
+                  url: { _ in geminiURL }),
     ]
+
+    // MARK: Official references (generated tables in DocsCatalogReference.swift)
+
+    static let codexReferenceURL = URL(string: "https://developers.openai.com/codex/config-reference")
+
+    /// `settings-reference` anchors are the dotted key, lowercased, with
+    /// dots turned into dashes (e.g. `permissions.allow` → `#permissions-allow`).
+    /// Sub-fields documented inside their parent's section link to the
+    /// nearest documented ancestor (`statusLine.command` → `#statusline`).
+    static func claudeReferenceURL(_ keyPath: [String]) -> URL? {
+        for length in stride(from: keyPath.count, to: 0, by: -1) {
+            let dotted = keyPath.prefix(length).joined(separator: ".")
+            guard claudeReference[dotted] != nil else { continue }
+            let anchor = dotted.lowercased().replacingOccurrences(of: ".", with: "-")
+            return URL(string: "https://code.claude.com/docs/en/settings-reference#" + anchor)
+        }
+        return nil
+    }
+
+    private static func claudeReferenceDoc(_ keyPath: [String]) -> (doc: KeyDoc, exact: Bool)? {
+        guard let entry = claudeReference[keyPath.joined(separator: ".")] else { return nil }
+        var doc = KeyDoc(entry.en, es: entry.es, docsURL: claudeReferenceURL(keyPath))
+        doc.spec = entry.spec
+        return (doc, true)
+    }
+
+    private static func codexReferenceDoc(_ keyPath: [String]) -> (doc: KeyDoc, exact: Bool)? {
+        patternReferenceDoc(keyPath, table: codexReference, patterns: codexReferencePatterns, url: codexReferenceURL)
+    }
+
+    private static func patternReferenceDoc(_ keyPath: [String], table: [String: ReferenceEntry],
+                                            patterns: [(key: String, segs: [String])],
+                                            url: URL?) -> (doc: KeyDoc, exact: Bool)? {
+        guard let match = matchReferenceKey(keyPath, in: patterns),
+              let entry = table[match.key] else { return nil }
+        var doc = KeyDoc(entry.en, es: entry.es, docsURL: url)
+        doc.spec = entry.spec
+        return (doc, match.wildcards == 0)
+    }
+
+    static func referencePatterns(_ table: [String: ReferenceEntry]) -> [(key: String, segs: [String])] {
+        table.keys.filter { !$0.contains(" ") }.map { key in
+            (key, key.replacingOccurrences(of: "[]", with: "").split(separator: ".").map(String.init))
+        }
+    }
+    private static let geminiPatterns = referencePatterns(geminiReference)
+    private static let opencodePatterns = referencePatterns(opencodeReference)
+
+    /// Reference keys split into segments; `[]` array markers are dropped
+    /// (the tree's key path skips array indices) and `<name>` segments
+    /// match any single key.
+    private static let codexReferencePatterns = referencePatterns(codexReference)
+
+    /// Curated table for a settings file (used to add documented sub-fields).
+    static func curatedKeys(filePath: String) -> [String: KeyDoc] {
+        if let equivalent = OrcaIntegration.equivalentPath(for: filePath) { return curatedKeys(filePath: equivalent) }
+        return keySources.first { ConfigFileContext.matches(filePath, suffix: $0.suffix) }?.curated ?? [:]
+    }
+
+    /// Spec for a curated sub-field: scopes and topic come from the parent
+    /// key's reference entry, so it is offered exactly where the parent is.
+    private static func claudeSub(_ parent: String, _ kind: SettingSpec.Kind, options: [String] = [],
+                                  def: String? = nil, min: Double? = nil, max: Double? = nil) -> SettingSpec? {
+        guard let base = claudeReference[parent]?.spec else { return nil }
+        return SettingSpec(kind: kind, options: options, allowsCustom: options.isEmpty, defaultJSON: def,
+                           scopes: base.scopes, topic: base.topic, deprecated: false, min: min, max: max)
+    }
+
+    /// Picks the pattern matching `keyPath` with the fewest placeholders, so
+    /// `apps._default.enabled` wins over `apps.<id>.enabled`.
+    static func matchReferenceKey(_ keyPath: [String], in patterns: [(key: String, segs: [String])]) -> (key: String, wildcards: Int)? {
+        var best: (key: String, wildcards: Int)?
+        for p in patterns where p.segs.count == keyPath.count {
+            var wildcards = 0
+            var ok = true
+            for (seg, key) in zip(p.segs, keyPath) {
+                if seg.hasPrefix("<") && seg.hasSuffix(">") { wildcards += 1 }
+                else if seg != key { ok = false; break }
+            }
+            if ok, best == nil || wildcards < best!.wildcards || (wildcards == best!.wildcards && p.key < best!.key) {
+                best = (p.key, wildcards)
+            }
+        }
+        return best
+    }
 
     private static let claudeKeys: [String: KeyDoc] = [
         "model": .init("Claude Code's default model.",
                        es: "Modelo por defecto de Claude Code.",
-                       values: ["sonnet": "Balanced, fast", "opus": "Maximum capability", "haiku": "Cheapest and fastest"],
-                       valuesES: ["sonnet": "Equilibrado, rápido", "opus": "Máxima capacidad", "haiku": "Más barato y veloz"]),
+                       values: ["default": "Your account's default model", "best": "Fable where available, otherwise Opus",
+                                "fable": "Fable, for the hardest and longest tasks", "opus": "Latest Opus, complex reasoning",
+                                "sonnet": "Latest Sonnet, daily coding", "haiku": "Haiku, fast and simple tasks",
+                                "opusplan": "Opus in plan mode, Sonnet to execute"],
+                       valuesES: ["default": "Modelo por defecto de tu cuenta", "best": "Fable si está disponible; si no, Opus",
+                                  "fable": "Fable, para las tareas más difíciles y largas", "opus": "Último Opus, razonamiento complejo",
+                                  "sonnet": "Último Sonnet, programación diaria", "haiku": "Haiku, tareas rápidas y simples",
+                                  "opusplan": "Opus en modo plan, Sonnet al ejecutar"]),
         "effortLevel": .init("Model reasoning effort level.",
                              es: "Nivel de esfuerzo de razonamiento del modelo.",
-                             values: ["low": "Faster answers", "high": "Thinks deeper", "max": "Maximum effort"],
-                             valuesES: ["low": "Respuestas rápidas", "high": "Razona más profundo", "max": "Máximo esfuerzo"]),
+                             values: ["low": "Least reasoning, latency-sensitive tasks", "medium": "Saves tokens, trades some intelligence",
+                                      "high": "Balances tokens and intelligence", "xhigh": "Deeper reasoning, more tokens"],
+                             valuesES: ["low": "Mínimo razonamiento, tareas sensibles a la latencia", "medium": "Ahorra tokens a cambio de algo de inteligencia",
+                                        "high": "Equilibra tokens e inteligencia", "xhigh": "Razonamiento más profundo, más tokens"]),
         "permissions": .init("What Claude can do without asking you: allowed, denied or ask-first tools and commands.",
                              es: "Qué puede hacer Claude sin pedirte aprobación: herramientas y comandos permitidos, denegados o que preguntan."),
         "permissions.allow": .init("Rules allowed without confirmation. E.g. \"Bash(git status)\" allows that exact command; \"Bash(npm run *)\" allows the pattern.",
@@ -443,6 +608,57 @@ enum DocsCatalog {
         "voiceEnabled": .init("Voice input in the CLI.", es: "Entrada por voz en el CLI."),
         "verbose": .init("Verbose logging of agent operations.", es: "Log detallado de las operaciones del agente."),
         "theme": .init("CLI interface theme.", es: "Tema de la interfaz del CLI."),
+        "$schema": .init("JSON Schema URL editors use to validate and autocomplete this file. Claude Code ignores it at runtime.",
+                         es: "URL del JSON Schema que usan los editores para validar y autocompletar este archivo. Claude Code la ignora al ejecutarse."),
+        "statusLine.type": .init("Kind of status line; \"command\" runs your own script.", es: "Tipo de status line; \"command\" ejecuta tu propio script.",
+                    spec: claudeSub("statusLine", .string, options: ["command"])),
+        "statusLine.command": .init("Command whose stdout becomes the status line. It receives session context as JSON on stdin.",
+                                    es: "Comando cuya salida estándar se convierte en la status line. Recibe el contexto de la sesión como JSON por stdin.",
+                    spec: claudeSub("statusLine", .string)),
+        "statusLine.padding": .init("Horizontal spacing, in characters, around the status line.", es: "Espaciado horizontal, en caracteres, alrededor de la status line.",
+                    spec: claudeSub("statusLine", .integer, min: 0)),
+        "statusLine.refreshInterval": .init("Seconds between periodic re-runs of the command (minimum 1).", es: "Segundos entre re-ejecuciones periódicas del comando (mínimo 1).",
+                    spec: claudeSub("statusLine", .integer, min: 1)),
+        "statusLine.hideVimModeIndicator": .init("Hides the built-in vim mode indicator when your script renders it itself.",
+                                                 es: "Oculta el indicador de modo vim integrado cuando tu script lo muestra por su cuenta.",
+                    spec: claudeSub("statusLine", .bool)),
+        "subagentStatusLine.type": .init("Kind of subagent row renderer; \"command\" runs your own script.", es: "Tipo de renderizador de filas de subagentes; \"command\" ejecuta tu propio script.",
+                    spec: claudeSub("subagentStatusLine", .string, options: ["command"])),
+        "subagentStatusLine.command": .init("Command that receives the visible subagent rows as JSON on stdin and writes back {\"id\", \"content\"} lines to replace them.",
+                                            es: "Comando que recibe las filas visibles de subagentes como JSON por stdin y devuelve líneas {\"id\", \"content\"} para reemplazarlas.",
+                    spec: claudeSub("subagentStatusLine", .string)),
+        "voice.enabled": .init("Turns voice dictation on or off.", es: "Activa o desactiva el dictado por voz.",
+                    spec: claudeSub("voice", .bool)),
+        "voice.mode": .init("How the dictation key behaves.", es: "Cómo se comporta la tecla de dictado.",
+                            values: ["hold": "Hold while speaking, release to stop", "tap": "Tap to start, tap again to send"],
+                            valuesES: ["hold": "Mantén pulsada mientras hablas y suelta para parar", "tap": "Pulsa para empezar y otra vez para enviar"],
+                            def: "hold",
+                    spec: claudeSub("voice", .string, options: ["hold", "tap"], def: "\"hold\"")),
+        "voice.autoSubmit": .init("In hold mode, sends the prompt when you release the key.", es: "En modo hold, envía el prompt al soltar la tecla.",
+                    spec: claudeSub("voice", .bool)),
+        "autoMode.environment": .init("Prose rules describing your trusted environment (repos, buckets, domains) for the auto mode classifier. Include \"$defaults\" to keep the built-in rules.",
+                                      es: "Reglas en prosa que describen tu entorno de confianza (repos, buckets, dominios) para el clasificador del modo auto. Incluye \"$defaults\" para conservar las reglas integradas.",
+                    spec: claudeSub("autoMode", .array)),
+        "autoMode.allow": .init("Prose rules for actions the auto mode classifier should allow. Include \"$defaults\" to keep the built-in rules.",
+                                es: "Reglas en prosa de acciones que el clasificador del modo auto debe permitir. Incluye \"$defaults\" para conservar las reglas integradas.",
+                    spec: claudeSub("autoMode", .array)),
+        "autoMode.soft_deny": .init("Prose rules for actions the auto mode classifier blocks unless you approve them. Include \"$defaults\" to keep the built-in rules.",
+                                    es: "Reglas en prosa de acciones que el clasificador del modo auto bloquea salvo que las apruebes. Incluye \"$defaults\" para conservar las reglas integradas.",
+                    spec: claudeSub("autoMode", .array)),
+        "autoMode.hard_deny": .init("Prose rules for actions the auto mode classifier always blocks. Include \"$defaults\" to keep the built-in rules.",
+                                    es: "Reglas en prosa de acciones que el clasificador del modo auto siempre bloquea. Incluye \"$defaults\" para conservar las reglas integradas.",
+                    spec: claudeSub("autoMode", .array)),
+        "modelSettings.<model>": .init("Saved settings for this model (canonical name such as claude-opus-5-5): effortLevel, maxEffortLevel and autoCompactWindow.",
+                                       es: "Ajustes guardados para este modelo (nombre canónico como claude-opus-5-5): effortLevel, maxEffortLevel y autoCompactWindow.",
+                    spec: claudeSub("modelSettings", .object)),
+        "modelSettings.<model>.effortLevel": .init("Effort level saved for this model (low, medium, high or xhigh); overrides the top-level effortLevel in the same file.",
+                                                   es: "Nivel de esfuerzo guardado para este modelo (low, medium, high o xhigh); tiene prioridad sobre el effortLevel general del mismo archivo.",
+                    spec: claudeSub("modelSettings", .string, options: ["low", "medium", "high", "xhigh"])),
+        "modelSettings.<model>.maxEffortLevel": .init("Highest effort level this model may run at.", es: "Nivel de esfuerzo máximo con el que puede ejecutarse este modelo.",
+                    spec: claudeSub("modelSettings", .string, options: ["low", "medium", "high", "xhigh", "max"])),
+        "modelSettings.<model>.autoCompactWindow": .init("Tokens (100000–1000000) or \"auto\" for this model's auto-compact window; overrides the top-level autoCompactWindow.",
+                                                         es: "Tokens (100000–1000000) o \"auto\" para la ventana de auto-compactación de este modelo; tiene prioridad sobre el autoCompactWindow general."),
+        "remote": .init("Settings for Claude Code on the web and remote sessions.", es: "Ajustes de Claude Code en la web y de las sesiones remotas."),
         "skillOverrides": .init("Per-skill overrides: enable/disable specific skills without deleting them.", es: "Overrides por skill: permite activar/desactivar skills concretas sin borrarlas."),
     ]
 
@@ -519,6 +735,16 @@ enum DocsCatalog {
         "hooks.UserPromptSubmit": .init("Runs when the user submits a prompt.", es: "Se ejecuta cuando el usuario envía un prompt."),
         "hooks.Stop": .init("Runs when the main agent stops responding.", es: "Se ejecuta cuando el agente principal deja de responder."),
         "hooks.Interrupt": .init("Runs when a running agent is interrupted.", es: "Se ejecuta cuando se interrumpe un agente en curso."),
+        "permissions": .init("Named permission profiles ([permissions.<name>]): filesystem, workspace roots and network rules. Select one with default_permissions.",
+                             es: "Perfiles de permisos con nombre ([permissions.<name>]): sistema de archivos, raíces del workspace y reglas de red. Se elige uno con default_permissions."),
+        "permissions.<name>": .init("A named permission profile; select it with default_permissions.",
+                                    es: "Un perfil de permisos con nombre; se elige con default_permissions."),
+        "permissions.<name>.network": .init("Network access rules for this permission profile (enabled, mode, domains, proxy, unix sockets).",
+                                            es: "Reglas de acceso a red de este perfil de permisos (enabled, mode, domains, proxy, unix sockets)."),
+        "skills": .init("Skill settings: bundled skills, per-skill entries in skills.config, and context budget.",
+                        es: "Ajustes de skills: skills incluidas, entradas por skill en skills.config y presupuesto de contexto."),
+        "features.js_repl": .init("Retired feature switch: the official reference lists js_repl = true as rejected.",
+                                  es: "Interruptor retirado: la referencia oficial indica que js_repl = true se rechaza."),
         "profiles": .init("Legacy inline profiles. Codex 0.134.0 and later selects separate <name>.config.toml files with --profile; it no longer reads this table.",
                           es: "Perfiles inline antiguos. Codex 0.134.0 y posteriores seleccionan archivos <nombre>.config.toml mediante --profile; ya no leen esta tabla."),
         "personality": .init("Tone/style of the agent's answers.",

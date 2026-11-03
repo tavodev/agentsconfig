@@ -527,10 +527,30 @@ final class ConfigStore {
             for file in agent.files where file.exists && file.format.isStructured
                 && seen.insert(family + "|" + file.path).inserted {
                 guard let tree = documents[file.path]?.tree as? [String: Any], tree["hooks"] is [String: Any] else { continue }
-                sources.append(.init(agentID: family, agentName: name, path: file.path, tree: tree))
+                sources.append(.init(agentID: family, agentName: name, path: file.path, tree: tree,
+                                     orca: orcaHookSource(for: file.path)))
             }
         }
         return HookMap.build(sources, projectRoot: projectRoot.isEmpty ? nil : projectRoot)
+    }
+
+    /// Account and origin of a hooks file inside an Orca home: copied files
+    /// (`settings.json`) are compared with their original so inherited hooks
+    /// are not shown as new ones.
+    private func orcaHookSource(for path: String) -> OrcaHookSource? {
+        guard let home = OrcaIntegration.home(containing: path) else { return nil }
+        let selected = home.kind == .claude && OrcaIntegration.isSelectedClaudeHome(home.path, root: OrcaIntegration.root)
+        let relation = OrcaIntegration.relation(for: path)
+        let origin = relation == .mirroredCopy || relation == .mergedState ? OrcaIntegration.sourcePath(for: path) : nil
+        return OrcaHookSource(account: OrcaIntegration.accountLabel(home), selected: selected, originPath: origin,
+                              originCommands: origin.flatMap { parsedObject(at: $0) }.map(HookMap.commandKeys))
+    }
+
+    /// Loaded document tree, or the file read and parsed now (nil when absent or unparsable).
+    func parsedObject(at path: String) -> [String: Any]? {
+        if let tree = documents[path]?.tree as? [String: Any] { return tree }
+        guard let text = try? Parsers.readText(at: path) else { return nil }
+        return Parsers.parse(text, format: AgentRegistry.inferFormat(path: path)).tree as? [String: Any]
     }
 
     // MARK: - scanning
@@ -575,6 +595,8 @@ final class ConfigStore {
         var preloaded: [String: PreloadedDocument] = [:]
         var readErrors: [String: String] = [:]
         var volatileMcpEntries: [McpServerEntry] = []
+        /// `projects` keys of each parsed volatile state file (Orca MCP origins).
+        var volatileProjectKeys: [String: Set<String>] = [:]
         /// Watch plan, computed here so `apply` does no filesystem checks.
         var treeRoots: [String] = []
         var missingSourceDirectories: Set<String> = []
@@ -713,6 +735,7 @@ final class ConfigStore {
                     else { continue }
                     result.volatileMcpEntries += mcpEntries(in: tree, agentID: agent.id,
                                                             agentName: agent.name, sourcePath: f.path)
+                    result.volatileProjectKeys[f.path] = projectKeys(in: tree)
                 }
             }
             return result
@@ -761,6 +784,7 @@ final class ConfigStore {
             }
         }
         volatileMcpEntries = result.volatileMcpEntries
+        volatileProjectKeys = result.volatileProjectKeys
         rebuildMcpIndex()
     }
 
@@ -817,6 +841,36 @@ final class ConfigStore {
         refresh()
     }
 
+    /// Shows or hides the Claude Code / Codex homes managed by Orca.
+    func setOrcaIntegration(enabled: Bool) {
+        guard dirtyPaths.isEmpty, savingPaths.isEmpty else {
+            actionError = L("Save or discard drafts before changing configuration roots."); return
+        }
+        AppSettings.defaults.set(enabled, forKey: "orcaIntegration")
+        selectedPath = nil
+        refresh()
+    }
+
+    /// Orca's data folder for detection (nil: `ORCA_USER_DATA_PATH` or the default).
+    func setOrcaDataFolder(path: String?) {
+        guard dirtyPaths.isEmpty, savingPaths.isEmpty else {
+            actionError = L("Save or discard drafts before changing configuration roots."); return
+        }
+        if let path, !path.isEmpty {
+            AppSettings.defaults.set(path, forKey: OrcaIntegration.dataPathKey)
+        } else {
+            AppSettings.defaults.removeObject(forKey: OrcaIntegration.dataPathKey)
+        }
+        selectedPath = nil
+        refresh()
+    }
+
+    func pickOrcaDataFolder() {
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        setOrcaDataFolder(path: url.path)
+    }
+
     func pickConfigurationRoot(agentID: String) {
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -828,6 +882,15 @@ final class ConfigStore {
     private nonisolated static let mcpContainerKeys = ["mcpServers", "mcp_servers", "mcp", "servers"]
 
     private var volatileMcpEntries: [McpServerEntry] = []
+    @ObservationIgnored private var volatileProjectKeys: [String: Set<String>] = [:]
+
+    /// Origin of each MCP server of an Orca home (keyed by entry id),
+    /// recomputed with the index.
+    private(set) var orcaMcpOrigins: [String: OrcaIntegration.McpOrigin] = [:]
+
+    private nonisolated static func projectKeys(in tree: [String: Any]) -> Set<String>? {
+        (tree["projects"] as? [String: Any]).map { Set($0.keys) }
+    }
 
     // MARK: - MCP static checks (issue #21)
 
@@ -876,6 +939,11 @@ final class ConfigStore {
             }
         }
         mcpIndex = out.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        orcaMcpOrigins = out.contains { OrcaIntegration.isOrcaAgentID($0.agentID) }
+            ? OrcaIntegration.mcpOrigins(out, sourceProjects: { [volatileProjectKeys, documents] path in
+                volatileProjectKeys[path] ?? (documents[path]?.tree as? [String: Any]).flatMap(Self.projectKeys(in:))
+            }, baseline: OrcaIntegration.readCodexBaseline(home:))
+            : [:]
     }
 
     /// Extract MCP entries from a parsed tree.
@@ -901,7 +969,8 @@ final class ConfigStore {
                 out.append(entry)
             }
         }
-        if agentID == "claude-code", let projects = tree["projects"] as? [String: Any] {
+        // Orca Claude profiles keep per-project servers in their own `.claude.json`.
+        if OrcaIntegration.baseAgentID(agentID) == "claude-code", let projects = tree["projects"] as? [String: Any] {
             for (project, value) in projects.sorted(by: { $0.key < $1.key }) {
                 guard let record = value as? [String: Any], let servers = record["mcpServers"] as? [String: Any] else { continue }
                 for (name, raw) in servers {
@@ -923,10 +992,12 @@ final class ConfigStore {
     private func refreshVolatileMcp(path: String) {
         guard let tf = trackedFile(for: path), tf.volatile else { return }
         volatileMcpEntries.removeAll { $0.sourcePath == path }
+        volatileProjectKeys.removeValue(forKey: path)
         guard let text = documents[path]?.text,
               let tree = Parsers.parse(text, format: tf.format).tree as? [String: Any],
               let agent = agents.first(where: { $0.id == fileOwners[path] })
         else { return }
+        volatileProjectKeys[path] = Self.projectKeys(in: tree)
         volatileMcpEntries += Self.mcpEntries(in: tree, agentID: agent.id,
                                               agentName: agent.name,
                                               sourcePath: path)
@@ -1015,7 +1086,7 @@ final class ConfigStore {
         let selectedTarget = targetPath.flatMap { path in mcpTargetFiles(for: agentID).first { $0.path == path } }
             ?? (targetPath == nil ? mcpTargetFile(for: agentID) : nil)
         guard let target = selectedTarget,
-              let sourceDialect = McpAdapter.dialect(agentID: entry.agentID, path: entry.sourcePath),
+              let sourceDialect = McpAdapter.dialect(agentID: OrcaIntegration.baseAgentID(entry.agentID), path: entry.sourcePath),
               let targetDialect = McpAdapter.dialect(agentID: agentID, path: target.path) else {
             actionError = L("No supported MCP source or destination for this operation.")
             return false
@@ -1024,6 +1095,34 @@ final class ConfigStore {
             let converted = try McpAdapter.convert(entry.raw, from: sourceDialect, to: targetDialect)
             return try prepareMcpReview(path: target.path, agentID: agentID,
                 name: entry.name, spec: converted.spec, warnings: converted.warnings)
+        } catch { actionError = error.localizedDescription; return false }
+    }
+
+    /// Regular destination a server of an Orca home can be promoted to:
+    /// `~/.claude.json` or `~/.codex/config.toml` (the file Orca copies from),
+    /// only for user-scope servers that exist in this account alone.
+    func orcaPromotionTarget(for entry: McpServerEntry) -> TrackedFile? {
+        guard orcaMcpOrigins[entry.id] == .accountOnly, entry.projectPath == nil,
+              let path = OrcaIntegration.promotionTarget(for: entry) else { return nil }
+        let agentID = OrcaIntegration.baseAgentID(entry.agentID)
+        return mcpTargetFiles(for: agentID).first { $0.path == path }
+    }
+
+    /// Stages copying an account-only server of an Orca home to the regular
+    /// config through the usual MCP review. Orca homes are never destinations.
+    @discardableResult
+    func promoteOrcaMcpServer(_ entry: McpServerEntry) -> Bool {
+        actionError = nil
+        let agentID = OrcaIntegration.baseAgentID(entry.agentID)
+        guard let target = orcaPromotionTarget(for: entry),
+              let dialect = McpAdapter.dialect(agentID: agentID, path: target.path) else {
+            actionError = L("No supported MCP source or destination for this operation.")
+            return false
+        }
+        do {
+            let converted = try McpAdapter.convert(entry.raw, from: dialect, to: dialect)
+            return try prepareMcpReview(path: target.path, agentID: agentID, name: entry.name, spec: converted.spec,
+                warnings: converted.warnings + [L("Orca copies the promoted definition back to every account on its next launch; this account's entry is then replaced by it.")])
         } catch { actionError = error.localizedDescription; return false }
     }
 
@@ -1143,13 +1242,14 @@ final class ConfigStore {
     /// families in the global scope (`projectRoot` empty) or a project.
     func divergences(projectRoot: String) -> [Divergence] {
         DivergenceDetector.detect(agents: agents, scope: projectRoot,
-                                  mcp: McpComparison.sources(mcpIndex, project: projectRoot)) { documents[$0]?.text }
+                                  mcp: McpComparison.sources(mcpIndex.filter { !isOrcaMirror($0) }, project: projectRoot)) { documents[$0]?.text }
     }
 
     /// Matrix indicator: the selected context defines `name` differently
     /// in two or more agent families.
     func mcpDefinitionsDiverge(_ name: String) -> Bool {
-        let rows = comparedMcpSources.filter { $0.entry.name == name && !["Outside context", "Shadowed"].contains($0.state) }
+        // Orca mirrors repeat their source's definition: one voice per definition.
+        let rows = comparedMcpSources.filter { $0.entry.name == name && !["Outside context", "Shadowed"].contains($0.state) && !isOrcaMirror($0.entry) }
         let byFamily = Dictionary(grouping: rows, by: { McpComparison.family($0.entry) })
         return byFamily.count > 1
             && Set(byFamily.values.compactMap { $0.first.map { DivergenceDetector.comparableSignature($0.entry) } }).count > 1
@@ -2006,6 +2106,7 @@ final class ConfigStore {
             }
             documents.removeValue(forKey: path)
             selfWriteHashes.removeValue(forKey: path)
+            volatileProjectKeys.removeValue(forKey: path)
             volatileMcpEntries.removeAll { $0.sourcePath == path }
             rebuildMcpIndex()
             return
@@ -2024,6 +2125,7 @@ final class ConfigStore {
             saveErrors[path] = L(error.localizedDescription)
             if dirtyPaths.contains(path) { flagConflict(path: path, disk: .unreadable) }
             documents.removeValue(forKey: path)
+            volatileProjectKeys.removeValue(forKey: path)
             volatileMcpEntries.removeAll { $0.sourcePath == path }
             rebuildMcpIndex()
             return
@@ -2187,6 +2289,7 @@ final class ConfigStore {
                 case .missing:
                     self.documents.removeValue(forKey: path)
                     self.updateFileMeta(path: path) { $0.exists = false; $0.size = 0; $0.mtime = nil }
+                    self.volatileProjectKeys.removeValue(forKey: path)
                     self.volatileMcpEntries.removeAll { $0.sourcePath == path }
                     self.rebuildMcpIndex()
                 }

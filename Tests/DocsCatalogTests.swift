@@ -68,6 +68,54 @@ struct DocsCatalogTests {
         #expect(DocsCatalog.keyDoc(filePath: "/fixture/notopencode.json", keyPath: ["model"]) == nil)
     }
 
+    @Test func claudeKeysFromTheOfficialReferenceLinkToTheirAnchor() throws {
+        let path = "/Users/fixture/.claude/settings.json"
+        for (keyPath, anchor) in [
+            (["agentPushNotifEnabled"], "agentpushnotifenabled"),
+            (["autoCompactEnabled"], "autocompactenabled"),
+            (["disableClaudeAiConnectors"], "disableclaudeaiconnectors"),
+            (["attribution", "commit"], "attribution-commit"),
+            (["permissions", "allow"], "permissions-allow"),
+        ] {
+            let doc = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: keyPath), "missing doc for \(keyPath)")
+            #expect(doc.summaryES != nil)
+            #expect(doc.docsURL?.absoluteString == "https://code.claude.com/docs/en/settings-reference#" + anchor)
+        }
+    }
+
+    @Test func claudeSubFieldsAndPerModelEntriesResolve() throws {
+        let path = "/Users/fixture/.claude/settings.json"
+        let command = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["statusLine", "command"]))
+        #expect(command.docsURL?.fragment == "statusline")
+        let perModel = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["modelSettings", "claude-opus-5-5", "effortLevel"]))
+        #expect(perModel.docsURL?.fragment == "modelsettings")
+    }
+
+    @Test func curatedValueListsSurviveTheReferenceSummary() throws {
+        let doc = try #require(DocsCatalog.keyDoc(filePath: "/Users/fixture/.claude/settings.json", keyPath: ["effortLevel"]))
+        #expect(doc.values?["high"] != nil)
+        #expect(doc.docsURL != nil)
+    }
+
+    @Test func codexPlaceholderKeysResolveAndPreferTheMostSpecificPattern() throws {
+        let path = "/Users/fixture/.codex/config.toml"
+        let command = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["mcp_servers", "github", "command"]))
+        #expect(command.docsURL == DocsCatalog.codexReferenceURL)
+        let defaults = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["apps", "_default", "enabled"]))
+        let perApp = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["apps", "slack", "enabled"]))
+        #expect(defaults.summary != perApp.summary)
+        // A curated event description beats the generic `hooks.<Event>` pattern.
+        let hook = try #require(DocsCatalog.keyDoc(filePath: path, keyPath: ["hooks", "PreToolUse"]))
+        #expect(hook.summary.contains("before"))
+    }
+
+    @Test func curatedOnlyTablesStillLinkToTheirOfficialPage() throws {
+        let gemini = try #require(DocsCatalog.keyDoc(filePath: "/Users/fixture/.gemini/settings.json", keyPath: ["theme"]))
+        #expect(gemini.docsURL != nil)
+        let opencode = try #require(DocsCatalog.keyDoc(filePath: "/Users/fixture/repo/opencode.json", keyPath: ["model"]))
+        #expect(opencode.docsURL != nil)
+    }
+
     @Test func unrelatedFilesGetNoDoc() throws {
         #expect(DocsCatalog.fileDoc(for: "/Users/fixture/repo/README.md") == nil)
         #expect(DocsCatalog.keyDoc(filePath: "/Users/fixture/repo/.codex/config.toml", keyPath: ["totally_unknown_key"]) == nil)

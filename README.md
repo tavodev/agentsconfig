@@ -28,6 +28,10 @@ AgentsConfig runs locally and does not require a model, AI subscription or API k
   scopes from piling up in one long list: pick a project from a menu, then
   a scope chip for its root or a submodule. Local MCP servers show up in
   the cross-agent comparator, read-only.
+- **Lists Orca's per-account homes**: the Claude Code profiles and Codex homes
+  that [Orca](https://onorca.dev) creates appear as their own agents, read-only
+  where Orca regenerates them, with each key and hook traced to its original. See
+  [Orca integration](docs/ORCA.md) (Spanish).
 - **Watches files live** (`DispatchSource` vnode watchers, debounced,
   resilient to atomic saves) and flags external changes with banners.
 - **Semantic diffs** on every change: key-path level for

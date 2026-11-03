@@ -1,0 +1,5150 @@
+{
+  "agents": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Multi-agent settings and custom role declarations. Scalar setting names are reserved and can't be used as custom role names.",
+    "es": "Ajustes multiagente y declaraciones de roles personalizados. Los nombres de ajustes escalares están reservados y no pueden usarse como nombres de roles personalizados.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "agents.<name>.config_file": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Path to a TOML config layer for that role; relative paths resolve from the config file that declares the role.",
+    "es": "Ruta a una capa de configuración TOML para ese rol; las rutas relativas se resuelven desde el archivo de configuración que declara el rol.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Role guidance shown to Codex when choosing and spawning that agent type.",
+    "es": "Guía del rol que se muestra a Codex al elegir y generar ese tipo de agente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.default_subagent_model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default model for spawned agents. An explicit spawn model takes precedence.",
+    "es": "Modelo por defecto de los agentes generados. Un modelo explícito al generarlos tiene prioridad.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.default_subagent_reasoning_effort": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default reasoning effort for spawned agents. An explicit spawn effort takes precedence.",
+    "es": "Esfuerzo de razonamiento por defecto de los agentes generados. Un esfuerzo explícito al generarlos tiene prioridad.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable multi-agent tools (default: true).",
+    "es": "Activa o desactiva las herramientas multiagente (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.interrupt_message": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Record a model-visible message when an agent turn is interrupted (default: true).",
+    "es": "Registra un mensaje visible para el modelo cuando se interrumpe el turno de un agente (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.max_concurrent_threads_per_session": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of spawned-agent threads that can be open concurrently, excluding the primary thread. When unset, Codex chooses the default.",
+    "es": "Número máximo de hilos de agentes generados que pueden estar abiertos a la vez, sin contar el hilo principal. Si no se define, Codex elige el valor por defecto.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "agents.max_threads": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Legacy alias for `agents.max_concurrent_threads_per_session`.",
+    "es": "Alias heredado de `agents.max_concurrent_threads_per_session`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "agents"
+  },
+  "allow_login_shell": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Allow shell-based tools to use login-shell semantics. Defaults to `true`; when `false`, `login = true` requests are rejected and omitted `login` defaults to non-login shells.",
+    "es": "Permite que las herramientas de shell usen semántica de login shell. Por defecto es `true`; si es `false`, se rechazan las solicitudes con `login = true` y, si se omite `login`, se usan shells sin login.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "allow_symlinked_codex_home": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "On macOS, allow writable sandbox roots at or under `$CODEX_HOME` to follow symlinks. Codex reads this only from the execution host's `$CODEX_HOME/config.toml` at startup. Enabling it trusts targets outside that directory and targets that change between commands. It grants no additional writable roots. Defaults to `false`.",
+    "es": "En macOS, permite que las raíces escribibles del sandbox en `$CODEX_HOME` o debajo de él sigan enlaces simbólicos. Codex lo lee solo del `$CODEX_HOME/config.toml` del host de ejecución al iniciar. Activarlo confía en destinos fuera de ese directorio y en destinos que cambian entre comandos. No concede raíces escribibles adicionales. Por defecto es `false`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "analytics.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable analytics for this machine or profile. Setting this to `false` disables the built-in Statsig metrics exporter. Explicit OTLP metrics exporters remain active. When unset, the client default applies.",
+    "es": "Activa o desactiva la analítica en esta máquina o perfil. Con `false` se desactiva el exportador de métricas Statsig integrado. Los exportadores de métricas OTLP explícitos siguen activos. Si no se define, aplica el valor por defecto del cliente.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "analytics"
+  },
+  "approval_policy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Controls when Codex pauses for approval before executing commands. You can also use `approval_policy = { granular = { ... } }` to allow or auto-reject specific prompt categories while keeping other prompts interactive. `untrusted` is unsupported, and `on-failure` is deprecated; use `on-request` for interactive runs or `never` for non-interactive runs.",
+    "es": "Controla cuándo Codex pide aprobación antes de ejecutar comandos. También puedes usar `approval_policy = { granular = { ... } }` para permitir o rechazar automáticamente categorías específicas de avisos y mantener interactivos los demás. `untrusted` no es compatible y `on-failure` está obsoleto; usa `on-request` en ejecuciones interactivas o `never` en las no interactivas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "on-request",
+      "never"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "approval_policy.granular.mcp_elicitations": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "When `true`, MCP elicitation prompts are allowed to surface instead of being auto-rejected.",
+    "es": "Si es `true`, se permite mostrar los avisos de elicitación de MCP en lugar de rechazarlos automáticamente.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "approval_policy"
+  },
+  "approval_policy.granular.request_permissions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "When `true`, prompts from the `request_permissions` tool are allowed to surface.",
+    "es": "Si es `true`, se permite mostrar los avisos de la herramienta `request_permissions`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "approval_policy"
+  },
+  "approval_policy.granular.rules": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "When `true`, approvals triggered by execpolicy `prompt` rules are allowed to surface.",
+    "es": "Si es `true`, se permite mostrar las aprobaciones provocadas por reglas `prompt` de execpolicy.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "approval_policy"
+  },
+  "approval_policy.granular.sandbox_approval": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "When `true`, sandbox escalation approval prompts are allowed to surface.",
+    "es": "Si es `true`, se permite mostrar los avisos de aprobación para escalar fuera del sandbox.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "approval_policy"
+  },
+  "approval_policy.granular.skill_approval": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "When `true`, skill-script approval prompts are allowed to surface.",
+    "es": "Si es `true`, se permite mostrar los avisos de aprobación de scripts de skills.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "approval_policy"
+  },
+  "approvals_reviewer": {
+    "custom": false,
+    "default": "\"user\"",
+    "deprecated": false,
+    "en": "Who reviews eligible approval prompts under `on-request` or granular approval policies. Defaults to `user`; `auto_review` uses the reviewer subagent. This setting doesn't change sandboxing or review actions already allowed inside the sandbox.",
+    "es": "Quién revisa los avisos de aprobación elegibles bajo `on-request` o políticas de aprobación granulares. Por defecto es `user`; `auto_review` usa el subagente revisor. No cambia el sandbox ni las acciones de revisión ya permitidas dentro del sandbox.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "user",
+      "auto_review"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "apps.<id>.approvals_reviewer": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Reviewer for this app's tool approval prompts. Overrides `apps._default.approvals_reviewer`.",
+    "es": "Revisor de los avisos de aprobación de herramientas de esta app. Reemplaza a `apps._default.approvals_reviewer`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "user",
+      "auto_review"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.default_tools_approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default approval behavior for tools in this app unless a per-tool override exists.",
+    "es": "Comportamiento de aprobación por defecto de las herramientas de esta app, salvo que exista un reemplazo por herramienta.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.default_tools_enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default enabled state for tools in this app unless a per-tool override exists.",
+    "es": "Estado de activación por defecto de las herramientas de esta app, salvo que exista un reemplazo por herramienta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.destructive_enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow or block tools in this app that advertise `destructive_hint = true`.",
+    "es": "Permite o bloquea las herramientas de esta app que declaran `destructive_hint = true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable a specific app/connector by id (default: true).",
+    "es": "Activa o desactiva una app o conector específico por ID (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.omit_tools_from": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Omit this app's tools from the `direct`, `deferred`, or `code_mode` surfaces. App and MCP server omissions apply together.",
+    "es": "Omite las herramientas de esta app de las superficies `direct`, `deferred` o `code_mode`. Las omisiones de la app y del servidor MCP se aplican en conjunto.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.open_world_enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow or block tools in this app that advertise `open_world_hint = true`.",
+    "es": "Permite o bloquea las herramientas de esta app que declaran `open_world_hint = true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.tools.<tool>.approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Per-tool approval behavior override for a single app tool.",
+    "es": "Reemplazo del comportamiento de aprobación para una sola herramienta de app.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps.<id>.tools.<tool>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Per-tool enabled override for an app tool (for example `repos/list`).",
+    "es": "Reemplazo de activación por herramienta para una herramienta de app (por ejemplo, `repos/list`).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps._default.approvals_reviewer": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default reviewer for app tool approval prompts unless overridden per app. When omitted, apps inherit the top-level `approvals_reviewer` value.",
+    "es": "Revisor por defecto de los avisos de aprobación de herramientas de apps, salvo que se reemplace por app. Si se omite, las apps heredan el valor de `approvals_reviewer` de nivel superior.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "user",
+      "auto_review"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps._default.default_tools_approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default approval behavior for app tools without per-app or per-tool overrides.",
+    "es": "Comportamiento de aprobación por defecto de las herramientas de apps sin reemplazo por app o por herramienta.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps._default.destructive_enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default allow/deny for app tools with `destructive_hint = true`.",
+    "es": "Permitir o denegar por defecto las herramientas de apps con `destructive_hint = true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps._default.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default app enabled state for all apps unless overridden per app.",
+    "es": "Estado de activación por defecto de todas las apps, salvo que se reemplace por app.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "apps._default.open_world_enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Default allow/deny for app tools with `open_world_hint = true`.",
+    "es": "Permitir o denegar por defecto las herramientas de apps con `open_world_hint = true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "apps"
+  },
+  "auto_review.extra_policy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional local Markdown policy for automatic review, included alongside the main policy. Managed `guardian_extra_policy` takes precedence. Blank values are ignored.",
+    "es": "Política local adicional en Markdown para la revisión automática, incluida junto con la política principal. `guardian_extra_policy` administrado tiene prioridad. Los valores en blanco se ignoran.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "auto_review"
+  },
+  "auto_review.policy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Local Markdown policy instructions for automatic review. Managed `guardian_policy_config` takes precedence. Blank values are ignored.",
+    "es": "Instrucciones de política locales en Markdown para la revisión automática. `guardian_policy_config` administrado tiene prioridad. Los valores en blanco se ignoran.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "auto_review"
+  },
+  "background_terminal_max_timeout": {
+    "custom": true,
+    "default": "300000",
+    "deprecated": false,
+    "en": "Maximum poll window in milliseconds for empty `write_stdin` polls (background terminal polling). Default: `300000` (5 minutes). Replaces the older `background_terminal_timeout` key.",
+    "es": "Ventana máxima de sondeo en milisegundos para sondeos vacíos de `write_stdin` (sondeo de terminal en segundo plano). Por defecto: `300000` (5 minutos). Reemplaza a la clave anterior `background_terminal_timeout`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "browser_use.allow_history_access": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set to `false` to restrict browser-history access. Managed requirements can enforce this restriction.",
+    "es": "Usa `false` para restringir el acceso al historial del navegador. Los requisitos administrados pueden imponer esta restricción.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "browser_use"
+  },
+  "browser_use.default_origin_policy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Fallback browser-origin restrictions. Supports `access`, `uploads`, `downloads`, and `full_cdp_access`, each set to `allow` or `deny`.",
+    "es": "Restricciones de origen del navegador por defecto. Admite `access`, `uploads`, `downloads` y `full_cdp_access`, cada uno con `allow` o `deny`.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "browser_use"
+  },
+  "browser_use.origins.<origin>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Per-origin browser restrictions with the same fields as `browser_use.default_origin_policy`. Include an HTTP or HTTPS scheme and optional port; omit paths, queries, and fragments. Local values cannot relax managed denies.",
+    "es": "Restricciones del navegador por origen, con los mismos campos que `browser_use.default_origin_policy`. Incluye el esquema HTTP o HTTPS y, opcionalmente, el puerto; omite rutas, consultas y fragmentos. Los valores locales no pueden relajar las denegaciones administradas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "browser_use"
+  },
+  "chatgpt_base_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Override the base URL used during the ChatGPT login flow.",
+    "es": "Reemplaza la URL base usada durante el flujo de inicio de sesión de ChatGPT.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "General"
+  },
+  "check_for_update_on_startup": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Check for Codex updates on startup (set to false only when updates are centrally managed).",
+    "es": "Busca actualizaciones de Codex al iniciar (pon `false` solo si las actualizaciones se administran de forma centralizada).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "cli_auth_credentials_store": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Control where the CLI stores cached credentials.",
+    "es": "Controla dónde guarda el CLI las credenciales en caché.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "file",
+      "keyring",
+      "auto",
+      "ephemeral"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "compact_prompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Inline override for the history compaction prompt.",
+    "es": "Reemplazo en línea del prompt de compactación del historial.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "computer_use.default_app_access": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Fallback native-app access policy for Computer Use. App-specific entries can supply a policy; local configuration cannot relax managed restrictions.",
+    "es": "Política de acceso a apps nativas por defecto para Computer Use. Las entradas específicas de cada app pueden definir una política; la configuración local no puede relajar las restricciones administradas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "allow",
+      "deny"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "computer_use"
+  },
+  "computer_use.macos.bundle_ids": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Native macOS app access keyed by bundle identifier.",
+    "es": "Acceso a apps nativas de macOS, indexado por identificador de bundle.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "computer_use"
+  },
+  "computer_use.windows.always_allowed_app_ids": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Windows app identifiers that Computer Use can open without prompting. Apps not in the list require approval; remove saved entries from the ChatGPT desktop app's Computer Use settings.",
+    "es": "Identificadores de apps de Windows que Computer Use puede abrir sin pedir confirmación. Las apps que no estén en la lista requieren aprobación; elimina las entradas guardadas desde los ajustes de Computer Use de la app de escritorio de ChatGPT.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "computer_use"
+  },
+  "computer_use.windows.aumids": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Packaged Windows app access keyed by Application User Model ID (AUMID).",
+    "es": "Acceso a apps empaquetadas de Windows, indexado por Application User Model ID (AUMID).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "computer_use"
+  },
+  "computer_use.windows.exes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Windows executable access rules. Each rule requires `publisher_name`, `product_name`, and `access` (`allow` or `deny`); `binary_name` is optional.",
+    "es": "Reglas de acceso a ejecutables de Windows. Cada regla requiere `publisher_name`, `product_name` y `access` (`allow` o `deny`); `binary_name` es opcional.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "computer_use"
+  },
+  "default_permissions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Name of the default permissions profile to apply to sandboxed tool calls. Built-ins are `:read-only`, `:workspace`, and `:danger-full-access`; custom profile names require matching `[permissions.<name>]` tables. Don't combine with `sandbox_mode` or `[sandbox_workspace_write]`.",
+    "es": "Nombre del perfil de permisos por defecto que se aplica a las llamadas a herramientas en sandbox. Los integrados son `:read-only`, `:workspace` y `:danger-full-access`; los nombres de perfiles personalizados requieren las tablas `[permissions.<name>]` correspondientes. No lo combines con `sandbox_mode` ni `[sandbox_workspace_write]`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "desktop.custom_file_handlers.<id>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "User-level only. Defines an additional **Open in** target for the ChatGPT desktop app. See Add custom file handlers for examples and handler ID constraints.",
+    "es": "Solo a nivel de usuario. Define un destino adicional de **Abrir en** para la app de escritorio de ChatGPT. Consulta Add custom file handlers para ver ejemplos y las restricciones del ID del handler.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.args": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Arguments inserted between the command and file input (default: `[]`).",
+    "es": "Argumentos que se insertan entre el comando y el archivo de entrada (por defecto: `[]`).",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.command": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Executable path or command name to detect and launch. Required.",
+    "es": "Ruta del ejecutable o nombre del comando que se detecta y se lanza. Obligatorio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.icon": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Bundled asset path, Base64-encoded `data:image/...` URL, file URI, or absolute local path for the handler icon. Required; unsupported sources use the default VS Code icon.",
+    "es": "Ruta de recurso incluido, URL `data:image/...` en Base64, URI de archivo o ruta local absoluta del icono del handler. Obligatorio; las fuentes no admitidas usan el icono por defecto de VS Code.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.input": {
+    "custom": false,
+    "default": "\"path\"",
+    "deprecated": false,
+    "en": "How the app sends file input to the handler (default: `path`).",
+    "es": "Cómo envía la app el archivo de entrada al handler (por defecto: `path`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "path",
+      "json_argument",
+      "json_stdin"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.label": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Display name shown in **Open in** menus. Required.",
+    "es": "Nombre que se muestra en los menús **Abrir en**. Obligatorio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "desktop.custom_file_handlers.<id>.supports_ssh": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Offer the handler for files in SSH workspaces (default: `false`).",
+    "es": "Ofrece el handler para archivos en espacios de trabajo SSH (por defecto: `false`).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "desktop"
+  },
+  "developer_instructions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional developer instructions injected into the session (optional).",
+    "es": "Instrucciones adicionales de desarrollador que se inyectan en la sesión (opcional).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "disable_paste_burst": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Legacy fallback for `tui.disable_paste_burst`. Prefer the setting under `[tui]`.",
+    "es": "Respaldo heredado de `tui.disable_paste_burst`. Prefiere el ajuste en `[tui]`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "experimental_compact_prompt_file": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Load the compaction prompt override from a file (experimental).",
+    "es": "Carga desde un archivo el reemplazo del prompt de compactación (experimental).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "experimental_use_unified_exec_tool": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Legacy name for enabling unified exec; prefer `[features].unified_exec` or `codex --enable unified_exec`.",
+    "es": "Nombre heredado para habilitar unified exec; prefiere `[features].unified_exec` o `codex --enable unified_exec`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "features.apps": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable app (connector) integrations (stable; on by default). App and connector traffic is not controlled by the sandboxed-command network proxy or its domain allowlist.",
+    "es": "Habilita las integraciones de apps (conectores) (estable; activado por defecto). El tráfico de apps y conectores no está controlado por el proxy de red de comandos en sandbox ni por su lista de dominios permitidos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.code_mode.direct_only_tool_namespaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool namespaces code mode can use only through direct tool calls.",
+    "es": "Espacios de nombres de herramientas que code mode solo puede usar mediante llamadas directas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.code_mode.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable code mode feature configuration. This feature is under development and off by default.",
+    "es": "Habilita la configuración de la función code mode. Esta función está en desarrollo y desactivada por defecto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.code_mode.excluded_tool_namespaces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool namespaces code mode excludes from nested code-mode tool guidance and executor exposure.",
+    "es": "Espacios de nombres de herramientas que code mode excluye de la guía anidada de herramientas y de la exposición al ejecutor.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.context_management.experimental_mode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Experimental context-management setting. The feature is not currently available.",
+    "es": "Ajuste experimental de administración de contexto. La función no está disponible por ahora.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.enable_request_compression": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Compress streaming request bodies with zstd when supported (stable; on by default).",
+    "es": "Comprime con zstd los cuerpos de solicitud en streaming cuando es compatible (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.fast_mode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable Fast mode controls advertised by the active model (stable; on by default), independently of `features.ultrafast_mode`. Availability still depends on the model and account.",
+    "es": "Habilita los controles de Fast mode que anuncia el modelo activo (estable; activado por defecto), de forma independiente de `features.ultrafast_mode`. La disponibilidad sigue dependiendo del modelo y de la cuenta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.goals": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable persisted goals and automatic continuation (stable; on by default).",
+    "es": "Habilita metas persistentes y continuación automática (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable lifecycle hooks loaded from `hooks.json` or inline `[hooks]` config. `features.codex_hooks` is a deprecated alias.",
+    "es": "Habilita los hooks de ciclo de vida cargados desde `hooks.json` o desde la configuración `[hooks]` en línea. `features.codex_hooks` es un alias obsoleto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.memories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable Memories (off by default).",
+    "es": "Habilita Memories (desactivado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.multi_agent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable multi-agent collaboration tools (`spawn_agent`, `send_input`, `resume_agent`, `wait_agent`, and `close_agent`) (stable; on by default).",
+    "es": "Habilita las herramientas de colaboración multiagente (`spawn_agent`, `send_input`, `resume_agent`, `wait_agent` y `close_agent`) (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Start the network proxy for sandboxed commands (experimental; off by default). Required to enforce permission-profile domain rules unless enabled administrator-managed `network_proxy` requirements start the proxy. Use a table when setting feature-level policy options such as `domains`. Does not filter web search, apps, MCP, or other hosted tools.",
+    "es": "Inicia el proxy de red para comandos en sandbox (experimental; desactivado por defecto). Es necesario para aplicar las reglas de dominio de los perfiles de permisos, salvo que requisitos `network_proxy` administrados y habilitados inicien el proxy. Usa una tabla para definir opciones de política a nivel de función, como `domains`. No filtra la búsqueda web, las apps, MCP ni otras herramientas alojadas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.allow_local_binding": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Allow broader local/private-network access. Defaults to `false`; exact local IP literal or `localhost` allow rules can still permit specific local targets.",
+    "es": "Permite un acceso más amplio a redes locales o privadas. Por defecto es `false`; las reglas `allow` con una IP local literal exacta o `localhost` aún pueden permitir destinos locales específicos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.allow_upstream_proxy": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Allow chaining through an upstream proxy from the environment. Defaults to `true`.",
+    "es": "Permite encadenar a través de un proxy upstream tomado del entorno. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.dangerously_allow_all_unix_sockets": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Permit arbitrary Unix socket destinations instead of allowlist-only access. Defaults to `false`; use only in tightly controlled environments.",
+    "es": "Permite destinos de socket Unix arbitrarios en lugar de acceso solo por lista de permitidos. Por defecto es `false`; úsalo solo en entornos estrictamente controlados.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.dangerously_allow_non_loopback_proxy": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Permit non-loopback listener addresses. Defaults to `false`; enabling it can expose proxy listeners beyond localhost.",
+    "es": "Permite direcciones de escucha que no son loopback. Por defecto es `false`; habilitarlo puede exponer los listeners del proxy más allá de localhost.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.domains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Domain policy for sandboxed networking. Unset by default, which means no external destinations are allowed until you add `allow` rules. Supports exact hosts, `*.example.com` for subdomains only, `**.example.com` for apex plus subdomains, and global `*` allow rules. Prefer scoped rules because `*` broadly opens public outbound access. Add `deny` rules for blocked destinations; `deny` wins on conflicts.",
+    "es": "Política de dominios para la red en sandbox. Sin definir por defecto, lo que significa que no se permite ningún destino externo hasta que agregues reglas `allow`. Admite hosts exactos, `*.example.com` solo para subdominios, `**.example.com` para el dominio raíz más subdominios y reglas `allow` globales con `*`. Prefiere reglas acotadas, porque `*` abre ampliamente el acceso saliente público. Agrega reglas `deny` para destinos bloqueados; `deny` prevalece en los conflictos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.enable_socks5": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Expose SOCKS5 support. Defaults to `true`.",
+    "es": "Expone compatibilidad con SOCKS5. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.enable_socks5_udp": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Allow UDP over SOCKS5. Defaults to `true`.",
+    "es": "Permite UDP sobre SOCKS5. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Start the sandboxed-command network proxy when command network access is enabled. Defaults to `false`; permission-profile domain rules are not enforced while the proxy is off.",
+    "es": "Inicia el proxy de red de comandos en sandbox cuando el acceso a la red de comandos está habilitado. Por defecto es `false`; las reglas de dominio de los perfiles de permisos no se aplican mientras el proxy está apagado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.network_proxy.unix_sockets": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Unix socket policy for sandboxed networking. Unset by default; add `allow` entries for permitted sockets.",
+    "es": "Política de sockets Unix para la red en sandbox. Sin definir por defecto; agrega entradas `allow` para los sockets permitidos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.personality": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Removed feature flag. Accepted for compatibility and ignored.",
+    "es": "Indicador de función eliminado. Se acepta por compatibilidad y se ignora.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.prefer_mxc": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Prefer MXC for local Windows execution when native capabilities and policy allow it; otherwise retain the configured legacy sandbox and setup. Disabled by default in the standalone CLI; the desktop app can enable it through rollout configuration. Command failures don't trigger fallback.",
+    "es": "Prefiere MXC para la ejecución local en Windows cuando las capacidades nativas y la política lo permitan; en caso contrario, conserva el sandbox heredado y la configuración establecidos. Desactivado por defecto en el CLI independiente; la app de escritorio puede habilitarlo mediante configuración de rollout. Los fallos de comandos no activan el respaldo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.prevent_idle_sleep": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Prevent the machine from sleeping while a turn is actively running (experimental; off by default).",
+    "es": "Evita que el equipo se suspenda mientras un turno se está ejecutando (experimental; desactivado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.remote_plugin": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable the remote plugin catalog (stable; on by default).",
+    "es": "Habilita el catálogo de plugins remotos (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.rollout_budget.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable rollout budget tracking. This feature is under development and off by default. When enabled, set both `limit_tokens` and `reminder_at_remaining_tokens`.",
+    "es": "Habilita el seguimiento del presupuesto de rollout. Esta función está en desarrollo y desactivada por defecto. Al habilitarla, define tanto `limit_tokens` como `reminder_at_remaining_tokens`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.rollout_budget.limit_tokens": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Positive token limit for rollout budget tracking. Required when rollout budget is enabled.",
+    "es": "Límite positivo de tokens para el seguimiento del presupuesto de rollout. Obligatorio cuando el presupuesto de rollout está habilitado.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.rollout_budget.prefill_token_weight": {
+    "custom": true,
+    "default": "1.0",
+    "deprecated": false,
+    "en": "Finite non-negative multiplier for prefill tokens in rollout budget accounting. Defaults to `1.0`.",
+    "es": "Multiplicador finito no negativo para los tokens de prefill en el cálculo del presupuesto de rollout. Por defecto es `1.0`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.rollout_budget.reminder_at_remaining_tokens": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Send a reminder as the remaining weighted token budget crosses each threshold. Supply the list when rollout budget tracking is enabled. Each value must be positive and below `limit_tokens`.",
+    "es": "Envía un recordatorio cuando el presupuesto ponderado de tokens restantes cruza cada umbral. Indica la lista al habilitar el seguimiento del presupuesto de rollout. Cada valor debe ser positivo y menor que `limit_tokens`.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.rollout_budget.sampling_token_weight": {
+    "custom": true,
+    "default": "1.0",
+    "deprecated": false,
+    "en": "Finite non-negative multiplier for sampled tokens in rollout budget accounting. Defaults to `1.0`.",
+    "es": "Multiplicador finito no negativo para los tokens muestreados en el cálculo del presupuesto de rollout. Por defecto es `1.0`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.shell_snapshot": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Snapshot shell environment to speed up repeated commands (stable; on by default).",
+    "es": "Guarda una instantánea del entorno del shell para acelerar comandos repetidos (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.shell_tool": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable command execution tools (stable; on by default).",
+    "es": "Habilita las herramientas de ejecución de comandos (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.skill_mcp_dependency_install": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow prompting and installing missing MCP dependencies for skills (stable; on by default).",
+    "es": "Permite solicitar e instalar las dependencias MCP faltantes de los skills (estable; activado por defecto).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.ultrafast_mode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable Ultrafast mode controls (stable; on by default), independently of `features.fast_mode`. Availability still depends on the model and account.",
+    "es": "Habilita los controles de Ultrafast mode (estable; activado por defecto), de forma independiente de `features.fast_mode`. La disponibilidad sigue dependiendo del modelo y de la cuenta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.unified_exec": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Use resumable command execution (stable; enabled on all platforms). User opt-outs are ignored. Managed requirements can disable resumable processes and `write_stdin`, leaving one-shot `exec_command` available.",
+    "es": "Usa ejecución de comandos reanudable (estable; habilitada en todas las plataformas). Se ignoran las desactivaciones del usuario. Los requisitos administrados pueden deshabilitar los procesos reanudables y `write_stdin`, dejando disponible `exec_command` de una sola ejecución.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.view_image": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable the built-in `view_image` tool for opening local images. Defaults to `true`.",
+    "es": "Habilita la herramienta integrada `view_image` para abrir imágenes locales. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "features.web_search": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Deprecated legacy toggle; prefer the top-level `web_search` setting.",
+    "es": "Interruptor heredado obsoleto; prefiere el ajuste `web_search` de nivel superior.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "features"
+  },
+  "feedback.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable feedback submission via `/feedback` across local clients (default: true).",
+    "es": "Habilita el envío de comentarios con `/feedback` en los clientes locales (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "feedback"
+  },
+  "file_opener": {
+    "custom": false,
+    "default": "\"vscode\"",
+    "deprecated": false,
+    "en": "URI scheme used to open citations from Codex output (default: `vscode`).",
+    "es": "Esquema de URI que se usa para abrir las citas de la salida de Codex (por defecto: `vscode`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "vscode",
+      "vscode-insiders",
+      "windsurf",
+      "cursor",
+      "none"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "forced_chatgpt_workspace_id": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Limit ChatGPT logins to a specific workspace identifier.",
+    "es": "Limita los inicios de sesión de ChatGPT a un identificador de workspace específico.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "forced_login_method": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Restrict Codex to a specific authentication method.",
+    "es": "Restringe Codex a un método de autenticación específico.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "chatgpt",
+      "api"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "goals.max_goal_token_budget": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set the default token budget for new goals and the largest budget a goal can request. Omit to leave goals without a configured limit.",
+    "es": "Define el presupuesto de tokens por defecto de las metas nuevas y el mayor presupuesto que una meta puede solicitar. Omítelo para dejar las metas sin límite configurado.",
+    "kind": "integer",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "goals"
+  },
+  "hide_agent_reasoning": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Suppress reasoning events in both the TUI and `codex exec` output.",
+    "es": "Suprime los eventos de razonamiento tanto en la TUI como en la salida de `codex exec`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "history.max_bytes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "If set, caps the history file size in bytes by dropping oldest entries.",
+    "es": "Si se define, limita el tamaño del archivo de historial en bytes eliminando las entradas más antiguas.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "history"
+  },
+  "history.persistence": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Control whether Codex saves session transcripts to history.jsonl.",
+    "es": "Controla si Codex guarda las transcripciones de sesión en history.jsonl.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "save-all",
+      "none"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "history"
+  },
+  "hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Lifecycle hooks configured inline in `config.toml`. Uses the same event schema as `hooks.json`; see the Hooks guide for examples and supported events.",
+    "es": "Hooks de ciclo de vida configurados en línea en `config.toml`. Usan el mismo esquema de eventos que `hooks.json`; consulta la guía de Hooks para ver ejemplos y eventos compatibles.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "hooks.<Event>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Matcher groups for hook events such as `PreModelRequest`, `PostModelRequest`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, `Stop`, or `Interrupt`.",
+    "es": "Grupos de matchers para eventos de hooks como `PreModelRequest`, `PostModelRequest`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `SessionStart`, `SessionEnd`, `SubagentStart`, `SubagentStop`, `UserPromptSubmit`, `Stop` o `Interrupt`.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.<Event>[].hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hook handlers for a matcher group. Command and MCP tool hooks are supported while prompt and agent hook handlers are parsed but skipped.",
+    "es": "Manejadores de hooks de un grupo de matchers. Se admiten hooks de comando y de herramientas MCP; los manejadores de hooks de prompt y de agente se analizan pero se omiten.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.<Event>[].hooks[].additionalContextLimit": {
+    "custom": true,
+    "default": "2500",
+    "deprecated": false,
+    "en": "Approximate per-handler token threshold for saving oversized `additionalContext` to disk and showing the model a shorter preview. Defaults to `2500`; `0` passes the full context directly to the model. See Large hook output.",
+    "es": "Umbral aproximado de tokens por manejador para guardar en disco un `additionalContext` demasiado grande y mostrar al modelo una vista previa más corta. Por defecto es `2500`; `0` pasa el contexto completo directamente al modelo. Consulta Large hook output.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.<Event>[].hooks[].async": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Run a command hook in the background without delaying the triggering operation. Defaults to `false`; `SessionEnd` always runs synchronously. See Run hooks in the background.",
+    "es": "Ejecuta un hook de comando en segundo plano sin retrasar la operación que lo activa. Por defecto es `false`; `SessionEnd` siempre se ejecuta de forma síncrona. Consulta Run hooks in the background.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.<Event>[].hooks[].commandWindows": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Windows-only command override for command hooks. The TOML alias `command_windows` is also accepted.",
+    "es": "Reemplazo del comando solo para Windows en hooks de comando. También se acepta el alias TOML `command_windows`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "hooks"
+  },
+  "instructions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Reserved for future use; prefer `model_instructions_file` or `AGENTS.md`.",
+    "es": "Reservado para uso futuro; prefiere `model_instructions_file` o `AGENTS.md`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "log_dir": {
+    "custom": true,
+    "default": "\"$CODEX_HOME/log\"",
+    "deprecated": false,
+    "en": "Directory where Codex writes log files; defaults to `$CODEX_HOME/log`. Setting this explicitly also enables the opt-in plaintext TUI log, `codex-tui.log`, in that directory.",
+    "es": "Directorio donde Codex escribe los archivos de registro; por defecto `$CODEX_HOME/log`. Definirlo explícitamente también habilita el registro opcional de TUI en texto plano, `codex-tui.log`, en ese directorio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "marketplaces.<name>.ref": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional Git branch, tag, or commit for the marketplace.",
+    "es": "Rama, etiqueta o commit de Git opcional del marketplace.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "marketplaces"
+  },
+  "marketplaces.<name>.source": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Git repository location or local marketplace root directory. Use an absolute path for a local source; the directory contains .agents/plugins/marketplace.json.",
+    "es": "Ubicación del repositorio Git o directorio raíz del marketplace local. Usa una ruta absoluta para un origen local; el directorio contiene .agents/plugins/marketplace.json.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "marketplaces"
+  },
+  "marketplaces.<name>.source_type": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Source kind for a configured plugin marketplace. Marketplaces can be defined in system, cloud-managed, user, or trusted-project config.toml.",
+    "es": "Tipo de origen de un marketplace de plugins configurado. Los marketplaces pueden definirse en el config.toml del sistema, administrado en la nube, de usuario o de un proyecto de confianza.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "git",
+      "local"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "marketplaces"
+  },
+  "marketplaces.<name>.sparse_paths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional sparse checkout paths for a Git marketplace. Include the marketplace catalog and any local plugin directories it references.",
+    "es": "Rutas opcionales de sparse checkout para un marketplace Git. Incluye el catálogo del marketplace y los directorios de plugins locales que referencia.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "marketplaces"
+  },
+  "mcp_oauth_callback_port": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional global fixed port for the local HTTP callback server used during MCP OAuth login. A server-specific `oauth.callback_port` takes precedence. When neither is set, Codex binds to an ephemeral port chosen by the OS.",
+    "es": "Puerto fijo global opcional del servidor HTTP de callback local usado durante el inicio de sesión OAuth de MCP. Un `oauth.callback_port` específico del servidor tiene prioridad. Si ninguno está definido, Codex usa un puerto efímero elegido por el sistema operativo.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mcp_oauth_callback_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional base callback URL for MCP OAuth login, such as a devbox ingress URL. Newly added pre-registered clients use this URL unchanged when the authorization server supports issuer identification; existing clients without a saved callback append a server-specific callback ID. Without issuer support, any pre-registered MCP server whose configured callback lacks the required ID falls back to this URL with the ID appended. Callback URL ports don't select the listener port.",
+    "es": "URL base de callback opcional para el inicio de sesión OAuth de MCP, como la URL de ingress de un devbox. Los clientes preregistrados recién agregados usan esta URL sin cambios cuando el servidor de autorización admite la identificación del emisor; los clientes existentes sin callback guardado añaden un ID de callback específico del servidor. Sin soporte de identificación del emisor, cualquier servidor MCP preregistrado cuyo callback configurado no tenga el ID requerido recurre a esta URL con el ID añadido. Los puertos de la URL de callback no seleccionan el puerto del listener.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mcp_oauth_credentials_store": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Preferred store for MCP OAuth credentials.",
+    "es": "Almacén preferido para las credenciales OAuth de MCP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "file",
+      "keyring"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mcp_optional_startup_grace_ms": {
+    "custom": true,
+    "default": "1000",
+    "deprecated": false,
+    "en": "Shared wait for optional MCP servers when building the initial tool catalog. Defaults to `1000`. Set to `0` to wait for each server's `startup_timeout_sec` instead.",
+    "es": "Espera compartida por los servidores MCP opcionales al construir el catálogo inicial de herramientas. Por defecto es `1000`. Usa `0` para esperar en cambio el `startup_timeout_sec` de cada servidor.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "mcp_servers.<id>.args": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Arguments passed to the MCP stdio server command.",
+    "es": "Argumentos que se pasan al comando del servidor MCP stdio.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.auth": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Authentication fallback for an MCP HTTP server after configured bearer tokens and authorization headers. `oauth` (default) uses stored MCP OAuth credentials when available. `chatgpt` uses the current ChatGPT session for the trusted first-party ChatGPT origin, then falls back to stored OAuth. Both modes can connect without authentication if no credential source resolves.",
+    "es": "Autenticación de respaldo para un servidor MCP HTTP, después de los bearer tokens y encabezados de autorización configurados. `oauth` (por defecto) usa las credenciales OAuth de MCP almacenadas, si las hay. `chatgpt` usa la sesión actual de ChatGPT para el origen de ChatGPT propio y de confianza, y luego recurre al OAuth almacenado. Ambos modos pueden conectarse sin autenticación si ninguna fuente de credenciales se resuelve.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "oauth",
+      "chatgpt"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.bearer_token_env_var": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variable sourcing the bearer token for an MCP HTTP server.",
+    "es": "Variable de entorno de la que se toma el bearer token de un servidor MCP HTTP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.command": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Launcher command for an MCP stdio server.",
+    "es": "Comando de lanzamiento de un servidor MCP stdio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.cwd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Working directory for the MCP stdio server process.",
+    "es": "Directorio de trabajo del proceso del servidor MCP stdio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.default_tools_approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default approval behavior for MCP tools on this server unless a per-tool override exists.",
+    "es": "Comportamiento de aprobación por defecto de las herramientas MCP de este servidor, salvo que exista un reemplazo por herramienta.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.disabled_tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Deny list applied after `enabled_tools` for the MCP server.",
+    "es": "Lista de denegadas que se aplica después de `enabled_tools` para el servidor MCP.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Disable an MCP server without removing its configuration.",
+    "es": "Desactiva un servidor MCP sin eliminar su configuración.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.enabled_tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow list of tool names exposed by the MCP server.",
+    "es": "Lista de permitidas con los nombres de las herramientas que expone el servidor MCP.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.env": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables forwarded to the MCP stdio server.",
+    "es": "Variables de entorno que se reenvían al servidor MCP stdio.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.env_http_headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "HTTP headers populated from environment variables for an MCP HTTP server.",
+    "es": "Encabezados HTTP llenados desde variables de entorno para un servidor MCP HTTP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.environment_id": {
+    "custom": true,
+    "default": "\"local\"",
+    "deprecated": false,
+    "en": "Execution environment for the MCP server. Defaults to `local`. Use the ID of a configured executor to run a stdio server or connect to a streamable HTTP server there.",
+    "es": "Entorno de ejecución del servidor MCP. Por defecto es `local`. Usa el ID de un ejecutor configurado para correr ahí un servidor stdio o conectarse a un servidor HTTP transmitible.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.http_headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Static HTTP headers included with each MCP HTTP request.",
+    "es": "Encabezados HTTP estáticos incluidos en cada solicitud HTTP a MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.http_headers_helper": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Local command that prints a JSON object of HTTP header names and values. Supported only for locally connected HTTP MCP servers. Explicit bearer tokens and OAuth credentials take precedence over helper-provided Authorization headers.",
+    "es": "Comando local que imprime un objeto JSON con nombres y valores de encabezados HTTP. Solo se admite en servidores MCP HTTP conectados localmente. Los bearer tokens explícitos y las credenciales OAuth tienen prioridad sobre los encabezados Authorization que aporte el helper.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.oauth.callback_port": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Fixed OAuth callback listener port for this MCP server. Overrides `mcp_oauth_callback_port`. For a direct loopback callback with an explicit URL port, configure the same listener port.",
+    "es": "Puerto fijo del listener de callback OAuth para este servidor MCP. Reemplaza a `mcp_oauth_callback_port`. Para un callback loopback directo con puerto explícito en la URL, configura el mismo puerto de listener.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.oauth.callback_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Server-specific OAuth callback. Pre-registered clients reuse it when issuer identification is supported or the URL already ends in the server-specific callback ID. Otherwise, Codex uses the global or default callback with that ID appended. Clients without a pre-registered ID use this callback during client registration.",
+    "es": "Callback OAuth específico del servidor. Los clientes preregistrados lo reutilizan cuando se admite la identificación del emisor o la URL ya termina en el ID de callback específico del servidor. En otro caso, Codex usa el callback global o por defecto con ese ID añadido. Los clientes sin ID preregistrado usan este callback durante el registro del cliente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.oauth.client_id": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Pre-registered OAuth client ID used for authorization and token exchange with this MCP server.",
+    "es": "ID de cliente OAuth preregistrado que se usa para la autorización y el intercambio de tokens con este servidor MCP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.oauth.client_secret": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth client secret for token exchange with a pre-registered client. Requires a nonempty `oauth.client_id`; the secret must also be nonempty. Stored in configuration.",
+    "es": "Secreto de cliente OAuth para el intercambio de tokens con un cliente preregistrado. Requiere un `oauth.client_id` no vacío; el secreto tampoco debe estar vacío. Se guarda en la configuración.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.oauth_resource": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional RFC 8707 OAuth resource parameter to include during MCP login.",
+    "es": "Parámetro de recurso OAuth RFC 8707 opcional que se incluye al iniciar sesión en MCP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.omit_tools_from": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Omit this server’s tools from selected model-facing surfaces. Choose `direct` (initial tools), `deferred` (tool search), or `code_mode` (Code Mode scripts). Use `disabled_tools` to block a tool. An empty list clears inherited omissions.",
+    "es": "Omite las herramientas de este servidor de las superficies seleccionadas que ve el modelo. Elige `direct` (herramientas iniciales), `deferred` (búsqueda de herramientas) o `code_mode` (scripts de Code Mode). Usa `disabled_tools` para bloquear una herramienta. Una lista vacía borra las omisiones heredadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.scopes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth scopes to request at login. If omitted, Codex uses the initial authentication challenge's scopes, falling back to the protected resource's metadata.",
+    "es": "Scopes de OAuth que se solicitan al iniciar sesión. Si se omite, Codex usa los scopes del desafío de autenticación inicial y, en su defecto, los de los metadatos del recurso protegido.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.startup_readiness": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Use a live connection to establish startup readiness (`connection`, the default), or let a valid cached tool catalog satisfy startup while the connection opens (`catalog`). Calling a tool still requires a live connection.",
+    "es": "Usa una conexión activa para establecer que el inicio está listo (`connection`, el valor por defecto), o deja que un catálogo de herramientas en caché válido satisfaga el inicio mientras se abre la conexión (`catalog`). Llamar a una herramienta sigue requiriendo una conexión activa.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "connection",
+      "catalog"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.startup_timeout_ms": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Alias for `startup_timeout_sec` in milliseconds.",
+    "es": "Alias de `startup_timeout_sec` en milisegundos.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.startup_timeout_sec": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Override the default 10s startup timeout for an MCP server.",
+    "es": "Reemplaza el tiempo de espera de inicio por defecto de 10 s para un servidor MCP.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.supports_parallel_tool_calls": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Mark every tool on this server as safe to run in parallel. Enable only when the server can handle concurrent calls to all its tools. Defaults to `false`.",
+    "es": "Marca todas las herramientas de este servidor como seguras para ejecutarse en paralelo. Actívalo solo si el servidor puede manejar llamadas concurrentes a todas sus herramientas. Por defecto es `false`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.tool_input_schema_max_bytes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Compact each ordinary MCP tool's input schema when it exceeds this many UTF-8 bytes. The default is 5,000 bytes. Code Mode also uses an explicit value when rendering tool input types.",
+    "es": "Compacta el esquema de entrada de cada herramienta MCP ordinaria cuando excede esta cantidad de bytes UTF-8. El valor por defecto es 5,000 bytes. Code Mode también usa un valor explícito al representar los tipos de entrada de las herramientas.",
+    "kind": "integer",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.tool_timeout_sec": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Override the default 60s per-tool timeout for an MCP server.",
+    "es": "Reemplaza el tiempo de espera por defecto de 60 s por herramienta para un servidor MCP.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.tools.<tool>.approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Per-tool approval behavior override for one MCP tool on this server.",
+    "es": "Reemplazo del comportamiento de aprobación para una herramienta MCP de este servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.tools.<tool>.output_token_limit": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Token budget for one MCP tool's output, before the standard 20% serialization allowance. Overrides the model's default output truncation budget for that tool.",
+    "es": "Presupuesto de tokens para la salida de una herramienta MCP, antes del margen estándar de serialización del 20 %. Reemplaza el presupuesto de truncamiento de salida por defecto del modelo para esa herramienta.",
+    "kind": "integer",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "mcp_servers.<id>.url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Endpoint for an MCP streamable HTTP server.",
+    "es": "Endpoint de un servidor MCP HTTP transmitible (streamable).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "mcp_servers"
+  },
+  "memories.consolidation_model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional model override for global memory consolidation.",
+    "es": "Modelo opcional que reemplaza al usado para la consolidación global de memorias.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.consolidation_service_tier": {
+    "custom": true,
+    "default": "\"default\"",
+    "deprecated": false,
+    "en": "Service tier for global memory consolidation. Defaults to `default` (Standard).",
+    "es": "Nivel de servicio para la consolidación global de memorias. Por defecto es `default` (Standard).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.disable_on_external_context": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "When `true`, threads that use external context such as MCP tool calls, web search, or tool search are kept out of memory generation. Defaults to `false`. Legacy alias: `memories.no_memories_if_mcp_or_web_search`.",
+    "es": "Si es `true`, los hilos que usan contexto externo, como llamadas a herramientas MCP, búsqueda web o búsqueda de herramientas, se excluyen de la generación de memorias. Por defecto es `false`. Alias heredado: `memories.no_memories_if_mcp_or_web_search`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.dual_write": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "With `v1` selected, set to `true` to generate both stores while continuing to read `v1`. With `v2` selected, Codex writes only `v2`.",
+    "es": "Con `v1` seleccionado, ponlo en `true` para generar ambos almacenes y seguir leyendo `v1`. Con `v2` seleccionado, Codex escribe solo `v2`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.extract_model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional model override for per-thread memory extraction.",
+    "es": "Modelo opcional que reemplaza al usado para extraer memorias por hilo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.generate_memories": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "When `false`, newly created threads are not stored as memory-generation inputs. Defaults to `true`.",
+    "es": "Si es `false`, los hilos recién creados no se guardan como entradas para generar memorias. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.max_raw_memories_for_consolidation": {
+    "custom": true,
+    "default": "256",
+    "deprecated": false,
+    "en": "Maximum recent raw memories retained for global consolidation. Defaults to `256` and is capped at `4096`.",
+    "es": "Máximo de memorias en bruto recientes que se conservan para la consolidación global. Por defecto es `256` y se limita a `4096`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.max_rollout_age_days": {
+    "custom": true,
+    "default": "30",
+    "deprecated": false,
+    "en": "Maximum age of threads considered for memory generation. Defaults to `30` and is clamped to `0`-`90`.",
+    "es": "Antigüedad máxima de los hilos considerados para generar memorias. Por defecto es `30` y se ajusta al rango `0`-`90`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.max_rollouts_per_startup": {
+    "custom": true,
+    "default": "16",
+    "deprecated": false,
+    "en": "Maximum rollout candidates processed per startup pass. Defaults to `16` and is capped at `128`.",
+    "es": "Máximo de candidatos de rollout que se procesan en cada pasada de inicio. Por defecto es `16` y se limita a `128`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.max_unused_days": {
+    "custom": true,
+    "default": "30",
+    "deprecated": false,
+    "en": "Maximum days since a memory was last used before it becomes ineligible for consolidation. Defaults to `30` and is clamped to `0`-`365`.",
+    "es": "Máximo de días desde el último uso de una memoria antes de que deje de ser elegible para consolidación. Por defecto es `30` y se ajusta al rango `0`-`365`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.min_rate_limit_remaining_percent": {
+    "custom": true,
+    "default": "25",
+    "deprecated": false,
+    "en": "Minimum remaining percentage required in Codex rate-limit windows before memory generation starts. Defaults to `25` and is clamped to `0`-`100`.",
+    "es": "Porcentaje mínimo restante requerido en las ventanas de límite de uso de Codex antes de iniciar la generación de memorias. Por defecto es `25` y se ajusta al rango `0`-`100`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.min_rollout_idle_hours": {
+    "custom": true,
+    "default": "6",
+    "deprecated": false,
+    "en": "Minimum idle time before a thread is considered for memory generation. Defaults to `6` and is clamped to `1`-`48`.",
+    "es": "Tiempo mínimo de inactividad antes de que un hilo se considere para generar memorias. Por defecto es `6` y se ajusta al rango `1`-`48`.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.use_memories": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "When `false`, Codex skips injecting existing memories into future sessions. Defaults to `true`.",
+    "es": "Si es `false`, Codex no inyecta las memorias existentes en sesiones futuras. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "memories.version": {
+    "custom": false,
+    "default": "\"v2\"",
+    "deprecated": false,
+    "en": "Select the local memory store. With memories enabled, Codex defaults to `v2` for a fresh home and `v1` if `$CODEX_HOME/memories/` exists. Explicitly setting `dual_write = false` keeps the default at `v1`.",
+    "es": "Selecciona el almacén local de memorias. Con memories habilitado, Codex usa `v2` por defecto en un home nuevo y `v1` si existe `$CODEX_HOME/memories/`. Definir explícitamente `dual_write = false` mantiene `v1` como valor por defecto.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "v1",
+      "v2"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "memories"
+  },
+  "model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Model to use (e.g., `gpt-6.1-sol`).",
+    "es": "Modelo que se usa (p. ej., `gpt-6.1-sol`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_auto_compact_token_limit": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Token threshold that triggers automatic history compaction (unset uses model defaults).",
+    "es": "Umbral de tokens que activa la compactación automática del historial (si no se define, se usan los valores del modelo).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_auto_compact_token_limit_scope": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Controls whether the auto-compaction threshold counts the full active context (`total`, the default) or only growth after the carried compaction-window prefix (`body_after_prefix`).",
+    "es": "Controla si el umbral de compactación automática cuenta todo el contexto activo (`total`, el valor por defecto) o solo el crecimiento posterior al prefijo de la ventana de compactación heredada (`body_after_prefix`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "total",
+      "body_after_prefix"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_catalog_json": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional path to a JSON model catalog loaded on startup. A selected `$CODEX_HOME/profile-name.config.toml` profile file can override this per profile.",
+    "es": "Ruta opcional a un catálogo de modelos en JSON que se carga al iniciar. Un archivo de perfil `$CODEX_HOME/profile-name.config.toml` seleccionado puede reemplazarla por perfil.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_context_window": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Context window tokens available to the active model.",
+    "es": "Tokens de ventana de contexto disponibles para el modelo activo.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_instructions_file": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Replacement for built-in instructions instead of `AGENTS.md`.",
+    "es": "Reemplaza las instrucciones integradas en lugar de usar `AGENTS.md`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_post_turn_compact_threshold_percent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Compact history after a final response when active context reaches this percentage of the usable context window. Omit or set to `0` to disable turn-end compaction. The usual auto-compaction limits still apply.",
+    "es": "Compacta el historial tras una respuesta final cuando el contexto activo alcanza este porcentaje de la ventana de contexto utilizable. Omítelo o usa `0` para desactivar la compactación al final del turno. Siguen aplicando los límites habituales de compactación automática.",
+    "kind": "integer",
+    "max": 100.0,
+    "min": 0.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_provider": {
+    "custom": true,
+    "default": "\"openai\"",
+    "deprecated": false,
+    "en": "Provider id from `model_providers` (default: `openai`).",
+    "es": "ID de proveedor de `model_providers` (por defecto: `openai`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "General"
+  },
+  "model_providers.<id>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom provider definition. Built-in provider IDs (`openai`, `ollama`, and `lmstudio`) are reserved and cannot be overridden.",
+    "es": "Definición de un proveedor personalizado. Los IDs de proveedores integrados (`openai`, `ollama` y `lmstudio`) están reservados y no pueden reemplazarse.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command-backed bearer token configuration for a custom provider. Do not combine with `env_key`, `experimental_bearer_token`, or `requires_openai_auth`.",
+    "es": "Configuración de bearer token basada en comando para un proveedor personalizado. No se combina con `env_key`, `experimental_bearer_token` ni `requires_openai_auth`.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth.args": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Arguments passed to the token command.",
+    "es": "Argumentos que se pasan al comando del token.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth.command": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command to run when Codex needs a bearer token. The command must print the token to stdout.",
+    "es": "Comando que se ejecuta cuando Codex necesita un bearer token. Debe imprimir el token en stdout.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth.cwd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Working directory for the token command.",
+    "es": "Directorio de trabajo del comando del token.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth.refresh_interval_ms": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "How often Codex proactively refreshes the token in milliseconds (default: 300000). Set to `0` to refresh only after an authentication retry.",
+    "es": "Cada cuánto renueva Codex el token de forma proactiva, en milisegundos (por defecto: 300000). Usa `0` para renovarlo solo tras un reintento de autenticación.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.auth.timeout_ms": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum token command runtime in milliseconds (default: 5000).",
+    "es": "Tiempo máximo de ejecución del comando del token en milisegundos (por defecto: 5000).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.base_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "API base URL for the model provider.",
+    "es": "URL base de la API del proveedor de modelos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.capabilities.external_web_access": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether the provider's hosted web search can access the live web. Omit to keep provider defaults; model and turn settings may restrict access further.",
+    "es": "Indica si la búsqueda web alojada del proveedor puede acceder a la web en vivo. Omítelo para conservar los valores por defecto del proveedor; los ajustes del modelo y del turno pueden restringir aún más el acceso.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.capabilities.remote_compaction": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Provider compaction protocol. `unsupported` uses local compaction; `v2` sends compaction triggers through Responses. Omit to keep provider defaults; model and turn settings may restrict support further.",
+    "es": "Protocolo de compactación del proveedor. `unsupported` usa compactación local; `v2` envía los disparadores de compactación mediante Responses. Omítelo para conservar los valores por defecto del proveedor; los ajustes del modelo y del turno pueden restringir aún más la compatibilidad.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "unsupported",
+      "v2"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.env_http_headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "HTTP headers populated from environment variables when present.",
+    "es": "Encabezados HTTP llenados desde variables de entorno cuando están presentes.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.env_key": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variable supplying the provider API key.",
+    "es": "Variable de entorno que aporta la clave de API del proveedor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.env_key_instructions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional setup guidance for the provider API key.",
+    "es": "Guía opcional de configuración de la clave de API del proveedor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.experimental_bearer_token": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Direct bearer token for the provider (discouraged; use `env_key`).",
+    "es": "Bearer token directo para el proveedor (no recomendado; usa `env_key`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.http_headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Static HTTP headers added to provider requests.",
+    "es": "Encabezados HTTP estáticos que se agregan a las solicitudes al proveedor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.model_catalog_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Full URL for a Codex-native model catalog. Omit to keep the provider's default model discovery.",
+    "es": "URL completa de un catálogo de modelos nativo de Codex. Omítela para conservar el descubrimiento de modelos por defecto del proveedor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.name": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Display name for a custom model provider.",
+    "es": "Nombre para mostrar de un proveedor de modelos personalizado.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.query_params": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Extra query parameters appended to provider requests.",
+    "es": "Parámetros de consulta adicionales que se anexan a las solicitudes al proveedor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.request_max_retries": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Retry count for HTTP requests to the provider (default: 4).",
+    "es": "Número de reintentos de las solicitudes HTTP al proveedor (por defecto: 4).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.requires_openai_auth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The provider uses OpenAI authentication (defaults to false).",
+    "es": "El proveedor usa la autenticación de OpenAI (por defecto es false).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.stream_idle_timeout_ms": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Idle timeout for SSE streams in milliseconds (default: 300000).",
+    "es": "Tiempo de espera por inactividad de los streams SSE en milisegundos (por defecto: 300000).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.stream_max_retries": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Retry count for SSE streaming interruptions (default: 5).",
+    "es": "Número de reintentos ante interrupciones del streaming SSE (por defecto: 5).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.supports_standalone_web_search": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Advertise support for a compatible standalone web search endpoint (default: false). Standalone search remains under development and off by default; provider compatibility alone doesn't enable it.",
+    "es": "Anuncia compatibilidad con un endpoint de búsqueda web independiente compatible (por defecto: false). La búsqueda independiente sigue en desarrollo y desactivada por defecto; la compatibilidad del proveedor por sí sola no la habilita.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.supports_websockets": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether that provider supports the Responses API WebSocket transport.",
+    "es": "Indica si ese proveedor admite el transporte WebSocket de la API Responses.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.<id>.wire_api": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Protocol used by the provider. `responses` is the only supported value, and it is the default when omitted.",
+    "es": "Protocolo que usa el proveedor. `responses` es el único valor admitido y es el predeterminado si se omite.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "responses"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.amazon-bedrock.aws.profile": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "AWS profile name used by the built-in `amazon-bedrock` provider.",
+    "es": "Nombre del perfil de AWS que usa el proveedor integrado `amazon-bedrock`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.amazon-bedrock.aws.region": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "AWS region used by the built-in `amazon-bedrock` provider.",
+    "es": "Región de AWS que usa el proveedor integrado `amazon-bedrock`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.gcp.base_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Override the built-in Google Cloud Vertex AI endpoint. Otherwise, Codex builds it from the project ID and location.",
+    "es": "Reemplaza el endpoint integrado de Google Cloud Vertex AI. De lo contrario, Codex lo construye a partir del ID de proyecto y la ubicación.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.gcp.credential_file": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Path to a Google Application Default Credentials (ADC) file. Overrides `GOOGLE_APPLICATION_CREDENTIALS` only for the provider’s authentication command.",
+    "es": "Ruta a un archivo de Google Application Default Credentials (ADC). Reemplaza a `GOOGLE_APPLICATION_CREDENTIALS` solo para el comando de autenticación del proveedor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.gcp.location": {
+    "custom": true,
+    "default": "\"global\"",
+    "deprecated": false,
+    "en": "Google Cloud location for the Vertex AI endpoint. Takes precedence over `GOOGLE_CLOUD_LOCATION`. Defaults to `global`.",
+    "es": "Ubicación de Google Cloud para el endpoint de Vertex AI. Tiene prioridad sobre `GOOGLE_CLOUD_LOCATION`. Por defecto es `global`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_providers.gcp.project_id": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Google Cloud project ID for the Vertex AI endpoint. Takes precedence over `GOOGLE_CLOUD_PROJECT`.",
+    "es": "ID del proyecto de Google Cloud para el endpoint de Vertex AI. Tiene prioridad sobre `GOOGLE_CLOUD_PROJECT`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "model_providers"
+  },
+  "model_reasoning_effort": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Reasoning effort advertised by the selected model, such as `low`, `medium`, `high`, `xhigh`, `max`, or `ultra`. Available levels depend on the model and client.",
+    "es": "Esfuerzo de razonamiento que anuncia el modelo seleccionado, como `low`, `medium`, `high`, `xhigh`, `max` o `ultra`. Los niveles disponibles dependen del modelo y del cliente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_reasoning_summary": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Select reasoning summary detail or disable summaries entirely.",
+    "es": "Selecciona el nivel de detalle de los resúmenes de razonamiento o los desactiva por completo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "concise",
+      "detailed",
+      "none"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "model_verbosity": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional GPT-5 Responses API verbosity override; when unset, the selected model/preset default is used.",
+    "es": "Reemplazo opcional de la verbosidad de la API Responses de GPT-5; si no se define, se usa el valor por defecto del modelo o preajuste seleccionado.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "notice.hide_full_access_warning": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track acknowledgement of the full access warning prompt.",
+    "es": "Registra la aceptación del aviso de advertencia de acceso total.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notice.hide_gpt-5.1-codex-max_migration_prompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track acknowledgement of the gpt-5.1-codex-max migration prompt.",
+    "es": "Registra la aceptación del aviso de migración a gpt-5.1-codex-max.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notice.hide_gpt5_1_migration_prompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track acknowledgement of the GPT-5.1 migration prompt.",
+    "es": "Registra la aceptación del aviso de migración a GPT-5.1.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notice.hide_rate_limit_model_nudge": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track opt-out of the rate limit model switch reminder.",
+    "es": "Registra la desactivación del recordatorio para cambiar de modelo por el límite de uso.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notice.hide_world_writable_warning": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track acknowledgement of the Windows world-writable directories warning.",
+    "es": "Registra la aceptación de la advertencia sobre directorios de Windows con escritura para todos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notice.model_migrations": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Track acknowledged model migrations as old->new mappings.",
+    "es": "Registra las migraciones de modelo aceptadas como asignaciones antiguo->nuevo.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "notice"
+  },
+  "notify": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command invoked for notifications; receives a JSON payload from Codex.",
+    "es": "Comando que se invoca para las notificaciones; recibe un payload JSON de Codex.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "General"
+  },
+  "openai_base_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Base URL override for the built-in `openai` model provider.",
+    "es": "URL base que reemplaza la del proveedor de modelos integrado `openai`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "General"
+  },
+  "oss_provider": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default local provider used when running with `--oss` (defaults to prompting if unset).",
+    "es": "Proveedor local por defecto al usar `--oss` (si no se define, se pregunta).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "lmstudio",
+      "ollama"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "otel.environment": {
+    "custom": true,
+    "default": "\"dev\"",
+    "deprecated": false,
+    "en": "Environment tag applied to emitted OpenTelemetry events (default: `dev`).",
+    "es": "Etiqueta de entorno que se aplica a los eventos de OpenTelemetry emitidos (por defecto: `dev`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Select the OpenTelemetry exporter and provide any endpoint metadata.",
+    "es": "Selecciona el exportador de OpenTelemetry y proporciona los metadatos del endpoint.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "none",
+      "otlp-http",
+      "otlp-grpc"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.endpoint": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Exporter endpoint for OTEL logs.",
+    "es": "Endpoint del exportador para los logs de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Static headers included with OTEL exporter requests.",
+    "es": "Encabezados estáticos incluidos en las solicitudes del exportador de OTEL.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.protocol": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Protocol used by the OTLP/HTTP exporter.",
+    "es": "Protocolo que usa el exportador OTLP/HTTP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "binary",
+      "json"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.tls.ca-certificate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "CA certificate path for OTEL exporter TLS.",
+    "es": "Ruta del certificado de CA para el TLS del exportador de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.tls.client-certificate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Client certificate path for OTEL exporter TLS.",
+    "es": "Ruta del certificado de cliente para el TLS del exportador de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.exporter.<id>.tls.client-private-key": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Client private key path for OTEL exporter TLS.",
+    "es": "Ruta de la clave privada de cliente para el TLS del exportador de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.log_agent_responses": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Export final response text from the main agent and spawned subagents to the configured OTLP log exporter. Defaults to `false`. Response text can contain sensitive data and is capped at 64 KiB per response.",
+    "es": "Exporta el texto de la respuesta final del agente principal y de los subagentes generados al exportador de logs OTLP configurado. Por defecto es `false`. El texto de la respuesta puede contener datos sensibles y se limita a 64 KiB por respuesta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.log_guardian_assessments": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Export completed automatic approval reviews to the configured OTLP log exporter. Defaults to `false`. Review rationales can contain sensitive data and are capped at 64 KiB each.",
+    "es": "Exporta las revisiones de aprobación automática completadas al exportador de logs OTLP configurado. Por defecto es `false`. Las justificaciones de las revisiones pueden contener datos sensibles y se limitan a 64 KiB cada una.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.log_user_prompt": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Opt in to exporting raw user prompts with OpenTelemetry logs.",
+    "es": "Activa la exportación de los prompts de usuario sin procesar con los logs de OpenTelemetry.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.metrics_exporter": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Select the OpenTelemetry metrics exporter. The default, `statsig`, follows `analytics.enabled`. Explicit OTLP exporters work independently of that setting. Set to `none` to disable metrics export.",
+    "es": "Selecciona el exportador de métricas de OpenTelemetry. El valor por defecto, `statsig`, sigue a `analytics.enabled`. Los exportadores OTLP explícitos funcionan de forma independiente de ese ajuste. Usa `none` para desactivar la exportación de métricas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "none",
+      "statsig",
+      "otlp-http",
+      "otlp-grpc"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.span_attributes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Add string attributes to every exported trace span.",
+    "es": "Agrega atributos de cadena a cada span de traza exportado.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.tool_result.max_bytes": {
+    "custom": true,
+    "default": "2048",
+    "deprecated": false,
+    "en": "Maximum number of UTF-8 bytes from each tool result to include in logs, before the truncation notice. Defaults to `2048`. This setting affects only logged output.",
+    "es": "Número máximo de bytes UTF-8 de cada resultado de herramienta que se incluye en los logs, antes del aviso de truncamiento. Por defecto es `2048`. Este ajuste solo afecta a la salida registrada.",
+    "kind": "integer",
+    "max": null,
+    "min": 0.0,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Select the OpenTelemetry trace exporter and provide any endpoint metadata.",
+    "es": "Selecciona el exportador de trazas de OpenTelemetry y proporciona los metadatos del endpoint.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "none",
+      "otlp-http",
+      "otlp-grpc"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.endpoint": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Trace exporter endpoint for OTEL logs.",
+    "es": "Endpoint del exportador de trazas para los logs de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Static headers included with OTEL trace exporter requests.",
+    "es": "Encabezados estáticos incluidos en las solicitudes del exportador de trazas de OTEL.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.protocol": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Protocol used by the OTLP/HTTP trace exporter.",
+    "es": "Protocolo que usa el exportador de trazas OTLP/HTTP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "binary",
+      "json"
+    ],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.tls.ca-certificate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "CA certificate path for OTEL trace exporter TLS.",
+    "es": "Ruta del certificado de CA para el TLS del exportador de trazas de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.tls.client-certificate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Client certificate path for OTEL trace exporter TLS.",
+    "es": "Ruta del certificado de cliente para el TLS del exportador de trazas de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.trace_exporter.<id>.tls.client-private-key": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Client private key path for OTEL trace exporter TLS.",
+    "es": "Ruta de la clave privada de cliente para el TLS del exportador de trazas de OTEL.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "otel.tracestate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set fields on W3C tracestate members when propagating trace context. Each member maps field names to string values.",
+    "es": "Define campos en los miembros de W3C tracestate al propagar el contexto de la traza. Cada miembro asigna nombres de campo a valores de cadena.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user"
+    ],
+    "topic": "otel"
+  },
+  "permissions.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Human-readable description for this named profile. A profile does not inherit its parent's description through `extends`.",
+    "es": "Descripción legible de este perfil con nombre. Un perfil no hereda la descripción de su padre mediante `extends`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.extends": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional parent profile applied before this named profile. Set it to another named profile, `:read-only`, or `:workspace`; `:danger-full-access`, undefined parents, and cycles are rejected.",
+    "es": "Perfil padre opcional que se aplica antes de este perfil con nombre. Indica otro perfil con nombre, `:read-only` o `:workspace`; `:danger-full-access`, los padres no definidos y los ciclos se rechazan.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.filesystem": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Named filesystem permission profile. Each key is an absolute path or special token such as `:minimal` or `:workspace_roots`.",
+    "es": "Perfil de permisos de sistema de archivos con nombre. Cada clave es una ruta absoluta o un token especial como `:minimal` o `:workspace_roots`.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.filesystem.glob_scan_max_depth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum depth for expanding deny-read glob patterns on platforms that snapshot matches before sandbox startup. Must be at least `1` when set.",
+    "es": "Profundidad máxima para expandir patrones glob de denegación de lectura en plataformas que toman una instantánea de las coincidencias antes de iniciar el sandbox. Debe ser al menos `1` si se define.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.allow_local_binding": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Permit broader local/private-network access through sandboxed networking. Exact local IP literal or `localhost` allow rules can still permit specific local targets when this stays `false`.",
+    "es": "Permite un acceso más amplio a redes locales o privadas mediante la red en sandbox. Si se mantiene en `false`, las reglas `allow` con una IP local literal exacta o `localhost` aún pueden permitir destinos locales específicos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.allow_upstream_proxy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow sandboxed networking to chain through another upstream proxy.",
+    "es": "Permite que la red en sandbox se encadene a través de otro proxy upstream.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.dangerously_allow_all_unix_sockets": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow arbitrary Unix socket destinations instead of the default restricted set. Use only in tightly controlled environments.",
+    "es": "Permite destinos de socket Unix arbitrarios en lugar del conjunto restringido por defecto. Úsalo solo en entornos estrictamente controlados.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.dangerously_allow_non_loopback_proxy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Permit non-loopback bind addresses for sandboxed networking listeners. Enabling it can expose listeners beyond localhost.",
+    "es": "Permite direcciones de enlace que no son loopback para los listeners de la red en sandbox. Habilitarlo puede exponer los listeners más allá de localhost.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.domains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Domain rules for sandboxed commands. Enforced only when `features.network_proxy` or enabled administrator-managed networking requirements activate the proxy. Supports exact hosts, `*.example.com`, `**.example.com`, and global `*` allow rules; `deny` wins. Does not restrict web search, apps, or MCP servers.",
+    "es": "Reglas de dominio para comandos en sandbox. Solo se aplican cuando `features.network_proxy` o requisitos de red administrados y habilitados activan el proxy. Admite hosts exactos, `*.example.com`, `**.example.com` y reglas `allow` globales con `*`; `deny` prevalece. No restringe la búsqueda web, las apps ni los servidores MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.domains.<pattern>": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow or deny an exact host or scoped wildcard pattern such as `*.example.com` or `**.example.com`.",
+    "es": "Permite o deniega un host exacto o un patrón con comodín acotado, como `*.example.com` o `**.example.com`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "allow",
+      "deny"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.enable_socks5": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Expose SOCKS5 support when this permissions profile enables sandboxed networking.",
+    "es": "Expone compatibilidad con SOCKS5 cuando este perfil de permisos habilita la red en sandbox.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.enable_socks5_udp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow UDP over the SOCKS5 listener when enabled.",
+    "es": "Permite UDP sobre el listener SOCKS5 cuando está habilitado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable network access for commands in this permission profile. This does not start the network proxy. Without `features.network_proxy` or enabled administrator-managed networking requirements, command network access is direct and profile domain rules are not enforced.",
+    "es": "Habilita el acceso a la red para los comandos de este perfil de permisos. No inicia el proxy de red. Sin `features.network_proxy` ni requisitos de red administrados y habilitados, el acceso a la red de los comandos es directo y las reglas de dominio del perfil no se aplican.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Network proxy mode used for subprocess traffic.",
+    "es": "Modo del proxy de red que se usa para el tráfico de subprocesos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "limited",
+      "full"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.proxy_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "HTTP listener URL used when this permissions profile enables sandboxed networking.",
+    "es": "URL del listener HTTP que se usa cuando este perfil de permisos habilita la red en sandbox.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.socks_url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "SOCKS5 proxy endpoint used by this permissions profile.",
+    "es": "Endpoint del proxy SOCKS5 que usa este perfil de permisos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.unix_sockets": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Unix socket allowlist overrides for sandboxed networking. Use socket paths as keys; `allow` adds a path, and `deny` rejects it.",
+    "es": "Reemplazos de la lista de sockets Unix permitidos para la red en sandbox. Usa rutas de socket como claves; `allow` agrega una ruta y `deny` la rechaza.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.network.unix_sockets.<path>": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Add an absolute Unix socket path to the effective allowlist with `allow`, or reject it with `deny`. Denied entries are omitted from the effective allowlist.",
+    "es": "Agrega con `allow` una ruta absoluta de socket Unix a la lista de permitidos efectiva, o la rechaza con `deny`. Las entradas denegadas se omiten de la lista de permitidos efectiva.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "allow",
+      "deny"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.workspace_roots": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Profile-defined workspace roots that receive `:workspace_roots` filesystem rules alongside the session's runtime workspace roots.",
+    "es": "Raíces de workspace definidas por el perfil que reciben reglas de sistema de archivos `:workspace_roots` junto con las raíces de workspace de ejecución de la sesión.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "permissions.<name>.workspace_roots.<path>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Opt a path into the profile's workspace root set when `true`. Disabled entries remain inactive.",
+    "es": "Si es `true`, incluye una ruta en el conjunto de raíces de workspace del perfil. Las entradas deshabilitadas permanecen inactivas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "permissions"
+  },
+  "personality": {
+    "custom": false,
+    "default": null,
+    "deprecated": true,
+    "en": "Deprecated compatibility setting. `friendly` and `pragmatic` no longer select a style. `none` omits the built-in Personality section from model instructions; explicit instruction overrides are unchanged.",
+    "es": "Ajuste de compatibilidad obsoleto. `friendly` y `pragmatic` ya no seleccionan un estilo. `none` omite la sección de Personality integrada de las instrucciones del modelo; los reemplazos explícitos de instrucciones no cambian.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "none",
+      "friendly",
+      "pragmatic"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "plan_mode_reasoning_effort": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Plan-mode-specific reasoning override using a level supported by the selected model. When unset, Plan mode uses its built-in preset default.",
+    "es": "Reemplazo del razonamiento específico del modo Plan, con un nivel compatible con el modelo seleccionado. Si no se define, el modo Plan usa el valor por defecto de su preajuste integrado.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "plugins.<plugin>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable a local-marketplace plugin using a `plugin-name@marketplace-name` key. Read from the effective merged config; trusted-project settings can override user, cloud-managed, and system defaults. Marketplace refresh can install or refresh configured plugins even when disabled. This does not override workspace-managed enabled states.",
+    "es": "Activa o desactiva un plugin de un marketplace local con una clave `plugin-name@marketplace-name`. Se lee de la configuración combinada efectiva; los ajustes de proyectos de confianza pueden reemplazar los valores por defecto del usuario, de la nube administrada y del sistema. La actualización del marketplace puede instalar o actualizar plugins configurados aunque estén desactivados. No reemplaza los estados de activación administrados por el workspace.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins.<plugin>.mcp_servers.<server>.default_tools_approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Default approval behavior for tools on a plugin-provided MCP server.",
+    "es": "Comportamiento de aprobación por defecto de las herramientas de un servidor MCP proporcionado por un plugin.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins.<plugin>.mcp_servers.<server>.disabled_tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Deny list applied after `enabled_tools` for a plugin-provided MCP server.",
+    "es": "Lista de denegadas que se aplica después de `enabled_tools` para un servidor MCP proporcionado por un plugin.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins.<plugin>.mcp_servers.<server>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable an MCP server bundled by an installed plugin without changing the plugin manifest.",
+    "es": "Activa o desactiva un servidor MCP incluido en un plugin instalado sin modificar el manifiesto del plugin.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins.<plugin>.mcp_servers.<server>.enabled_tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow list of tools exposed from a plugin-provided MCP server.",
+    "es": "Lista de permitidas de herramientas expuestas por un servidor MCP proporcionado por un plugin.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins.<plugin>.mcp_servers.<server>.tools.<tool>.approval_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Per-tool approval behavior override for a plugin-provided MCP tool.",
+    "es": "Reemplazo del comportamiento de aprobación para una herramienta MCP proporcionada por un plugin.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "prompt",
+      "writes",
+      "approve"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "plugins._default.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Set the default activation state for installed plugins. An explicit `plugins.<plugin>.enabled` overrides this default for plugins their source enables. Omit the table to keep the source or account activation settings.",
+    "es": "Define el estado de activación por defecto de los plugins instalados. Un `plugins.<plugin>.enabled` explícito reemplaza este valor para los plugins que su origen habilita. Omite la tabla para conservar los ajustes de activación del origen o de la cuenta.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "plugins"
+  },
+  "project_doc_fallback_filenames": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional filenames to try when `AGENTS.md` is missing.",
+    "es": "Nombres de archivo adicionales que se intentan cuando falta `AGENTS.md`.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "project_doc_max_bytes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum bytes read from `AGENTS.md` when building project instructions.",
+    "es": "Máximo de bytes que se leen de `AGENTS.md` al construir las instrucciones del proyecto.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "project_root_markers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of project root marker filenames; used when searching parent directories for the project root.",
+    "es": "Lista de nombres de archivo marcadores de la raíz del proyecto; se usa al buscar la raíz del proyecto en los directorios padre.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "review_model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional model override used by `/review` (defaults to the current session model).",
+    "es": "Modelo opcional que reemplaza al de `/review` (por defecto, el modelo de la sesión actual).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "sandbox_mode": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Sandbox policy for filesystem and network access during command execution.",
+    "es": "Política de sandbox para el acceso al sistema de archivos y a la red durante la ejecución de comandos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "read-only",
+      "workspace-write",
+      "danger-full-access"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "sandbox_workspace_write.exclude_slash_tmp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Exclude `/tmp` from writable roots in workspace-write mode.",
+    "es": "Excluye `/tmp` de las raíces escribibles en modo workspace-write.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "sandbox_workspace_write"
+  },
+  "sandbox_workspace_write.exclude_tmpdir_env_var": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Exclude `$TMPDIR` from writable roots in workspace-write mode.",
+    "es": "Excluye `$TMPDIR` de las raíces escribibles en modo workspace-write.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "sandbox_workspace_write"
+  },
+  "sandbox_workspace_write.network_access": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow outbound network access inside the workspace-write sandbox.",
+    "es": "Permite acceso de red saliente dentro del sandbox workspace-write.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "sandbox_workspace_write"
+  },
+  "service_tier": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Preferred service tier for new turns. Use `fast` or another tier advertised by the active model; `fast` maps to the request value `priority`.",
+    "es": "Nivel de servicio preferido para los nuevos turnos. Usa `fast` u otro nivel que anuncie el modelo activo; `fast` se traduce al valor de solicitud `priority`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "shell_environment_policy.exclude": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Legacy environment-variable exclusion patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
+    "es": "Patrones heredados de exclusión de variables de entorno. Usa `shell_environment_policy.filters` en configuraciones nuevas; no combines ambas formas en la misma capa.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.experimental_use_profile": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Use the user shell profile when spawning subprocesses.",
+    "es": "Usa el perfil del shell del usuario al generar subprocesos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.filters": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Canonical case-insensitive environment-variable pattern filters. Include entries create an allowlist and can't restore excluded values. Explicit `set` values apply after exclusions. Don't combine filters with legacy `exclude` or `include_only` arrays in the same layer.",
+    "es": "Filtros canónicos de patrones de variables de entorno, sin distinguir mayúsculas. Las entradas include crean una lista de permitidas y no pueden restaurar valores excluidos. Los valores explícitos de `set` se aplican después de las exclusiones. No combines filtros con los arreglos heredados `exclude` o `include_only` en la misma capa.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.ignore_default_excludes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Keep variables containing KEY, SECRET, or TOKEN before other filters run (default: true). Set to false to apply automatic secret-name exclusions.",
+    "es": "Conserva las variables que contienen KEY, SECRET o TOKEN antes de aplicar los demás filtros (por defecto: true). Ponlo en false para aplicar las exclusiones automáticas por nombre de secreto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.include_only": {
+    "custom": true,
+    "default": null,
+    "deprecated": true,
+    "en": "Legacy allowlist of environment-variable patterns. Use `shell_environment_policy.filters` for new configuration; don't combine both forms in the same layer.",
+    "es": "Lista de permitidas heredada de patrones de variables de entorno. Usa `shell_environment_policy.filters` en configuraciones nuevas; no combines ambas formas en la misma capa.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.inherit": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Baseline environment inheritance when spawning subprocesses.",
+    "es": "Herencia base del entorno al generar subprocesos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "all",
+      "core",
+      "none"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "shell_environment_policy.set": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Explicit environment values injected after exclusions; include filters can still remove them.",
+    "es": "Valores de entorno explícitos que se inyectan después de las exclusiones; los filtros include aún pueden eliminarlos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "shell_environment_policy"
+  },
+  "show_raw_agent_reasoning": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Surface raw reasoning content when the active model emits it.",
+    "es": "Muestra el contenido de razonamiento sin procesar cuando el modelo activo lo emite.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "skills.bundled.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Load the system skills bundled with Codex. Defaults to `true`. Set to `false` in a trusted project configuration to disable bundled skills for that project.",
+    "es": "Carga los skills del sistema incluidos con Codex. Por defecto es `true`. Ponlo en `false` en la configuración de un proyecto de confianza para desactivar los skills incluidos en ese proyecto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.config": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable skills by name or path. If several rules match a skill, the last one wins.",
+    "es": "Activa o desactiva skills por nombre o ruta. Si varias reglas coinciden con un skill, gana la última.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.config.<index>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable or disable the referenced skill.",
+    "es": "Activa o desactiva el skill indicado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.config.<index>.name": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Match every skill with this exact name. Specify either `name` or `path` for each entry.",
+    "es": "Coincide con todos los skills con este nombre exacto. Especifica `name` o `path` en cada entrada.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.config.<index>.path": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Absolute path to one `SKILL.md` file.",
+    "es": "Ruta absoluta a un archivo `SKILL.md`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.include_instructions": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Include the automatic skills instructions in the model context. Defaults to `true`.",
+    "es": "Incluye en el contexto del modelo las instrucciones automáticas de skills. Por defecto es `true`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "skills.max_context_tokens": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Token budget for the available-skills catalog. Defaults to 2% of the model's context window. Explicit values are capped at `10000` tokens.",
+    "es": "Presupuesto de tokens para el catálogo de skills disponibles. Por defecto es el 2 % de la ventana de contexto del modelo. Los valores explícitos se limitan a `10000` tokens.",
+    "kind": "integer",
+    "max": null,
+    "min": 1.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "skills"
+  },
+  "sqlite_home": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Directory where Codex stores the SQLite-backed state DB used by agent jobs and other resumable runtime state.",
+    "es": "Directorio donde Codex guarda la base de datos de estado SQLite que usan los trabajos de agentes y otro estado de ejecución reanudable.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "suppress_unstable_features_warning": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Suppress the warning that appears when under-development feature flags are enabled.",
+    "es": "Suprime la advertencia que aparece al habilitar indicadores de funciones en desarrollo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "thread_unload_delay_secs": {
+    "custom": true,
+    "default": "60",
+    "deprecated": false,
+    "en": "Seconds the app server waits before unloading an inactive thread with no subscribers. Set to `0` to unload it as soon as it meets both conditions. Defaults to `60` seconds.",
+    "es": "Segundos que el servidor de la app espera antes de descargar un hilo inactivo sin suscriptores. Usa `0` para descargarlo en cuanto cumpla ambas condiciones. Por defecto es `60` segundos.",
+    "kind": "integer",
+    "max": null,
+    "min": 0.0,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "tool_output_token_limit": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Token budget for storing individual tool/function outputs in history.",
+    "es": "Presupuesto de tokens para guardar en el historial la salida de cada herramienta o función.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "tui": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "TUI-specific options such as enabling inline desktop notifications.",
+    "es": "Opciones específicas de la TUI, como habilitar notificaciones de escritorio en línea.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "General"
+  },
+  "tui.alternate_screen": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Control alternate screen usage for the TUI (default: auto; auto skips it in Zellij to preserve scrollback).",
+    "es": "Controla el uso de la pantalla alternativa en la TUI (por defecto: auto; auto la omite en Zellij para conservar el scrollback).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "always",
+      "never"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.animations": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable terminal animations (welcome screen, shimmer, spinner) (default: true).",
+    "es": "Habilita las animaciones de la terminal (pantalla de bienvenida, shimmer, spinner) (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.auto_recap": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Generate automatic conversation recaps while the terminal is unfocused (default: true). Set to `false` to disable automatic recaps; `/recap` remains available.",
+    "es": "Genera resúmenes automáticos de la conversación mientras la terminal no tiene el foco (por defecto: true). Usa `false` para desactivarlos; `/recap` sigue disponible.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.disable_paste_burst": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Disable burst-paste detection in the TUI (default: false). Takes precedence over the legacy top-level `disable_paste_burst` setting.",
+    "es": "Desactiva la detección de pegado en ráfaga en la TUI (por defecto: false). Tiene prioridad sobre el ajuste heredado `disable_paste_burst` de nivel superior.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.keymap.<context>.<action>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Keyboard shortcut binding for a TUI action. Supported contexts include `global`, `chat`, `composer`, `editor`, `vim_normal`, `vim_operator`, `vim_text_object`, `pager`, `list`, and `approval`. Selected composer actions fall back to matching `tui.keymap.global` bindings; context-specific bindings take precedence when supported.",
+    "es": "Atajo de teclado asignado a una acción de la TUI. Los contextos compatibles incluyen `global`, `chat`, `composer`, `editor`, `vim_normal`, `vim_operator`, `vim_text_object`, `pager`, `list` y `approval`. Algunas acciones del compositor recurren a los atajos `tui.keymap.global` equivalentes; los atajos específicos del contexto tienen prioridad cuando se admiten.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.model_availability_nux.<model>": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Internal startup-tooltip state keyed by model slug.",
+    "es": "Estado interno de tooltips de inicio, indexado por slug de modelo.",
+    "kind": "integer",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.notification_condition": {
+    "custom": false,
+    "default": "\"unfocused\"",
+    "deprecated": false,
+    "en": "Control whether TUI notifications fire only when the terminal is unfocused or regardless of focus. Defaults to `unfocused`.",
+    "es": "Controla si las notificaciones de la TUI se disparan solo cuando la terminal no tiene el foco o sin importar el foco. Por defecto es `unfocused`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "unfocused",
+      "always"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.notification_method": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Notification method for terminal notifications (default: auto).",
+    "es": "Método de notificación para las notificaciones de la terminal (por defecto: auto).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "osc9",
+      "bel"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.notifications": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable TUI notifications; optionally restrict to specific event types.",
+    "es": "Habilita las notificaciones de la TUI; opcionalmente, las restringe a tipos de evento específicos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.presets.<digit>.input": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Save a prompt or slash command in one of the ten slots (`0`–`9`) shown by `/presets`. Use up to 8,000 UTF-8 bytes of nonempty text. Shell commands beginning with `!` are unsupported.",
+    "es": "Guarda un prompt o comando de barra en una de las diez ranuras (`0`–`9`) que muestra `/presets`. Usa hasta 8,000 bytes UTF-8 de texto no vacío. No se admiten comandos de shell que empiecen con `!`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.presets.<digit>.label": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Optional name for the preset in the picker and shortcut hints.",
+    "es": "Nombre opcional del preajuste en el selector y en las sugerencias de atajos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.raw_output_mode": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Start the TUI in raw scrollback mode for copy-friendly terminal selection (default: false). You can toggle it with `/raw` or the default `alt-r` key binding.",
+    "es": "Inicia la TUI en modo scrollback sin procesar para facilitar la selección y copia en la terminal (por defecto: false). Puedes alternarlo con `/raw` o con el atajo por defecto `alt-r`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.resume_cwd": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Working directory to use when resuming or forking a session. When unset, Codex asks you to choose if your current directory differs from the session's saved directory.",
+    "es": "Directorio de trabajo que se usa al reanudar o bifurcar una sesión. Si no se define, Codex te pide elegir cuando tu directorio actual difiere del guardado en la sesión.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "current",
+      "session"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.show_server_version_notice": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Show informational notices about connected app-server version differences (default: true). Does not hide compatibility errors or version status.",
+    "es": "Muestra avisos informativos sobre diferencias de versión con el app-server conectado (por defecto: true). No oculta los errores de compatibilidad ni el estado de la versión.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.show_tooltips": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Show onboarding tooltips in the TUI welcome screen (default: true).",
+    "es": "Muestra tooltips de bienvenida en la pantalla inicial de la TUI (por defecto: true).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.status_line": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Ordered list of TUI footer status-line item identifiers. `null` disables the status line.",
+    "es": "Lista ordenada de identificadores de elementos de la línea de estado del pie de la TUI. `null` desactiva la línea de estado.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.theme": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Syntax-highlighting theme override (kebab-case theme name).",
+    "es": "Reemplazo del tema de resaltado de sintaxis (nombre del tema en kebab-case).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "tui.vim_mode_default": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Start the composer in Vim normal mode instead of insert mode (default: false). You can still toggle it per session with `/vim`.",
+    "es": "Inicia el compositor en modo normal de Vim en lugar del modo de inserción (por defecto: false). Aún puedes alternarlo por sesión con `/vim`.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "tui"
+  },
+  "windows.sandbox": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Native Windows sandbox implementation. Explicit `mxc` selection fails when MXC is unavailable or prohibited by managed requirements. Use `features.prefer_mxc` with a legacy selection for automatic MXC selection with fallback.",
+    "es": "Implementación nativa del sandbox de Windows. Seleccionar `mxc` explícitamente falla si MXC no está disponible o lo prohíben los requisitos administrados. Usa `features.prefer_mxc` con una selección heredada para elegir MXC automáticamente con respaldo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "mxc",
+      "elevated",
+      "unelevated"
+    ],
+    "scopes": [
+      "user",
+      "project"
+    ],
+    "topic": "windows"
+  }
+}
