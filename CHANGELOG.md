@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Gemini CLI (335 keys) and OpenCode (153 keys) get the same descriptions, value controls and **Add setting** catalog, generated from their official JSON schemas; map entries such as `mcpServers.<name>.command` resolve for any name. Gemini `admin.*` keys are offered only in managed settings.
+- Lists of text are edited in place (add, remove, reorder, documented suggestions) in JSON and in TOML; a TOML array is rewritten keeping its single- or multi-line layout and re-parsed to confirm only it changed. Arrays with comments inside stay in Source.
+- Documented objects (`worktree`, `sandbox`, `statusLine`, `voice`, `autoMode`, `modelSettings.<model>`, Codex/Gemini tables…) show **+** to add only their documented fields; per-model entries pre-fill the model name.
+- When another layer decides a key (a local override, managed settings, a project setting that isn't accepted, an untrusted project), the row explains it with the effective value and the file it comes from. A user file is analysed against the project last chosen in the sidebar. This is an on-disk estimate, like the Configuration view.
+
+- **Add setting** in the structured view lists every documented setting the file can still take (Claude Code `settings.json` / `settings.local.json` and Codex `config.toml`), grouped by topic and searchable, with description, type, default and docs link. Keys for other scopes (e.g. managed-only or `~/.claude.json` keys in a settings file, user-only Codex keys in a project file) and deprecated keys are left out; `<id>` keys ask for a name. The key goes into the edit buffer with its default (or chosen) value and still needs the reviewed save. Codex keys are inserted as text — inside the parent `[table]`, in a new section, or as a dotted key — and the result is re-parsed so only that key changes; comments, formatting and CRLF line endings are preserved.
+- Existing values use controls from the official reference: a picker for closed option lists (an unknown value is kept as "Custom"), suggestions for open lists such as `model`, numeric range checks, a "Default: x" badge, and **Reset to default**, which removes the key (in TOML only that line).
+- `scripts/refresh-docs-reference.py` refreshes kinds, options, defaults, scopes and topics from the Claude Code settings reference, the SchemaStore schema and the Codex config reference, keeping the Spanish text.
+- Key tooltips cover every key in the official Claude Code settings reference (248) and Codex config reference (316, including `<id>` placeholder keys such as `mcp_servers.<id>.command`), in English and Spanish, plus documented sub-fields (`statusLine.*`, `voice.*`, `autoMode.*`, `modelSettings.<model>.*`). Each ⓘ popover links to the official docs — the key's own anchor for Claude Code — and the ⓘ button shows a pointing-hand cursor. Gemini CLI and OpenCode keys link to their configuration pages. App-internal keys the references don't document (e.g. Codex `desktop.*`) stay without a description.
+
 ## 0.2.0 — 2026-11-03
 
 Build 4. First release with automatic updates: users of 0.1.0 must download and install it by hand (replace the app in `/Applications`); later releases arrive through Sparkle.

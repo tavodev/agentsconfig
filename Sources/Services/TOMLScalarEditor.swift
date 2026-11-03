@@ -18,6 +18,16 @@ enum TOMLScalarEditor {
             }
         }
 
+        /// Foundation value as `Parsers` produces it, for tree comparisons.
+        var native: Any {
+            switch self {
+            case .string(let value): value
+            case .bool(let value): value
+            case .integer(let value): Int(value)
+            case .float(let value): value
+            }
+        }
+
         /// Plain input text, without converting Int64 through Double/JSON.
         var text: String {
             switch self {
@@ -110,9 +120,167 @@ enum TOMLScalarEditor {
         return try replacing(in: text, path: path, with: replacement)
     }
 
+    /// An existing array whose items are all strings.
+    struct ListField: Identifiable, Equatable {
+        let path: [String]
+        let values: [String]
+        var id: [String] { path }
+        var label: String { path.map(TOMLScalarEditor.keyLabel).joined(separator: ".") }
+    }
+
+    /// String arrays that can be rewritten in place. Arrays with comments
+    /// inside them stay in Source, since rewriting would drop the comments.
+    static func stringLists(in text: String) throws -> [ListField] {
+        let table = try parse(text)
+        var scanner = Scanner(bytes: Array(text.utf8))
+        let tokens = try scanner.scan()
+        let counts = Dictionary(grouping: tokens, by: \.path).mapValues(\.count)
+        return tokens.compactMap { token in
+            guard counts[token.path] == 1, scanner.bytes[token.range.lowerBound] == 0x5B,
+                  !hasComment(scanner.bytes[token.range]),
+                  let array = value(at: token.path, in: table)?.array else { return nil }
+            var values: [String] = []
+            for index in 0..<array.count {
+                guard let item = array[index].string else { return nil }
+                values.append(item)
+            }
+            return ListField(path: token.path, values: values)
+        }
+    }
+
+    /// Replaces a string array, keeping its single- or multi-line layout.
+    static func replacingStringList(in text: String, path: [String], with values: [String]) throws -> String {
+        guard try stringLists(in: text).contains(where: { $0.path == path }) else { throw Failure.unavailableField }
+        var scanner = Scanner(bytes: Array(text.utf8))
+        let tokens = try scanner.scan()
+        guard let token = tokens.first(where: { $0.path == path }) else { throw Failure.unavailableField }
+        let raw = String(decoding: scanner.bytes[token.range], as: UTF8.self)
+        let items = try values.map { try encode(.string($0)) }
+        let newline = text.contains("\r\n") ? "\r\n" : "\n"
+        let replacement: String
+        if raw.contains("\n") && !items.isEmpty {
+            let lines: [String] = items.map { item in "  " + item + "," + newline }
+            replacement = "[" + newline + lines.joined() + "]"
+        } else {
+            replacement = "[" + items.joined(separator: ", ") + "]"
+        }
+        var bytes = scanner.bytes
+        bytes.replaceSubrange(token.range, with: Array(replacement.utf8))
+        let result = String(decoding: bytes, as: UTF8.self)
+        guard var expected = Parsers.parseInBackground(text, format: .toml).tree as? [String: Any] else { throw Failure.invalidDocument }
+        setAt(&expected, path.map(Seg.key), values)
+        guard (try? parse(result)) != nil,
+              let actual = Parsers.parseInBackground(result, format: .toml).tree as? [String: Any],
+              NSDictionary(dictionary: actual).isEqual(to: expected) else { throw Failure.validationFailed }
+        return result
+    }
+
+    /// True when a `#` appears outside string literals.
+    private static func hasComment(_ bytes: ArraySlice<UInt8>) -> Bool {
+        var quote: UInt8?
+        var escaped = false
+        for byte in bytes {
+            if let q = quote {
+                if escaped { escaped = false } else if byte == 0x5C && q == 0x22 { escaped = true } else if byte == q { quote = nil }
+            } else if byte == 0x22 || byte == 0x27 { quote = byte } else if byte == 0x23 { return true }
+        }
+        return false
+    }
+
+    /// What a new key holds. Tables become a `[header]`; arrays start empty.
+    enum NewValue: Equatable {
+        case scalar(Scalar), emptyArray, table
+    }
+
+    /// Adds a key that does not exist yet without touching any other byte
+    /// of the document: inside its parent's `[table]` section when there is
+    /// one, otherwise in a new section at the end, or as a dotted key. Each
+    /// candidate is re-parsed and must change exactly that key.
+    static func inserting(in text: String, path: [String], value: NewValue) throws -> String {
+        guard let key = path.last, !path.contains(where: \.isEmpty) else { throw Failure.unavailableField }
+        let table = try parse(text)
+        guard self.value(at: path, in: table) == nil else { throw Failure.unavailableField }
+        var scanner = Scanner(bytes: Array(text.utf8))
+        let tokens = try scanner.scan()
+        let parent = Array(path.dropLast())
+        let label = path.map(keyLabel).joined(separator: ".")
+        let assignment: (String) throws -> String = { lhs in
+            switch value {
+            case .scalar(let scalar): return lhs + " = " + (try encode(scalar)) + "\n"
+            case .emptyArray: return lhs + " = []\n"
+            case .table: return ""
+            }
+        }
+        var candidates: [(offset: Int, insert: String)] = []
+        if case .table = value {
+            candidates.append((scanner.bytes.count, "\n[" + label + "]\n"))
+        } else if parent.isEmpty {
+            let rootEnd = tokens.filter { $0.header == nil }.map(\.statement.upperBound).max()
+            let offset = rootEnd ?? scanner.headers.first?.lineStart ?? scanner.bytes.count
+            candidates.append((offset, try assignment(keyLabel(key)) + (rootEnd == nil && !scanner.headers.isEmpty ? "\n" : "")))
+        } else {
+            if let section = scanner.headers.last(where: { $0.path == parent && !$0.isArray }) {
+                candidates.append((section.bodyEnd, try assignment(keyLabel(key))))
+            }
+            candidates.append((scanner.bytes.count, "\n[" + parent.map(keyLabel).joined(separator: ".") + "]\n"
+                               + (try assignment(keyLabel(key)))))
+            let rootEnd = tokens.filter { $0.header == nil }.map(\.statement.upperBound).max()
+                ?? scanner.headers.first?.lineStart ?? scanner.bytes.count
+            candidates.append((rootEnd, try assignment(label)))
+        }
+        guard var expected = Parsers.parseInBackground(text, format: .toml).tree as? [String: Any] else { throw Failure.invalidDocument }
+        switch value {
+        case .scalar(let scalar): setAt(&expected, path.map(Seg.key), scalar.native)
+        case .emptyArray: setAt(&expected, path.map(Seg.key), [Any]())
+        case .table: setAt(&expected, path.map(Seg.key), [String: Any]())
+        }
+        for candidate in candidates {
+            var bytes = scanner.bytes
+            var insert = candidate.insert
+            if candidate.offset > 0 && bytes[candidate.offset - 1] != 0x0A { insert = "\n" + insert }
+            if text.contains("\r\n") { insert = insert.replacingOccurrences(of: "\n", with: "\r\n") }
+            bytes.insert(contentsOf: Array(insert.utf8), at: candidate.offset)
+            let result = String(decoding: bytes, as: UTF8.self)
+            guard (try? parse(result)) != nil,
+                  let actual = Parsers.parseInBackground(result, format: .toml).tree as? [String: Any],
+                  NSDictionary(dictionary: actual).isEqual(to: expected) else { continue }
+            return result
+        }
+        throw Failure.validationFailed
+    }
+
+    /// Removes one single-line `key = value` statement (and its trailing
+    /// comment), so the agent falls back to the key's default.
+    static func removing(in text: String, path: [String]) throws -> String {
+        var scanner = Scanner(bytes: Array(text.utf8))
+        let tokens = try scanner.scan()
+        let matches = tokens.filter { $0.path == path }
+        guard matches.count == 1, let token = matches.first else { throw Failure.unavailableField }
+        var bytes = scanner.bytes
+        bytes.removeSubrange(token.statement)
+        let result = String(decoding: bytes, as: UTF8.self)
+        guard var expected = Parsers.parseInBackground(text, format: .toml).tree as? [String: Any] else { throw Failure.invalidDocument }
+        removeAt(&expected, path.map(Seg.key))
+        guard (try? parse(result)) != nil,
+              let actual = Parsers.parseInBackground(result, format: .toml).tree as? [String: Any],
+              NSDictionary(dictionary: actual).isEqual(to: expected) else { throw Failure.validationFailed }
+        return result
+    }
+
     private struct Token {
         let path: [String]
         let range: Range<Int>
+        /// Whole `key = value` line, including its comment and newline.
+        var statement: Range<Int> = 0..<0
+        /// Index into `Scanner.headers` of the enclosing table, nil at root.
+        var header: Int? = nil
+    }
+    private struct Header {
+        let path: [String]
+        let isArray: Bool
+        /// Start of the header's line and end of its last statement.
+        let lineStart: Int
+        var bodyEnd: Int
     }
     private struct IndexedField {
         let field: Field
@@ -217,6 +385,7 @@ enum TOMLScalarEditor {
         let bytes: [UInt8]
         var offset = 0
         var tablePath: [String] = []
+        var headers: [Header] = []
 
         mutating func scan() throws -> [Token] {
             if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { offset = 3 }
@@ -224,6 +393,8 @@ enum TOMLScalarEditor {
             while true {
                 skipTrivia()
                 guard offset < bytes.count else { return tokens }
+                var lineStart = offset
+                while lineStart > 0 && isHorizontal(bytes[lineStart - 1]) { lineStart -= 1 }
                 if bytes[offset] == 0x5B {
                     offset += 1
                     let array = peek() == 0x5B
@@ -234,6 +405,8 @@ enum TOMLScalarEditor {
                         guard peek() == 0x5D else { throw Failure.unsupportedSyntax }
                         offset += 1
                     }
+                    try finishStatement()
+                    headers.append(.init(path: tablePath, isArray: array, lineStart: lineStart, bodyEnd: offset))
                 } else {
                     let path = tablePath + (try key(until: 0x3D))
                     offset += 1
@@ -243,9 +416,11 @@ enum TOMLScalarEditor {
                     var end = offset
                     while end > start && isHorizontal(bytes[end - 1]) { end -= 1 }
                     guard end > start else { throw Failure.unsupportedSyntax }
-                    tokens.append(.init(path: path, range: start..<end))
+                    try finishStatement()
+                    tokens.append(.init(path: path, range: start..<end, statement: lineStart..<offset,
+                                        header: headers.isEmpty ? nil : headers.count - 1))
+                    if !headers.isEmpty { headers[headers.count - 1].bodyEnd = offset }
                 }
-                try finishStatement()
             }
         }
 

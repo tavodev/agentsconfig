@@ -237,9 +237,34 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
 - `Sources/Services/DocsCatalog.swift` — doc por archivo (ⓘ junto al nombre)
   y por clave (ⓘ junto a cada fila en "Todas las claves"/tarjetas). Ambas
   búsquedas emparejan por **sufijo relativo** (`pathSuffixDocs`/
-  `keyTableSuffixes`), no por ruta absoluta exacta: así una copia local de
+  `keySources`), no por ruta absoluta exacta: así una copia local de
   proyecto (`.codex/config.toml`, `.claude/settings.json`, etc.) obtiene la
-  misma documentación que la global sin duplicar entradas.
+  misma documentación que la global sin duplicar entradas. Las claves de
+  Claude Code y Codex salen de las referencias oficiales
+  (`settings-reference`, `config-reference`) en
+  `scripts/docs-reference/{claude,codex}.json` (EN + ES); tras editarlas,
+  `python3 scripts/generate-docs-reference.py` regenera
+  `DocsCatalogReference.swift`. Orden: referencia exacta (conserva valores y
+  default curados) → curada exacta o con `<placeholder>` → patrón `<id>` de
+  la referencia → curada por último segmento. Toda clave enlaza a su
+  documentación (ancla por clave en Claude; el ancla del padre documentado
+  para subcampos). Cada entrada generada trae `SettingSpec`
+  (`Sources/Services/SettingSpec.swift`: tipo, opciones, si admite valores
+  propios, default, alcances, tema, obsoleta, rango);
+  `scripts/refresh-docs-reference.py` la actualiza desde las fuentes
+  oficiales sin perder el español y lista las claves que faltan traducir.
+  `DocsCatalog.settingsCatalog(filePath:)` filtra por alcance del archivo
+  (usuario/proyecto/local) para la hoja **Agregar ajuste**
+  (`Sources/Views/SettingEditingViews.swift`). En TOML,
+  `TOMLScalarEditor.inserting`/`removing`/`replacingStringList` editan el
+  texto y validan re-parseando: el árbol resultante debe diferir solo en esa
+  clave. Gemini y OpenCode salen de sus JSON Schema (`from_schema` en el
+  script; los mapas usan el segmento `<name>`). Los subcampos curados con
+  `spec:` (statusLine, voice, autoMode, modelSettings) entran al catálogo con
+  el alcance de su clave padre. `ConfigStore.layerNotes(for:)`
+  (`LayerNotes.swift`) reutiliza `ConfigurationResolver` para avisar, por
+  clave, cuando otra capa la sustituye, excluye o restringe; llega a las
+  filas por el entorno `\.layerNotes`.
 - `Sources/Views/` — navegación nativa por destino: tres columnas para
   archivos/Actividad y dos para Ajustes/MCP. En ventanas menores de 1180 pt
   la navegación de archivos inicia con sidebar oculta y permite recuperarla.

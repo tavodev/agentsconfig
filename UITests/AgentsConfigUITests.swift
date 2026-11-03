@@ -453,6 +453,88 @@ final class AgentsConfigUITests: XCTestCase {
 
     // MARK: - R05 visual matrix
 
+    /// The ⓘ popover of a documented key offers a link to the official docs.
+    @MainActor func testKeyDocPopoverLinksToOfficialDocs() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        open(".claude/settings.json", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        click("key-doc", in: app)
+        let link = app.descendants(matching: .any).matching(identifier: "key-doc-link").firstMatch
+        XCTAssertTrue(link.waitForExistence(timeout: 5), app.debugDescription)
+        XCTAssertTrue(link.label.contains("Official docs"), link.label)
+    }
+
+    /// "Add setting" writes a documented key into the edit buffer (JSON via
+    /// the tree, TOML as inserted text) without saving to disk.
+    @MainActor func testAddSettingInsertsDocumentedKeysIntoTheBuffer() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        let claudePath = home.appendingPathComponent(".claude/settings.json")
+        let claudeOriginal = try Data(contentsOf: claudePath)
+        open(".claude/settings.json", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        click("add-setting", in: app)
+        let search = app.textFields["add-setting-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 5), app.debugDescription)
+        search.click(); search.typeText("autoCompactEnabled")
+        click("add-setting-row:autoCompactEnabled", in: app)
+        saveScreenshot(app, "add-setting-claude")
+        click("add-setting-confirm", in: app)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "reset-default").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["autoCompactEnabled"].waitForExistence(timeout: 5), app.debugDescription)
+        saveScreenshot(app, "all-keys-claude")
+        XCTAssertEqual(try Data(contentsOf: claudePath), claudeOriginal, "adding must not save")
+
+        open(".codex/config.toml", agent: "codex", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        click("add-setting", in: app)
+        let codexSearch = app.textFields["add-setting-search"]
+        XCTAssertTrue(codexSearch.waitForExistence(timeout: 5), app.debugDescription)
+        codexSearch.click(); codexSearch.typeText("sandbox_mode")
+        click("add-setting-row:sandbox_mode", in: app)
+        click("add-setting-confirm", in: app)
+        let added = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'sandbox_mode'")).firstMatch
+        XCTAssertTrue(added.waitForExistence(timeout: 5), app.debugDescription)
+        saveScreenshot(app, "toml-codex")
+    }
+
+    /// Lists of text are edited in place, and documented objects offer
+    /// "+ field" limited to their children; TOML lists rewrite only the array.
+    @MainActor func testStringListsAndObjectFieldsAreEditable() throws {
+        let (app, home, suite) = try fixture(); defer { cleanup(app, home, suite) }
+        try #"{"model":"fixture","claudeMdExcludes":["vendor/**"],"worktree":{"sparsePaths":["src"]},"theme":"dark"}"#
+            .write(to: home.appendingPathComponent(".claude/settings.json"), atomically: true, encoding: .utf8)
+        try "model = 'fixture'\nproject_root_markers = [\".git\"]\n"
+            .write(to: home.appendingPathComponent(".codex/config.toml"), atomically: true, encoding: .utf8)
+        open(".claude/settings.json", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        let field = app.textFields["list-add-field:claudeMdExcludes"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), app.debugDescription)
+        field.click(); field.typeText("docs\r")
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "list-item:claudeMdExcludes[1]").firstMatch
+            .waitForExistence(timeout: 5), app.debugDescription)
+        saveScreenshot(app, "claude-list")
+        click("add-child:worktree", in: app)
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "add-setting-row:worktree.baseRef").firstMatch
+            .waitForExistence(timeout: 5), app.debugDescription)
+        saveScreenshot(app, "claude-add-child")
+        app.typeKey(.escape, modifierFlags: [])
+
+        open(".codex/config.toml", agent: "codex", home: home, app: app)
+        app.typeKey("1", modifierFlags: .command)
+        let tomlField = app.textFields["list-add-field:project_root_markers"]
+        XCTAssertTrue(tomlField.waitForExistence(timeout: 5), app.debugDescription)
+        tomlField.click(); tomlField.typeText(".hg\r")
+        XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "list-item:project_root_markers[1]").firstMatch
+            .waitForExistence(timeout: 5), app.debugDescription)
+        saveScreenshot(app, "codex-list")
+    }
+
+    /// Review screenshot kept in the result bundle (`xcresulttool export attachments`).
+    @MainActor private func saveScreenshot(_ app: XCUIApplication, _ name: String) {
+        let shot = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        shot.name = name; shot.lifetime = .keepAlways; add(shot)
+    }
+
     /// Structured view: env values, `credentials.*` and deeper nested tokens
     /// stay masked even after expanding the tree, while ordinary keys such as
     /// mode/theme remain visible and editable.

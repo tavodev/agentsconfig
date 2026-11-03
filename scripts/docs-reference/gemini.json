@@ -1,0 +1,5702 @@
+{
+  "admin": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings configured remotely by enterprise admins.",
+    "es": "Ajustes configurados de forma remota por administradores empresariales.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "admin.extensions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Extensions-specific admin settings.",
+    "es": "Ajustes de administración específicos de las extensiones.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.extensions.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "If false, disallows extensions from being installed or used.",
+    "es": "Si es false, no se permite instalar ni usar extensiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "MCP-specific admin settings.",
+    "es": "Ajustes de administración específicos de MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Admin-configured MCP servers (allowlist).",
+    "es": "Servidores MCP configurados por el administrador (lista de permitidos).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.args": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command-line arguments for the stdio transport command.",
+    "es": "Argumentos de línea de comandos para el comando de transporte stdio.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.authProviderType": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Authentication provider used for acquiring credentials (for example `dynamic_discovery`).",
+    "es": "Proveedor de autenticación usado para obtener credenciales (por ejemplo `dynamic_discovery`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "dynamic_discovery",
+      "google_credentials",
+      "service_account_impersonation"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.command": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Executable invoked for stdio transport.",
+    "es": "Ejecutable invocado para el transporte stdio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.cwd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Working directory for the server process.",
+    "es": "Directorio de trabajo del proceso del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Human-readable description of the server.",
+    "es": "Descripción legible del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.env": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables to set for the server process.",
+    "es": "Variables de entorno que se establecen para el proceso del servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.excludeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tools that should be disabled for this server even if exposed.",
+    "es": "Herramientas que deben deshabilitarse para este servidor aunque estén expuestas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.extension": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Metadata describing the Gemini CLI extension that owns this MCP server.",
+    "es": "Metadatos que describen la extensión de Gemini CLI a la que pertenece este servidor MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional HTTP headers sent to the server.",
+    "es": "Encabezados HTTP adicionales enviados al servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.httpUrl": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Streaming HTTP transport URL.",
+    "es": "URL del transporte HTTP en streaming.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.includeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Subset of tools that should be enabled for this server. When omitted all tools are enabled.",
+    "es": "Subconjunto de herramientas que deben habilitarse para este servidor. Si se omite, todas las herramientas quedan habilitadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.oauth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth configuration for authenticating with the server.",
+    "es": "Configuración de OAuth para autenticarse con el servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.oauth.allowPrivateNetwork": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow OAuth endpoints on private enterprise networks (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "es": "Permite endpoints de OAuth en redes empresariales privadas (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.oauth.authorizationResponseIssParameterSupported": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether the authorization server returns the \"iss\" parameter in the authorization response (RFC 9207). When true, callbacks without \"iss\" are rejected; when false, they are accepted. A provided \"iss\" is always validated. Overrides the \"authorization_response_iss_parameter_supported\" value discovered from server metadata.",
+    "es": "Indica si el servidor de autorización devuelve el parámetro \"iss\" en la respuesta de autorización (RFC 9207). Si es true, se rechazan los callbacks sin \"iss\"; si es false, se aceptan. Un \"iss\" proporcionado siempre se valida. Reemplaza el valor \"authorization_response_iss_parameter_supported\" descubierto en los metadatos del servidor.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.targetAudience": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth target audience (CLIENT_ID.apps.googleusercontent.com).",
+    "es": "Audiencia objetivo de OAuth (CLIENT_ID.apps.googleusercontent.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.targetServiceAccount": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Service account email to impersonate (name@project.iam.gserviceaccount.com).",
+    "es": "Correo de la cuenta de servicio a suplantar (name@project.iam.gserviceaccount.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.tcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "TCP address for websocket transport.",
+    "es": "Dirección TCP para el transporte websocket.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.timeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds for MCP requests.",
+    "es": "Tiempo de espera en milisegundos para las solicitudes MCP.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.trust": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Marks the server as trusted. Trusted servers may gain additional capabilities.",
+    "es": "Marca el servidor como de confianza. Los servidores de confianza pueden obtener capacidades adicionales.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.type": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Transport type. Use \"stdio\" for local command, \"sse\" for Server-Sent Events, or \"http\" for Streamable HTTP.",
+    "es": "Tipo de transporte. Usa \"stdio\" para un comando local, \"sse\" para Server-Sent Events o \"http\" para Streamable HTTP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "stdio",
+      "sse",
+      "http"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.config.<name>.url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "URL for SSE or HTTP transport. Use with \"type\" field to specify transport type.",
+    "es": "URL del transporte SSE o HTTP. Úsala junto con el campo \"type\" para indicar el tipo de transporte.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "If false, disallows MCP servers from being used.",
+    "es": "Si es false, no se permite usar servidores MCP.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Admin-required MCP servers that are always injected.",
+    "es": "Servidores MCP exigidos por el administrador que siempre se inyectan.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.authProviderType": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Authentication provider used for acquiring credentials.",
+    "es": "Proveedor de autenticación usado para obtener credenciales.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "dynamic_discovery",
+      "google_credentials",
+      "service_account_impersonation"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Human-readable description of the server.",
+    "es": "Descripción legible del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.excludeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tools disabled for this server.",
+    "es": "Herramientas deshabilitadas para este servidor.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional HTTP headers sent to the server.",
+    "es": "Encabezados HTTP adicionales enviados al servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.includeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Subset of tools enabled for this server.",
+    "es": "Subconjunto de herramientas habilitadas para este servidor.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.oauth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth configuration for authenticating with the server.",
+    "es": "Configuración de OAuth para autenticarse con el servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.oauth.allowPrivateNetwork": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow OAuth endpoints on private enterprise networks (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "es": "Permite endpoints de OAuth en redes empresariales privadas (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.oauth.authorizationResponseIssParameterSupported": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether the authorization server returns the \"iss\" parameter in the authorization response (RFC 9207). When true, callbacks without \"iss\" are rejected; when false, they are accepted. A provided \"iss\" is always validated. Overrides the \"authorization_response_iss_parameter_supported\" value discovered from server metadata.",
+    "es": "Indica si el servidor de autorización devuelve el parámetro \"iss\" en la respuesta de autorización (RFC 9207). Si es true, se rechazan los callbacks sin \"iss\"; si es false, se aceptan. Un \"iss\" proporcionado siempre se valida. Reemplaza el valor \"authorization_response_iss_parameter_supported\" descubierto en los metadatos del servidor.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.targetAudience": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth target audience (CLIENT_ID.apps.googleusercontent.com).",
+    "es": "Audiencia objetivo de OAuth (CLIENT_ID.apps.googleusercontent.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.targetServiceAccount": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Service account email to impersonate (name@project.iam.gserviceaccount.com).",
+    "es": "Correo de la cuenta de servicio a suplantar (name@project.iam.gserviceaccount.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.timeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds for MCP requests.",
+    "es": "Tiempo de espera en milisegundos para las solicitudes MCP.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.trust": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Marks the server as trusted. Defaults to true for admin-required servers.",
+    "es": "Marca el servidor como de confianza. Por defecto es true para los servidores requeridos por el administrador.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.type": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Transport type for the required server.",
+    "es": "Tipo de transporte del servidor requerido.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "sse",
+      "http"
+    ],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.mcp.requiredConfig.<name>.url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "URL for the required MCP server.",
+    "es": "URL del servidor MCP requerido.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.secureModeEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "If true, disallows YOLO mode and \"Always allow\" options from being used.",
+    "es": "Si es true, no se permite el modo YOLO ni las opciones \"Always allow\".",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.skills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Agent Skills-specific admin settings.",
+    "es": "Ajustes de administración específicos de Agent Skills.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "admin.skills.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "If false, disallows agent skills from being used.",
+    "es": "Si es false, no se permite usar skills de agente.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "managed"
+    ],
+    "topic": "admin"
+  },
+  "adminPolicyPaths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional admin policy files or directories to load.",
+    "es": "Archivos o directorios de políticas de administración adicionales que se cargarán.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "advanced": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Advanced settings for power users.",
+    "es": "Ajustes avanzados para usuarios expertos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "advanced.autoConfigureMemory": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Automatically configure Node.js memory limits. Note: Because memory is allocated during the initial process boot, this setting is only read from the global user settings file and ignores workspace-level overrides.",
+    "es": "Configura automáticamente los límites de memoria de Node.js. Nota: como la memoria se asigna durante el arranque inicial del proceso, este ajuste solo se lee del archivo global de ajustes del usuario e ignora las anulaciones a nivel de workspace.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "advanced.bugCommand": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Configuration for the bug report helper command.",
+    "es": "Configuración del comando auxiliar para reportar errores.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "advanced.bugCommand.urlTemplate": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Template used to open a bug report URL. Variables in the template are populated at runtime.",
+    "es": "Plantilla usada para abrir la URL del reporte de errores. Las variables de la plantilla se completan en tiempo de ejecución.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "advanced.dnsResolutionOrder": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The DNS resolution order.",
+    "es": "El orden de resolución de DNS.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "advanced.excludedEnvVars": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables to exclude from project context.",
+    "es": "Variables de entorno que se excluyen del contexto del proyecto.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "advanced.ignoreLocalEnv": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Whether to ignore generic .env files in the project directory.",
+    "es": "Indica si se ignoran los archivos .env genéricos del directorio del proyecto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "advanced"
+  },
+  "agents": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for subagents.",
+    "es": "Ajustes de los subagents.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "agents.browser": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings specific to the browser agent.",
+    "es": "Ajustes específicos del agente de navegador.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.allowedDomains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "A list of allowed domains for the browser agent (e.g., [\"github.com\", \"*.google.com\"]).",
+    "es": "Lista de dominios permitidos para el agente de navegador (p. ej., [\"github.com\", \"*.google.com\"]).",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.blockFileUploads": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hard-block file upload requests from the browser agent.",
+    "es": "Bloquea de forma estricta las solicitudes de carga de archivos del agente de navegador.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.confirmSensitiveActions": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Require manual confirmation for sensitive browser actions (e.g., fill_form, evaluate_script).",
+    "es": "Exige confirmación manual para acciones sensibles del navegador (p. ej., fill_form, evaluate_script).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.disableUserInput": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Disable user input on browser window during automation.",
+    "es": "Deshabilita la entrada del usuario en la ventana del navegador durante la automatización.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.headless": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Run browser in headless mode.",
+    "es": "Ejecuta el navegador en modo headless.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.maxActionsPerTask": {
+    "custom": true,
+    "default": "100",
+    "deprecated": false,
+    "en": "The maximum number of tool calls allowed per browser task. Enforcement is hard: the agent will be terminated when the limit is reached.",
+    "es": "Número máximo de llamadas a herramientas permitidas por tarea del navegador. El límite es estricto: el agente se termina al alcanzarlo.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.profilePath": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Path to browser profile directory for session persistence.",
+    "es": "Ruta del directorio de perfil del navegador para conservar la sesión.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.sessionMode": {
+    "custom": false,
+    "default": "\"persistent\"",
+    "deprecated": false,
+    "en": "Session mode: 'persistent', 'isolated', or 'existing'.",
+    "es": "Modo de sesión: 'persistent', 'isolated' o 'existing'.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "persistent",
+      "isolated",
+      "existing"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.browser.visualModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Model for the visual agent's analyze_screenshot tool. When set, enables the tool.",
+    "es": "Modelo para la herramienta analyze_screenshot del agente visual. Si se define, habilita la herramienta.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.overrides": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Override settings for specific agents, e.g. to disable the agent, set a custom model config, or run config.",
+    "es": "Anula ajustes de agentes específicos, p. ej. para deshabilitar el agente, definir una configuración de modelo personalizada o la configuración de ejecución.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.overrides.<name>.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether to enable the agent.",
+    "es": "Indica si se habilita el agente.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.overrides.<name>.runConfig": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Run configuration for an agent.",
+    "es": "Configuración de ejecución de un agente.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.overrides.<name>.runConfig.maxTimeMinutes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The maximum execution time for the agent in minutes.",
+    "es": "Tiempo máximo de ejecución del agente, en minutos.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "agents.overrides.<name>.runConfig.maxTurns": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The maximum number of conversational turns.",
+    "es": "Número máximo de turnos de conversación.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "agents"
+  },
+  "billing": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Billing and AI credits settings.",
+    "es": "Ajustes de facturación y créditos de IA.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "billing.overageStrategy": {
+    "custom": false,
+    "default": "\"ask\"",
+    "deprecated": false,
+    "en": "How to handle quota exhaustion when AI credits are available. 'ask' prompts each time, 'always' automatically uses credits, 'never' disables credit usage.",
+    "es": "Cómo manejar el agotamiento de la cuota cuando hay créditos de IA disponibles. 'ask' pregunta cada vez, 'always' usa los créditos automáticamente, 'never' deshabilita el uso de créditos.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "ask",
+      "always",
+      "never"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "billing"
+  },
+  "billing.vertexAi": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Vertex AI request routing settings.",
+    "es": "Ajustes de enrutamiento de solicitudes de Vertex AI.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "billing"
+  },
+  "billing.vertexAi.requestType": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Sets the X-Vertex-AI-LLM-Request-Type header for Vertex AI requests.",
+    "es": "Define el encabezado X-Vertex-AI-LLM-Request-Type en las solicitudes a Vertex AI.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "dedicated",
+      "shared"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "billing"
+  },
+  "billing.vertexAi.sharedRequestType": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Sets the X-Vertex-AI-LLM-Shared-Request-Type header for Vertex AI requests.",
+    "es": "Define el encabezado X-Vertex-AI-LLM-Shared-Request-Type en las solicitudes a Vertex AI.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "priority",
+      "flex"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "billing"
+  },
+  "context": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for managing context provided to the model.",
+    "es": "Ajustes para administrar el contexto que se proporciona al modelo.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "context.discoveryMaxDirs": {
+    "custom": true,
+    "default": "200",
+    "deprecated": false,
+    "en": "Maximum number of directories to search for memory.",
+    "es": "Número máximo de directorios donde buscar memoria.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for git-aware file filtering.",
+    "es": "Ajustes del filtrado de archivos con conocimiento de git.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.customIgnoreFilePaths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional ignore file paths to respect. These files take precedence over .geminiignore and .gitignore. Files earlier in the array take precedence over files later in the array, e.g. the first file takes precedence over the second one.",
+    "es": "Rutas adicionales de archivos de exclusión que se respetarán. Estos archivos tienen prioridad sobre .geminiignore y .gitignore. Los archivos anteriores en el arreglo tienen prioridad sobre los posteriores; por ejemplo, el primero prevalece sobre el segundo.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.enableFileWatcher": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable file watcher updates for @ file suggestions (experimental).",
+    "es": "Habilita las actualizaciones del observador de archivos para las sugerencias de archivos con @ (experimental).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.enableFuzzySearch": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable fuzzy search when searching for files.",
+    "es": "Habilita la búsqueda aproximada (fuzzy) al buscar archivos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.enableRecursiveFileSearch": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable recursive file search functionality when completing @ references in the prompt.",
+    "es": "Habilita la búsqueda recursiva de archivos al completar referencias con @ en el prompt.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.respectGeminiIgnore": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Respect .geminiignore files when searching.",
+    "es": "Respeta los archivos .geminiignore al buscar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileFiltering.respectGitIgnore": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Respect .gitignore files when searching.",
+    "es": "Respeta los archivos .gitignore al buscar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.fileName": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Accepts either a single string or an array of strings.",
+    "es": "Acepta una sola cadena o un arreglo de cadenas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.importFormat": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The format to use when importing memory.",
+    "es": "Formato que se usa al importar memoria.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.includeDirectories": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional directories to include in the workspace context. Missing directories will be skipped with a warning.",
+    "es": "Directorios adicionales que se incluyen en el contexto del workspace. Los directorios inexistentes se omiten con una advertencia.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.includeDirectoryTree": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Whether to include the directory tree of the current working directory in the initial request to the model.",
+    "es": "Indica si se incluye el árbol de directorios del directorio de trabajo actual en la solicitud inicial al modelo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.loadMemoryFromIncludeDirectories": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Controls how /memory reload loads GEMINI.md files. When true, include directories are scanned; when false, only the current directory is used.",
+    "es": "Controla cómo /memory reload carga los archivos GEMINI.md. Si es true, se exploran los directorios incluidos; si es false, solo se usa el directorio actual.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "context.memoryBoundaryMarkers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "File or directory names that mark the boundary for GEMINI.md discovery. The upward traversal stops at the first directory containing any of these markers. An empty array disables parent traversal.",
+    "es": "Nombres de archivos o directorios que marcan el límite para la búsqueda de GEMINI.md. El recorrido hacia arriba se detiene en el primer directorio que contenga alguno de estos marcadores. Un arreglo vacío deshabilita el recorrido de directorios superiores.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "context"
+  },
+  "contextManagement": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for agent history and tool distillation context management.",
+    "es": "Ajustes para administrar el contexto del historial del agente y la destilación de herramientas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "contextManagement.historyWindow.maxTokens": {
+    "custom": true,
+    "default": "150000",
+    "deprecated": false,
+    "en": "The number of tokens to allow before triggering compression.",
+    "es": "Número de tokens permitidos antes de activar la compresión.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.historyWindow.retainedTokens": {
+    "custom": true,
+    "default": "40000",
+    "deprecated": false,
+    "en": "The number of tokens to always retain.",
+    "es": "Número de tokens que siempre se conservan.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.messageLimits.normalMaxTokens": {
+    "custom": true,
+    "default": "2500",
+    "deprecated": false,
+    "en": "The target number of tokens to budget for a normal conversation turn.",
+    "es": "Número objetivo de tokens a presupuestar para un turno de conversación normal.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.messageLimits.normalizationHeadRatio": {
+    "custom": true,
+    "default": "0.25",
+    "deprecated": false,
+    "en": "The ratio of tokens to retain from the beginning of a truncated message (0.0 to 1.0).",
+    "es": "Proporción de tokens que se conservan del inicio de un mensaje truncado (0.0 a 1.0).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.messageLimits.retainedMaxTokens": {
+    "custom": true,
+    "default": "12000",
+    "deprecated": false,
+    "en": "The maximum number of tokens a single conversation turn can consume before truncation.",
+    "es": "Número máximo de tokens que un solo turno de conversación puede consumir antes de truncarse.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.distillation.maxOutputTokens": {
+    "custom": true,
+    "default": "10000",
+    "deprecated": false,
+    "en": "Maximum tokens to show to the model when truncating large tool outputs.",
+    "es": "Máximo de tokens que se muestran al modelo al truncar salidas grandes de herramientas.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.distillation.summarizationThresholdTokens": {
+    "custom": true,
+    "default": "20000",
+    "deprecated": false,
+    "en": "Threshold above which truncated tool outputs will be summarized by an LLM.",
+    "es": "Umbral a partir del cual las salidas truncadas de herramientas serán resumidas por un LLM.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.outputMasking": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Advanced settings for tool output masking to manage context window efficiency.",
+    "es": "Ajustes avanzados del enmascaramiento de salidas de herramientas para administrar la eficiencia de la ventana de contexto.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.outputMasking.minPrunableThresholdTokens": {
+    "custom": true,
+    "default": "30000",
+    "deprecated": false,
+    "en": "Minimum prunable tokens required to trigger a masking pass.",
+    "es": "Mínimo de tokens podables requeridos para activar una pasada de enmascaramiento.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.outputMasking.protectLatestTurn": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Ensures the absolute latest turn is never masked, regardless of token count.",
+    "es": "Garantiza que el turno más reciente nunca se enmascare, sin importar el número de tokens.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "contextManagement.tools.outputMasking.protectionThresholdTokens": {
+    "custom": true,
+    "default": "50000",
+    "deprecated": false,
+    "en": "Minimum number of tokens to protect from masking (most recent tool outputs).",
+    "es": "Número mínimo de tokens que se protegen del enmascaramiento (las salidas de herramientas más recientes).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "contextManagement"
+  },
+  "experimental": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Setting to enable experimental features.",
+    "es": "Ajuste para habilitar funciones experimentales.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "experimental.adk": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for the Agent Development Kit (ADK).",
+    "es": "Ajustes del Agent Development Kit (ADK).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.adk.agentSessionInteractiveEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable the agent session implementation for the interactive CLI.",
+    "es": "Habilita la implementación de sesión de agente para la CLI interactiva.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.adk.agentSessionNoninteractiveEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable non-interactive agent sessions.",
+    "es": "Habilita las sesiones de agente no interactivas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.adk.agentSessionSubagentEnabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Route subagent invocations through the AgentSession protocol instead of legacy executors.",
+    "es": "Dirige las invocaciones de subagents por el protocolo AgentSession en lugar de los ejecutores heredados.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.autoMemory": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Automatically extract memory patches and skills from past sessions in the background. Every change is written as a unified diff `.patch` file under `<projectMemoryDir>/.inbox/<kind>/` and held for review in /memory inbox; nothing is applied until you approve it.",
+    "es": "Extrae automáticamente en segundo plano parches de memoria y skills de sesiones anteriores. Cada cambio se escribe como un archivo `.patch` en formato diff unificado en `<projectMemoryDir>/.inbox/<kind>/` y queda pendiente de revisión en /memory inbox; nada se aplica hasta que lo apruebes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.contextManagement": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable logic for context management.",
+    "es": "Habilita la lógica de administración de contexto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.directWebFetch": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable web fetch behavior that bypasses LLM summarization.",
+    "es": "Habilita un comportamiento de web fetch que omite el resumen por LLM.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.dynamicModelConfiguration": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable dynamic model configuration (definitions, resolutions, and chains) via settings.",
+    "es": "Habilita la configuración dinámica de modelos (definiciones, resoluciones y cadenas) mediante ajustes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.enableAgents": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable local and remote subagents.",
+    "es": "Habilita subagents locales y remotos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.extensionConfig": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable requesting and fetching of extension settings.",
+    "es": "Habilita la solicitud y obtención de ajustes de extensiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.extensionManagement": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable extension management features.",
+    "es": "Habilita las funciones de administración de extensiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.extensionRegistry": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable extension registry explore UI.",
+    "es": "Habilita la interfaz de exploración del registro de extensiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.extensionRegistryURI": {
+    "custom": true,
+    "default": "\"https://geminicli.com/extensions.json\"",
+    "deprecated": false,
+    "en": "The URI (web URL or local file path) of the extension registry.",
+    "es": "URI (URL web o ruta de archivo local) del registro de extensiones.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.extensionReloading": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enables extension loading/unloading within the CLI session.",
+    "es": "Habilita la carga y descarga de extensiones dentro de la sesión de la CLI.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemma": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable access to Gemma 4 models via Gemini API.",
+    "es": "Habilita el acceso a los modelos Gemma 4 mediante la API de Gemini.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enable Gemma model router (experimental).",
+    "es": "Habilita el enrutador de modelos Gemma (experimental).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.autoStartServer": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Automatically start the LiteRT-LM server when Gemini CLI starts and the Gemma router is enabled.",
+    "es": "Inicia automáticamente el servidor LiteRT-LM cuando arranca Gemini CLI y el enrutador Gemma está habilitado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.binaryPath": {
+    "custom": true,
+    "default": "\"\"",
+    "deprecated": false,
+    "en": "Custom path to the LiteRT-LM binary. Leave empty to use the default location (~/.gemini/bin/litert/).",
+    "es": "Ruta personalizada al binario de LiteRT-LM. Déjala vacía para usar la ubicación por defecto (~/.gemini/bin/litert/).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.classifier": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Classifier configuration.",
+    "es": "Configuración del clasificador.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.classifier.host": {
+    "custom": true,
+    "default": "\"http://localhost:9379\"",
+    "deprecated": false,
+    "en": "The host of the classifier.",
+    "es": "Host del clasificador.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.classifier.model": {
+    "custom": true,
+    "default": "\"gemma3-1b-gpu-custom\"",
+    "deprecated": false,
+    "en": "The model to use for the classifier. Only tested on `gemma3-1b-gpu-custom`.",
+    "es": "Modelo que se usa para el clasificador. Solo probado con `gemma3-1b-gpu-custom`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.gemmaModelRouter.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable the Gemma Model Router (experimental). Requires a local endpoint serving Gemma via the Gemini API using LiteRT-LM shim.",
+    "es": "Habilita el enrutador de modelos Gemma (experimental). Requiere un endpoint local que sirva Gemma mediante la API de Gemini usando el shim de LiteRT-LM.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.generalistProfile": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Suitable for general coding and software development tasks.",
+    "es": "Adecuado para tareas generales de programación y desarrollo de software.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.modelSteering": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable model steering (user hints) to guide the model during tool execution.",
+    "es": "Habilita la guía del modelo (sugerencias del usuario) durante la ejecución de herramientas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.powerUserProfile": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Less cache friendly version of the generalist profile.",
+    "es": "Versión menos amigable con la caché del perfil generalista.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.stressTestProfile": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Significantly lowers token limits to force early garbage collection and distillation for testing purposes.",
+    "es": "Reduce significativamente los límites de tokens para forzar la recolección de basura y la destilación anticipadas con fines de prueba.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.taskTracker": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable task tracker tools.",
+    "es": "Habilita las herramientas de seguimiento de tareas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.topicUpdateNarration": {
+    "custom": true,
+    "default": "false",
+    "deprecated": true,
+    "en": "Deprecated: Use general.topicUpdateNarration instead.",
+    "es": "Obsoleto: usa general.topicUpdateNarration en su lugar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.useOSC52Copy": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Use OSC 52 for copying. This may be more robust than the default system when using remote terminal sessions (if your terminal is configured to allow it).",
+    "es": "Usa OSC 52 para copiar. Puede ser más robusto que el método predeterminado del sistema en sesiones de terminal remotas (si tu terminal está configurada para permitirlo).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.useOSC52Paste": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Use OSC 52 for pasting. This may be more robust than the default system when using remote terminal sessions (if your terminal is configured to allow it).",
+    "es": "Usa OSC 52 para pegar. Puede ser más robusto que el método predeterminado del sistema en sesiones de terminal remotas (si tu terminal está configurada para permitirlo).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voice": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for voice mode and transcription.",
+    "es": "Ajustes del modo de voz y la transcripción.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voice.activationMode": {
+    "custom": false,
+    "default": "\"push-to-talk\"",
+    "deprecated": false,
+    "en": "How to trigger voice recording with the Space key.",
+    "es": "Cómo activar la grabación de voz con la tecla Espacio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "push-to-talk",
+      "toggle"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voice.backend": {
+    "custom": false,
+    "default": "\"gemini-live\"",
+    "deprecated": false,
+    "en": "The backend to use for voice transcription. Note: When using the Gemini Live backend, voice recordings are sent to Google Cloud for transcription.",
+    "es": "Backend que se usa para la transcripción de voz. Nota: con el backend Gemini Live, las grabaciones de voz se envían a Google Cloud para su transcripción.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "gemini-live",
+      "whisper"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voice.stopGracePeriodMs": {
+    "custom": true,
+    "default": "4000",
+    "deprecated": false,
+    "en": "How long to wait for final transcription after stopping recording.",
+    "es": "Cuánto esperar la transcripción final después de detener la grabación.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voice.whisperModel": {
+    "custom": false,
+    "default": "\"ggml-base.en.bin\"",
+    "deprecated": false,
+    "en": "The Whisper model to use for local transcription.",
+    "es": "Modelo Whisper que se usa para la transcripción local.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "ggml-tiny.en.bin",
+      "ggml-base.en.bin",
+      "ggml-large-v3-turbo-q5_0.bin",
+      "ggml-large-v3-turbo-q8_0.bin"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.voiceMode": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable experimental voice dictation and commands (/voice, /voice model).",
+    "es": "Habilita el dictado por voz y los comandos experimentales (/voice, /voice model).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "experimental.worktrees": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable automated Git worktree management for parallel work.",
+    "es": "Habilita la administración automatizada de worktrees de Git para trabajo en paralelo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "experimental"
+  },
+  "extensions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for extensions.",
+    "es": "Ajustes de las extensiones.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "extensions.disabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of disabled extensions.",
+    "es": "Lista de extensiones deshabilitadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "extensions"
+  },
+  "extensions.workspacesWithMigrationNudge": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of workspaces for which the migration nudge has been shown.",
+    "es": "Lista de workspaces para los que ya se mostró el aviso de migración.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "extensions"
+  },
+  "general": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "General application settings.",
+    "es": "Ajustes generales de la aplicación.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "general.checkpointing": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Session checkpointing settings.",
+    "es": "Ajustes de checkpoints de sesión.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.checkpointing.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable session checkpointing for recovery.",
+    "es": "Habilita los checkpoints de sesión para recuperación.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.debugKeystrokeLogging": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable debug logging of keystrokes to the console.",
+    "es": "Habilita el registro de depuración de las pulsaciones de teclas en la consola.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.defaultApprovalMode": {
+    "custom": false,
+    "default": "\"default\"",
+    "deprecated": false,
+    "en": "The default approval mode for tool execution. 'default' prompts for approval, 'auto_edit' auto-approves edit tools, and 'plan' is read-only mode. YOLO mode (auto-approve all actions) can only be enabled via command line (--yolo or --approval-mode=yolo).",
+    "es": "Modo de aprobación por defecto para la ejecución de herramientas. 'default' pide aprobación, 'auto_edit' aprueba automáticamente las herramientas de edición y 'plan' es un modo de solo lectura. El modo YOLO (aprobar automáticamente todas las acciones) solo se puede habilitar desde la línea de comandos (--yolo o --approval-mode=yolo).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "default",
+      "auto_edit",
+      "plan"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.devtools": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable DevTools inspector on launch.",
+    "es": "Habilita el inspector DevTools al iniciar.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.enableAutoUpdate": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable automatic updates.",
+    "es": "Habilita las actualizaciones automáticas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.enableAutoUpdateNotification": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable update notification prompts.",
+    "es": "Habilita los avisos de notificación de actualización.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.enableNotifications": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable terminal run-event notifications for action-required prompts and session completion.",
+    "es": "Habilita notificaciones de eventos de ejecución en la terminal para avisos que requieren acción y para la finalización de la sesión.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.logRagSnippets": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Log full Code Customization (RAG) retrieved snippets to a local file for debugging.",
+    "es": "Registra en un archivo local los fragmentos completos recuperados por Code Customization (RAG) para depuración.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.maxAttempts": {
+    "custom": true,
+    "default": "10",
+    "deprecated": false,
+    "en": "Maximum number of attempts for requests to the main chat model. Cannot exceed 10.",
+    "es": "Número máximo de intentos para las solicitudes al modelo principal del chat. No puede superar 10.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.notificationMethod": {
+    "custom": false,
+    "default": "\"auto\"",
+    "deprecated": false,
+    "en": "How to send terminal notifications.",
+    "es": "Cómo enviar las notificaciones de la terminal.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "auto",
+      "osc9",
+      "osc777",
+      "bell"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.openEditorInNewWindow": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Open VS Code-family editors in a new window when editing files.",
+    "es": "Abre los editores de la familia VS Code en una ventana nueva al editar archivos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.plan": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Planning features configuration.",
+    "es": "Configuración de las funciones de planificación.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.plan.directory": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The directory where planning artifacts are stored. If not specified, defaults to the system temporary directory. A custom directory requires a policy to allow write access in Plan Mode.",
+    "es": "Directorio donde se almacenan los artefactos de planificación. Si no se especifica, usa por defecto el directorio temporal del sistema. Un directorio personalizado requiere una política que permita la escritura en Plan Mode.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.plan.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable Plan Mode for read-only safety during planning.",
+    "es": "Habilita Plan Mode para mayor seguridad de solo lectura durante la planificación.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.plan.modelRouting": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Automatically switch between Pro and Flash models based on Plan Mode status. Uses Pro for the planning phase and Flash for the implementation phase.",
+    "es": "Cambia automáticamente entre los modelos Pro y Flash según el estado de Plan Mode. Usa Pro para la fase de planificación y Flash para la fase de implementación.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.preferredEditor": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "The preferred editor to open files in. Must be one of the built-in supported identifiers. Use /editor in the CLI to pick interactively, or leave unset to use $VISUAL/$EDITOR.",
+    "es": "Editor preferido para abrir archivos. Debe ser uno de los identificadores integrados compatibles. Usa /editor en la CLI para elegirlo de forma interactiva, o déjalo sin definir para usar $VISUAL/$EDITOR.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "vscode",
+      "vscodium",
+      "windsurf",
+      "cursor",
+      "zed",
+      "antigravity",
+      "sublimetext",
+      "lapce",
+      "nova",
+      "bbedit",
+      "vim",
+      "neovim",
+      "emacs",
+      "hx",
+      "emacsclient",
+      "micro"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.retryFetchErrors": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Retry on \"exception TypeError: fetch failed sending request\" errors.",
+    "es": "Reintenta ante errores \"exception TypeError: fetch failed sending request\".",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.sessionRetention": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for automatic session cleanup.",
+    "es": "Ajustes de la limpieza automática de sesiones.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.sessionRetention.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable automatic session cleanup.",
+    "es": "Habilita la limpieza automática de sesiones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.sessionRetention.maxAge": {
+    "custom": true,
+    "default": "\"30d\"",
+    "deprecated": false,
+    "en": "Automatically delete chats older than this time period (e.g., \"30d\", \"7d\", \"24h\", \"1w\")",
+    "es": "Elimina automáticamente los chats más antiguos que este periodo (p. ej., \"30d\", \"7d\", \"24h\", \"1w\").",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.sessionRetention.maxCount": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Alternative: Maximum number of sessions to keep (most recent)",
+    "es": "Alternativa: número máximo de sesiones que se conservan (las más recientes).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.sessionRetention.minRetention": {
+    "custom": true,
+    "default": "\"1d\"",
+    "deprecated": false,
+    "en": "Minimum retention period (safety limit, defaults to \"1d\")",
+    "es": "Periodo mínimo de retención (límite de seguridad, por defecto \"1d\").",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.topicUpdateNarration": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable the Topic & Update communication model for reduced chattiness and structured progress reporting.",
+    "es": "Habilita el modelo de comunicación Topic & Update para reducir la verbosidad y dar reportes de progreso estructurados.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "general.vimMode": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable Vim keybindings.",
+    "es": "Habilita los atajos de teclado de Vim.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "general"
+  },
+  "hooks": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Event-specific hook configurations.",
+    "es": "Configuraciones de hooks específicas de cada evento.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "hooks.AfterAgent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.AfterModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.AfterTool": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.BeforeAgent": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.BeforeModel": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.BeforeTool": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.BeforeToolSelection": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.Notification": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.PreCompress": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.SessionEnd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooks.SessionStart": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Array of hook definition objects for a specific event.",
+    "es": "Arreglo de objetos de definición de hooks para un evento específico.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooks"
+  },
+  "hooksConfig": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Hook configurations for intercepting and customizing agent behavior.",
+    "es": "Configuración de hooks para interceptar y personalizar el comportamiento del agente.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "hooksConfig.disabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of hook names (commands) that should be disabled. Hooks in this list will not execute even if configured.",
+    "es": "Lista de nombres de hooks (comandos) que deben deshabilitarse. Los hooks de esta lista no se ejecutan aunque estén configurados.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooksConfig"
+  },
+  "hooksConfig.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Canonical toggle for the hooks system. When disabled, no hooks will be executed.",
+    "es": "Interruptor principal del sistema de hooks. Si está deshabilitado, no se ejecuta ningún hook.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooksConfig"
+  },
+  "hooksConfig.notifications": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show visual indicators when hooks are executing.",
+    "es": "Muestra indicadores visuales cuando se ejecutan hooks.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "hooksConfig"
+  },
+  "ide": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "IDE integration settings.",
+    "es": "Ajustes de integración con el IDE.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "ide.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable IDE integration mode.",
+    "es": "Habilita el modo de integración con el IDE.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ide"
+  },
+  "ide.hasSeenNudge": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Whether the user has seen the IDE integration nudge.",
+    "es": "Indica si el usuario ya vio el aviso de integración con el IDE.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ide"
+  },
+  "mcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for Model Context Protocol (MCP) servers.",
+    "es": "Ajustes de los servidores de Model Context Protocol (MCP).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "mcp.allowed": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "A list of MCP servers to allow.",
+    "es": "Lista de servidores MCP permitidos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcp"
+  },
+  "mcp.excluded": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "A list of MCP servers to exclude.",
+    "es": "Lista de servidores MCP excluidos.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcp"
+  },
+  "mcp.serverCommand": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command to start an MCP server.",
+    "es": "Comando para iniciar un servidor MCP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcp"
+  },
+  "mcpServers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Configuration for MCP servers.",
+    "es": "Configuración de los servidores MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "mcpServers.<name>.args": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command-line arguments for the stdio transport command.",
+    "es": "Argumentos de línea de comandos para el comando de transporte stdio.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.authProviderType": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Authentication provider used for acquiring credentials (for example `dynamic_discovery`).",
+    "es": "Proveedor de autenticación usado para obtener credenciales (por ejemplo `dynamic_discovery`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "dynamic_discovery",
+      "google_credentials",
+      "service_account_impersonation"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.command": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Executable invoked for stdio transport.",
+    "es": "Ejecutable invocado para el transporte stdio.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.cwd": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Working directory for the server process.",
+    "es": "Directorio de trabajo del proceso del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.description": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Human-readable description of the server.",
+    "es": "Descripción legible del servidor.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.env": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables to set for the server process.",
+    "es": "Variables de entorno que se establecen para el proceso del servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.excludeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tools that should be disabled for this server even if exposed.",
+    "es": "Herramientas que deben deshabilitarse para este servidor aunque estén expuestas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.extension": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Metadata describing the Gemini CLI extension that owns this MCP server.",
+    "es": "Metadatos que describen la extensión de Gemini CLI a la que pertenece este servidor MCP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.headers": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional HTTP headers sent to the server.",
+    "es": "Encabezados HTTP adicionales enviados al servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.httpUrl": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Streaming HTTP transport URL.",
+    "es": "URL del transporte HTTP en streaming.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.includeTools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Subset of tools that should be enabled for this server. When omitted all tools are enabled.",
+    "es": "Subconjunto de herramientas que deben habilitarse para este servidor. Si se omite, todas las herramientas quedan habilitadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.oauth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth configuration for authenticating with the server.",
+    "es": "Configuración de OAuth para autenticarse con el servidor.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.oauth.allowPrivateNetwork": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Allow OAuth endpoints on private enterprise networks (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "es": "Permite endpoints de OAuth en redes empresariales privadas (RFC 1918, RFC 6598, RFC 4193, .internal, .local).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.oauth.authorizationResponseIssParameterSupported": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether the authorization server returns the \"iss\" parameter in the authorization response (RFC 9207). When true, callbacks without \"iss\" are rejected; when false, they are accepted. A provided \"iss\" is always validated. Overrides the \"authorization_response_iss_parameter_supported\" value discovered from server metadata.",
+    "es": "Indica si el servidor de autorización devuelve el parámetro \"iss\" en la respuesta de autorización (RFC 9207). Si es true, se rechazan los callbacks sin \"iss\"; si es false, se aceptan. Un \"iss\" proporcionado siempre se valida. Reemplaza el valor \"authorization_response_iss_parameter_supported\" descubierto en los metadatos del servidor.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.targetAudience": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "OAuth target audience (CLIENT_ID.apps.googleusercontent.com).",
+    "es": "Audiencia objetivo de OAuth (CLIENT_ID.apps.googleusercontent.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.targetServiceAccount": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Service account email to impersonate (name@project.iam.gserviceaccount.com).",
+    "es": "Correo de la cuenta de servicio a suplantar (name@project.iam.gserviceaccount.com).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.tcp": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "TCP address for websocket transport.",
+    "es": "Dirección TCP para el transporte websocket.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.timeout": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Timeout in milliseconds for MCP requests.",
+    "es": "Tiempo de espera en milisegundos para las solicitudes MCP.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.trust": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Marks the server as trusted. Trusted servers may gain additional capabilities.",
+    "es": "Marca el servidor como de confianza. Los servidores de confianza pueden obtener capacidades adicionales.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.type": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Transport type. Use \"stdio\" for local command, \"sse\" for Server-Sent Events, or \"http\" for Streamable HTTP.",
+    "es": "Tipo de transporte. Usa \"stdio\" para un comando local, \"sse\" para Server-Sent Events o \"http\" para Streamable HTTP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "stdio",
+      "sse",
+      "http"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "mcpServers.<name>.url": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "URL for SSE or HTTP transport. Use with \"type\" field to specify transport type.",
+    "es": "URL del transporte SSE o HTTP. Úsala junto con el campo \"type\" para indicar el tipo de transporte.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "mcpServers"
+  },
+  "model": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings related to the generative model.",
+    "es": "Ajustes relacionados con el modelo generativo.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "model.compressionThreshold": {
+    "custom": true,
+    "default": "0.5",
+    "deprecated": false,
+    "en": "The fraction of context usage at which to trigger context compression (e.g. 0.2, 0.3).",
+    "es": "Fracción de uso del contexto a la que se activa la compresión del contexto (p. ej., 0.2, 0.3).",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.disableLoopDetection": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Disable automatic detection and prevention of infinite loops.",
+    "es": "Deshabilita la detección y prevención automática de bucles infinitos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.maxSessionTurns": {
+    "custom": true,
+    "default": "-1",
+    "deprecated": false,
+    "en": "Maximum number of user/model/tool turns to keep in a session. -1 means unlimited.",
+    "es": "Número máximo de turnos de usuario/modelo/herramienta que se conservan en una sesión. -1 significa sin límite.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.name": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The Gemini model to use for conversations.",
+    "es": "Modelo de Gemini que se usa para las conversaciones.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.skipNextSpeakerCheck": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Skip the next speaker check.",
+    "es": "Omite la verificación del siguiente interlocutor.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.summarizeToolOutput": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enables or disables summarization of tool output. Configure per-tool token budgets (for example {\"run_shell_command\": {\"tokenBudget\": 2000}}). Currently only the run_shell_command tool supports summarization.",
+    "es": "Habilita o deshabilita el resumen de la salida de herramientas. Configura presupuestos de tokens por herramienta (por ejemplo {\"run_shell_command\": {\"tokenBudget\": 2000}}). Actualmente solo la herramienta run_shell_command admite resumen.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "model.summarizeToolOutput.<name>.tokenBudget": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Maximum number of tokens used when summarizing tool output.",
+    "es": "Número máximo de tokens usados al resumir la salida de la herramienta.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "model"
+  },
+  "modelConfigs": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Model configurations.",
+    "es": "Configuraciones de modelos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "modelConfigs.aliases": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Named presets for model configs. Can be used in place of a model name and can inherit from other aliases using an `extends` property.",
+    "es": "Preajustes con nombre para configuraciones de modelo. Pueden usarse en lugar de un nombre de modelo y heredar de otros alias mediante la propiedad `extends`.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.classifierIdResolutions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Rules for resolving classifier tiers (flash, pro) to concrete model IDs.",
+    "es": "Reglas para resolver los niveles del clasificador (flash, pro) a IDs de modelo concretos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.customAliases": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom named presets for model configs. These are merged with (and override) the built-in aliases.",
+    "es": "Preajustes personalizados con nombre para configuraciones de modelo. Se combinan con los alias integrados (y los reemplazan).",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.customOverrides": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom model config overrides. These are merged with (and added to) the built-in overrides.",
+    "es": "Anulaciones personalizadas de configuración de modelo. Se combinan con las anulaciones integradas (y se suman a ellas).",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.modelChains": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Availability policy chains defining fallback behavior for models.",
+    "es": "Cadenas de políticas de disponibilidad que definen el comportamiento de respaldo (fallback) de los modelos.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.modelDefinitions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Registry of model metadata, including tier, family, and features.",
+    "es": "Registro de metadatos de modelos, incluyendo nivel, familia y funciones.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.modelDefinitions.<name>.dialogDescription": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "A description of the model to display in the model selection dialog. For the 'auto' alias, this value is dynamically generated and any value provided here will be ignored.",
+    "es": "Descripción del modelo que se muestra en el diálogo de selección de modelo. Para el alias 'auto', este valor se genera dinámicamente y se ignora cualquier valor indicado aquí.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.modelIdResolutions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Rules for resolving requested model names to concrete model IDs based on context.",
+    "es": "Reglas para resolver los nombres de modelo solicitados a IDs de modelo concretos según el contexto.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "modelConfigs.overrides": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Apply specific configuration overrides based on matches, with a primary key of model (or alias). The most specific match will be used.",
+    "es": "Aplica anulaciones de configuración específicas según coincidencias, con una clave principal de modelo (o alias). Se usa la coincidencia más específica.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "modelConfigs"
+  },
+  "output": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for the CLI output.",
+    "es": "Ajustes de la salida de la CLI.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "output.format": {
+    "custom": false,
+    "default": "\"text\"",
+    "deprecated": false,
+    "en": "The format of the CLI output. Can be `text` or `json`.",
+    "es": "Formato de la salida de la CLI. Puede ser `text` o `json`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "text",
+      "json"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "output"
+  },
+  "policyPaths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Additional policy files or directories to load.",
+    "es": "Archivos o directorios de políticas adicionales que se cargarán.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "privacy": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Privacy-related settings.",
+    "es": "Ajustes relacionados con la privacidad.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "privacy.usageStatisticsEnabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable collection of usage statistics.",
+    "es": "Habilita la recopilación de estadísticas de uso.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "privacy"
+  },
+  "security": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Security-related settings.",
+    "es": "Ajustes relacionados con la seguridad.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "security.allowedExtensions": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of Regex patterns for allowed extensions. If nonempty, only extensions that match the patterns in this list are allowed. Overrides the blockGitExtensions setting.",
+    "es": "Lista de patrones Regex de extensiones permitidas. Si no está vacía, solo se permiten las extensiones que coincidan con los patrones de esta lista. Tiene prioridad sobre el ajuste blockGitExtensions.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.auth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Authentication settings.",
+    "es": "Ajustes de autenticación.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.auth.enforcedType": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The required auth type. If this does not match the selected auth type, the user will be prompted to re-authenticate.",
+    "es": "Tipo de autenticación requerido. Si no coincide con el tipo seleccionado, se pedirá al usuario que se autentique de nuevo.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.auth.selectedType": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The currently selected authentication type.",
+    "es": "Tipo de autenticación seleccionado actualmente.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.auth.useExternal": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether to use an external authentication flow.",
+    "es": "Indica si se usa un flujo de autenticación externo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.autoAddToPolicyByDefault": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "When enabled, the \"Allow for all future sessions\" option becomes the default choice for low-risk tools in trusted workspaces.",
+    "es": "Si está habilitado, la opción \"Allow for all future sessions\" pasa a ser la opción predeterminada para herramientas de bajo riesgo en workspaces de confianza.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.blockGitExtensions": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Blocks installing and loading extensions from Git.",
+    "es": "Bloquea la instalación y carga de extensiones desde Git.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.disableAlwaysAllow": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Disable \"Always allow\" options in tool confirmation dialogs.",
+    "es": "Deshabilita las opciones \"Always allow\" en los diálogos de confirmación de herramientas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.disableYoloMode": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Disable YOLO mode, even if enabled by a flag.",
+    "es": "Deshabilita el modo YOLO, incluso si se habilita con un flag.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.enableConseca": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable the context-aware security checker. This feature uses an LLM to dynamically generate and enforce security policies for tool use based on your prompt, providing an additional layer of protection against unintended actions.",
+    "es": "Habilita el verificador de seguridad consciente del contexto. Esta función usa un LLM para generar y aplicar dinámicamente políticas de seguridad para el uso de herramientas según tu prompt, ofreciendo una capa adicional de protección contra acciones no deseadas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.enablePermanentToolApproval": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable the \"Allow for all future sessions\" option in tool confirmation dialogs.",
+    "es": "Habilita la opción \"Allow for all future sessions\" en los diálogos de confirmación de herramientas.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.environmentVariableRedaction": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for environment variable redaction.",
+    "es": "Ajustes de la redacción (ocultamiento) de variables de entorno.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.environmentVariableRedaction.allowed": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables to always allow (bypass redaction).",
+    "es": "Variables de entorno que siempre se permiten (omiten la redacción).",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.environmentVariableRedaction.blocked": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Environment variables to always redact.",
+    "es": "Variables de entorno que siempre se redactan.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.environmentVariableRedaction.enabled": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable redaction of environment variables that may contain secrets.",
+    "es": "Habilita la redacción de variables de entorno que puedan contener secretos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.folderTrust": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for folder trust.",
+    "es": "Ajustes de confianza de carpetas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.folderTrust.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Setting to track whether Folder trust is enabled.",
+    "es": "Ajuste que registra si la confianza de carpetas está habilitada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "security.toolSandboxing": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Tool-level sandboxing. Isolates individual tools instead of the entire CLI process.",
+    "es": "Sandboxing a nivel de herramienta. Aísla cada herramienta en lugar de todo el proceso de la CLI.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "security"
+  },
+  "skills": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for agent skills.",
+    "es": "Ajustes de las skills de agente.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "skills.disabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of disabled skills.",
+    "es": "Lista de skills deshabilitadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "skills"
+  },
+  "skills.enabled": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable Agent Skills.",
+    "es": "Habilita Agent Skills.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "skills"
+  },
+  "telemetry": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Telemetry configuration for Gemini CLI.",
+    "es": "Configuración de telemetría de Gemini CLI.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "telemetry.enabled": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Enables telemetry emission.",
+    "es": "Habilita la emisión de telemetría.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.logPrompts": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether prompts are logged in telemetry payloads.",
+    "es": "Indica si los prompts se registran en los datos de telemetría.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.otlpEndpoint": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Endpoint for OTLP exporters.",
+    "es": "Endpoint de los exportadores OTLP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.otlpHeaders": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom headers to send with OTLP exporter requests.",
+    "es": "Encabezados personalizados que se envían con las solicitudes del exportador OTLP.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.otlpProtocol": {
+    "custom": false,
+    "default": null,
+    "deprecated": false,
+    "en": "Protocol for OTLP exporters.",
+    "es": "Protocolo de los exportadores OTLP.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "grpc",
+      "http"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.outfile": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "File path for writing telemetry output.",
+    "es": "Ruta del archivo donde se escribe la salida de telemetría.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.target": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Telemetry destination (for example `stderr`, `stdout`, or `otlp`).",
+    "es": "Destino de la telemetría (por ejemplo `stderr`, `stdout` u `otlp`).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.traces": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether detailed traces with large attributes are captured.",
+    "es": "Indica si se capturan trazas detalladas con atributos grandes.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.useCliAuth": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether to use CLI authentication for telemetry (only for in-process exporters).",
+    "es": "Indica si se usa la autenticación de la CLI para la telemetría (solo para exportadores en proceso).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "telemetry.useCollector": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Whether to forward telemetry to an OTLP collector.",
+    "es": "Indica si la telemetría se reenvía a un colector OTLP.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "telemetry"
+  },
+  "tools": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for built-in and custom tools.",
+    "es": "Ajustes de las herramientas integradas y personalizadas.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "tools.allowed": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool names that bypass the confirmation dialog. Useful for trusted commands (for example [\"run_shell_command(git)\", \"run_shell_command(npm test)\"]). See shell tool command restrictions for matching details.",
+    "es": "Nombres de herramientas que omiten el diálogo de confirmación. Útil para comandos de confianza (por ejemplo [\"run_shell_command(git)\", \"run_shell_command(npm test)\"]). Consulta las restricciones de comandos de la herramienta shell para ver los detalles de coincidencia.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.callCommand": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Defines a custom shell command for invoking discovered tools. The command must take the tool name as the first argument, read JSON arguments from stdin, and emit JSON results on stdout.",
+    "es": "Define un comando de shell personalizado para invocar las herramientas descubiertas. El comando debe recibir el nombre de la herramienta como primer argumento, leer argumentos JSON desde stdin y emitir resultados JSON por stdout.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.confirmationRequired": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool names that always require user confirmation. Takes precedence over allowed tools and core tool allowlists.",
+    "es": "Nombres de herramientas que siempre requieren confirmación del usuario. Tiene prioridad sobre las herramientas permitidas y las listas de permitidos de herramientas core.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.core": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Restrict the set of built-in tools with an allowlist. Match semantics mirror tools.allowed; see the built-in tools documentation for available names.",
+    "es": "Restringe el conjunto de herramientas integradas con una lista de permitidos. La semántica de coincidencia es la misma que en tools.allowed; consulta la documentación de herramientas integradas para ver los nombres disponibles.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.disableLLMCorrection": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Disable LLM-based error correction for edit tools. When enabled, tools will fail immediately if exact string matches are not found, instead of attempting to self-correct.",
+    "es": "Deshabilita la corrección de errores basada en LLM para las herramientas de edición. Si está habilitado, las herramientas fallan de inmediato cuando no se encuentran coincidencias exactas de texto, en lugar de intentar autocorregirse.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.discoveryCommand": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Command to run for tool discovery.",
+    "es": "Comando que se ejecuta para descubrir herramientas.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.exclude": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Tool names to exclude from discovery.",
+    "es": "Nombres de herramientas que se excluyen del descubrimiento.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.sandbox": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Accepts either a boolean flag, a string command name, or a configuration object.",
+    "es": "Acepta un valor booleano, el nombre de un comando como cadena o un objeto de configuración.",
+    "kind": "other",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.sandboxAllowedPaths": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of additional paths that the sandbox is allowed to access.",
+    "es": "Lista de rutas adicionales a las que el sandbox puede acceder.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.sandboxNetworkAccess": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Whether the sandbox is allowed to access the network.",
+    "es": "Indica si el sandbox puede acceder a la red.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for shell execution.",
+    "es": "Ajustes de la ejecución de shell.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.backgroundCompletionBehavior": {
+    "custom": false,
+    "default": "\"silent\"",
+    "deprecated": false,
+    "en": "Controls what happens when a background shell command finishes. 'silent' (default): quietly exits in background. 'inject': automatically returns output to agent. 'notify': shows brief message in chat.",
+    "es": "Controla qué sucede cuando termina un comando de shell en segundo plano. 'silent' (por defecto): termina silenciosamente en segundo plano. 'inject': devuelve automáticamente la salida al agente. 'notify': muestra un mensaje breve en el chat.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "silent",
+      "inject",
+      "notify"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.enableInteractiveShell": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Use node-pty for an interactive shell experience. Fallback to child_process still applies.",
+    "es": "Usa node-pty para una experiencia de shell interactiva. Se mantiene el respaldo a child_process.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.enableShellOutputEfficiency": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable shell output efficiency optimizations for better performance.",
+    "es": "Habilita optimizaciones de eficiencia de la salida del shell para mejorar el rendimiento.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.inactivityTimeout": {
+    "custom": true,
+    "default": "300",
+    "deprecated": false,
+    "en": "The maximum time in seconds allowed without output from the shell command. Defaults to 5 minutes.",
+    "es": "Tiempo máximo, en segundos, permitido sin salida del comando de shell. Por defecto son 5 minutos.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.pager": {
+    "custom": true,
+    "default": "\"cat\"",
+    "deprecated": false,
+    "en": "The pager command to use for shell output. Defaults to `cat`.",
+    "es": "Comando de paginador que se usa para la salida del shell. Por defecto es `cat`.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.shell.showColor": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show color in shell output.",
+    "es": "Muestra color en la salida del shell.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.truncateToolOutputThreshold": {
+    "custom": true,
+    "default": "40000",
+    "deprecated": false,
+    "en": "Maximum characters to show when truncating large tool outputs. Set to 0 or negative to disable truncation.",
+    "es": "Máximo de caracteres que se muestran al truncar salidas grandes de herramientas. Usa 0 o un valor negativo para deshabilitar el truncamiento.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "tools.useRipgrep": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Use ripgrep for file content search instead of the fallback implementation. Provides faster search performance.",
+    "es": "Usa ripgrep para buscar contenido de archivos en lugar de la implementación de respaldo. Ofrece un mejor rendimiento de búsqueda.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "tools"
+  },
+  "ui": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "User interface settings.",
+    "es": "Ajustes de la interfaz de usuario.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  },
+  "ui.accessibility": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Accessibility settings.",
+    "es": "Ajustes de accesibilidad.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.accessibility.enableLoadingPhrases": {
+    "custom": true,
+    "default": "true",
+    "deprecated": true,
+    "en": "@deprecated Use ui.loadingPhrases instead. Enable loading phrases during operations.",
+    "es": "@deprecated Usa ui.loadingPhrases en su lugar. Habilita frases de carga durante las operaciones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.accessibility.screenReader": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Render output in plain-text to be more screen reader accessible.",
+    "es": "Renderiza la salida en texto plano para que sea más accesible con lectores de pantalla.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.autoThemeSwitching": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Automatically switch between default light and dark themes based on terminal background color.",
+    "es": "Cambia automáticamente entre los temas claro y oscuro por defecto según el color de fondo de la terminal.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.collapseDrawerDuringApproval": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Whether to collapse the UI drawer when a tool is awaiting confirmation.",
+    "es": "Indica si se contrae el panel de la interfaz cuando una herramienta espera confirmación.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.compactToolOutput": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Display tool outputs (like directory listings and file reads) in a compact, structured format.",
+    "es": "Muestra las salidas de herramientas (como listados de directorios y lecturas de archivos) en un formato compacto y estructurado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.customThemes": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom theme definitions.",
+    "es": "Definiciones de temas personalizados.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.customThemes.<name>.name": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Theme display name.",
+    "es": "Nombre visible del tema.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.customWittyPhrases": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Custom witty phrases to display during loading. When provided, the CLI cycles through these instead of the defaults.",
+    "es": "Frases ingeniosas personalizadas que se muestran durante la carga. Si se indican, la CLI las recorre en lugar de las predeterminadas.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.debugRainbow": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Enable debug rainbow rendering. Only useful for debugging rendering bugs and performance issues.",
+    "es": "Habilita el renderizado arcoíris de depuración. Solo es útil para depurar errores de renderizado y problemas de rendimiento.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.dynamicWindowTitle": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Update the terminal window title with current status icons (Ready: ◇, Action Required: ✋, Working: ✦)",
+    "es": "Actualiza el título de la ventana de la terminal con íconos de estado actuales (Listo: ◇, Requiere acción: ✋, Trabajando: ✦).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.errorVerbosity": {
+    "custom": false,
+    "default": "\"low\"",
+    "deprecated": false,
+    "en": "Controls whether recoverable errors are hidden (low) or fully shown (full).",
+    "es": "Controla si los errores recuperables se ocultan (low) o se muestran completos (full).",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "low",
+      "full"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.escapePastedAtSymbols": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "When enabled, @ symbols in pasted text are escaped to prevent unintended @path expansion.",
+    "es": "Si está habilitado, los símbolos @ del texto pegado se escapan para evitar la expansión no deseada de @path.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "Settings for the footer.",
+    "es": "Ajustes del pie de página.",
+    "kind": "object",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.hideCWD": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the current working directory in the footer.",
+    "es": "Oculta el directorio de trabajo actual en el pie de página.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.hideContextPercentage": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Hides the context window usage percentage.",
+    "es": "Oculta el porcentaje de uso de la ventana de contexto.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.hideModelInfo": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the model name and context usage in the footer.",
+    "es": "Oculta el nombre del modelo y el uso de contexto en el pie de página.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.hideSandboxStatus": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the sandbox status indicator in the footer.",
+    "es": "Oculta el indicador de estado del sandbox en el pie de página.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.items": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "List of item IDs to display in the footer. Rendered in order.",
+    "es": "Lista de IDs de elementos que se muestran en el pie de página. Se renderizan en orden.",
+    "kind": "array",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.footer.showLabels": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Display a second line above the footer items with descriptive headers (e.g., /model).",
+    "es": "Muestra una segunda línea sobre los elementos del pie de página con encabezados descriptivos (p. ej., /model).",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.hideBanner": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the application banner.",
+    "es": "Oculta el banner de la aplicación.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.hideContextSummary": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the context summary (GEMINI.md, MCP servers) above the input.",
+    "es": "Oculta el resumen de contexto (GEMINI.md, servidores MCP) sobre el campo de entrada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.hideFooter": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the footer from the UI.",
+    "es": "Oculta el pie de página de la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.hideTips": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide helpful tips in the UI.",
+    "es": "Oculta los consejos útiles en la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.hideWindowTitle": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Hide the window title bar.",
+    "es": "Oculta la barra de título de la ventana.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.incrementalRendering": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable incremental rendering for the UI. This option will reduce flickering but may cause rendering artifacts. Only supported when useAlternateBuffer is enabled.",
+    "es": "Habilita el renderizado incremental de la interfaz. Esta opción reduce el parpadeo pero puede causar artefactos de renderizado. Solo se admite cuando useAlternateBuffer está habilitado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.inlineThinkingMode": {
+    "custom": false,
+    "default": "\"off\"",
+    "deprecated": false,
+    "en": "Display model thinking inline: off or full.",
+    "es": "Muestra el razonamiento del modelo en línea: off o full.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "off",
+      "full"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.loadingPhrases": {
+    "custom": false,
+    "default": "\"off\"",
+    "deprecated": false,
+    "en": "What to show while the model is working: tips, witty comments, all, or off.",
+    "es": "Qué mostrar mientras el modelo trabaja: tips, comentarios ingeniosos, all u off.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [
+      "tips",
+      "witty",
+      "all",
+      "off"
+    ],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.renderProcess": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable Ink render process for the UI.",
+    "es": "Habilita el proceso de renderizado de Ink para la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showCitations": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show citations for generated text in the chat.",
+    "es": "Muestra citas del texto generado en el chat.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showCompatibilityWarnings": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show warnings about terminal or OS compatibility issues.",
+    "es": "Muestra advertencias sobre problemas de compatibilidad de la terminal o del sistema operativo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showHomeDirectoryWarning": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show a warning when running Gemini CLI in the home directory.",
+    "es": "Muestra una advertencia al ejecutar Gemini CLI en el directorio personal.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showLineNumbers": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show line numbers in the chat.",
+    "es": "Muestra números de línea en el chat.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showMemoryUsage": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Display memory usage information in the UI.",
+    "es": "Muestra información de uso de memoria en la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showModelInfoInChat": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show the model name in the chat for each model turn.",
+    "es": "Muestra el nombre del modelo en el chat en cada turno del modelo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showShortcutsHint": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show the \"? for shortcuts\" hint above the input.",
+    "es": "Muestra la sugerencia \"? for shortcuts\" sobre el campo de entrada.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showSpinner": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show the spinner during operations.",
+    "es": "Muestra el indicador de carga durante las operaciones.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showStatusInTitle": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Show Gemini CLI model thoughts in the terminal window title during the working phase.",
+    "es": "Muestra los pensamientos del modelo de Gemini CLI en el título de la ventana de la terminal durante la fase de trabajo.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.showUserIdentity": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Show the signed-in user's identity (e.g. email) in the UI.",
+    "es": "Muestra la identidad del usuario con sesión iniciada (p. ej., el correo) en la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.terminalBackgroundPollingInterval": {
+    "custom": true,
+    "default": "60",
+    "deprecated": false,
+    "en": "Interval in seconds to poll the terminal background color.",
+    "es": "Intervalo, en segundos, para consultar el color de fondo de la terminal.",
+    "kind": "number",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.terminalBuffer": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Use the new terminal buffer architecture for rendering.",
+    "es": "Usa la nueva arquitectura de búfer de terminal para el renderizado.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.theme": {
+    "custom": true,
+    "default": null,
+    "deprecated": false,
+    "en": "The color theme for the UI. See the CLI themes guide for available options.",
+    "es": "Tema de color de la interfaz. Consulta la guía de temas de la CLI para ver las opciones disponibles.",
+    "kind": "string",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.useAlternateBuffer": {
+    "custom": true,
+    "default": "false",
+    "deprecated": false,
+    "en": "Use an alternate screen buffer for the UI, preserving shell history.",
+    "es": "Usa un búfer de pantalla alternativo para la interfaz, conservando el historial del shell.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "ui.useBackgroundColor": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Whether to use background colors in the UI.",
+    "es": "Indica si se usan colores de fondo en la interfaz.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "ui"
+  },
+  "useWriteTodos": {
+    "custom": true,
+    "default": "true",
+    "deprecated": false,
+    "en": "Enable the write_todos tool.",
+    "es": "Habilita la herramienta write_todos.",
+    "kind": "bool",
+    "max": null,
+    "min": null,
+    "options": [],
+    "scopes": [
+      "user",
+      "project",
+      "managed"
+    ],
+    "topic": "General"
+  }
+}
