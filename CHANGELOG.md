@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-11-03
+
+Build 4. First release with automatic updates: users of 0.1.0 must download and install it by hand (replace the app in `/Applications`); later releases arrive through Sparkle.
 
 - Optional local history encryption in Settings → Privacy: AES-256-GCM protects existing indexes, snapshots and legacy backups, with a device-local Keychain key, reviewed encryption/decryption, resumable conversion and visible failures instead of plaintext fallback. Config files remain unchanged; old clients must be closed before conversion.
 - Structured TOML editing can patch existing text, boolean, Int64 and finite numeric values without rewriting comments or surrounding formatting. Apply updates the buffer and Save still requires review; unsupported types and new keys use Source.
