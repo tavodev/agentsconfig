@@ -94,6 +94,8 @@ struct SettingCatalogEntry: Identifiable {
 extension DocsCatalog {
     /// Settings scope of a file the app can edit, from its location.
     static func settingsScope(filePath: String) -> SettingSpec.Scope? {
+        // An Orca home replaces the user folder for the sessions it launches.
+        if let equivalent = OrcaIntegration.equivalentPath(for: filePath) { return settingsScope(filePath: equivalent) }
         func isUser(_ agentID: String, _ names: [String], _ relative: [String]) -> Bool {
             let root = AgentCatalog.root(for: agentID) as NSString
             return names.contains { filePath == root.appendingPathComponent($0) }

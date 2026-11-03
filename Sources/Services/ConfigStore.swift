@@ -817,6 +817,16 @@ final class ConfigStore {
         refresh()
     }
 
+    /// Shows or hides the Claude Code / Codex homes managed by Orca.
+    func setOrcaIntegration(enabled: Bool) {
+        guard dirtyPaths.isEmpty, savingPaths.isEmpty else {
+            actionError = L("Save or discard drafts before changing configuration roots."); return
+        }
+        AppSettings.defaults.set(enabled, forKey: "orcaIntegration")
+        selectedPath = nil
+        refresh()
+    }
+
     func pickConfigurationRoot(agentID: String) {
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
         guard panel.runModal() == .OK, let url = panel.url else { return }

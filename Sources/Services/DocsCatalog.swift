@@ -62,6 +62,7 @@ enum DocsCatalog {
     // MARK: - File docs
 
     static func fileDoc(for path: String) -> FileDoc? {
+        if let equivalent = OrcaIntegration.equivalentPath(for: path) { return fileDoc(for: equivalent) }
         let home = AppPaths.home
         let name = URL(fileURLWithPath: path).lastPathComponent
         // Home-only files: no project-local equivalent exists for these.
@@ -401,6 +402,7 @@ enum DocsCatalog {
     /// exact key, a reference `<id>` placeholder pattern, and finally the
     /// curated entry for the last segment. Every result links to the docs.
     static func keyDoc(filePath: String, keyPath: [String]) -> KeyDoc? {
+        if let equivalent = OrcaIntegration.equivalentPath(for: filePath) { return keyDoc(filePath: equivalent, keyPath: keyPath) }
         guard let source = keySources.first(where: { ConfigFileContext.matches(filePath, suffix: $0.suffix) }) else { return nil }
         let curated = source.curated[keyPath.joined(separator: ".")]
             ?? matchReferenceKey(keyPath, in: source.curatedPatterns).flatMap { source.curated[$0.key] }
@@ -515,7 +517,8 @@ enum DocsCatalog {
 
     /// Curated table for a settings file (used to add documented sub-fields).
     static func curatedKeys(filePath: String) -> [String: KeyDoc] {
-        keySources.first { ConfigFileContext.matches(filePath, suffix: $0.suffix) }?.curated ?? [:]
+        if let equivalent = OrcaIntegration.equivalentPath(for: filePath) { return curatedKeys(filePath: equivalent) }
+        return keySources.first { ConfigFileContext.matches(filePath, suffix: $0.suffix) }?.curated ?? [:]
     }
 
     /// Spec for a curated sub-field: scopes and topic come from the parent

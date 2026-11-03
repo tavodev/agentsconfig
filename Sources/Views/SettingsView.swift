@@ -19,6 +19,7 @@ struct AppSettingsView: View {
     @AppStorage("appearance", store: AppSettings.defaults) private var appearance = "system"
     @AppStorage("mcpLoginShellEnvironment", store: AppSettings.defaults) private var mcpLoginShell = false
     @AppStorage("contextBudgetThreshold", store: AppSettings.defaults) private var budgetThreshold = 8_000
+    @AppStorage("orcaIntegration", store: AppSettings.defaults) private var orcaIntegration = true
 
     var body: some View {
         Form {
@@ -68,6 +69,11 @@ struct AppSettingsView: View {
                         }
                     }
                 }
+                Toggle(L("Show configuration folders managed by Orca"), isOn: Binding(
+                    get: { orcaIntegration },
+                    set: { store.setOrcaIntegration(enabled: $0) }))
+                Text(L("Orca launches Claude Code and Codex with one configuration folder per account. Each one is listed as its own agent; which folder a terminal uses is not inferred."))
+                    .font(.callout).foregroundStyle(.secondary)
             }
             Section(L("Context budget")) {
                 Stepper(L("Warn above %d estimated tokens", budgetThreshold),

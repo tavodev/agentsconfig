@@ -63,6 +63,17 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   sin lógica especial. `Agent.submodulePath` (relativo al proyecto) distingue
   a estos agentes en el sidebar. `SubmoduleDiscovery.swift` valida sintaxis,
   pertenencia canónica, aliases y ciclos sin ejecutar Git.
+- `Sources/Services/OrcaIntegration.swift` — homes que Orca crea por cuenta
+  (`~/Library/Application Support/orca/claude-profiles/<id>/home`,
+  `codex-accounts/<id>/home`, `codex-runtime-home/home`) como agentes propios
+  (`id: "<claude-code|codex>:orca:<cuenta|runtime>"`), derivados de las
+  definiciones base antes de aplicar raíces personalizadas. Omite fuentes
+  enlazadas fuera del home (skills/plugins/`AGENTS.md` de Orca apuntan a
+  `~/.claude`/`~/.codex`), `auth.json` de Codex, MCP destino y fuentes locales.
+  `equivalentPath` mapea cada archivo a su equivalente en `~/.claude`/`~/.codex`
+  para docs, `settingsKind` y alcance usuario; `LayerNotes` lo excluye porque el
+  resolver no modela esos homes. No infiere qué home usa una terminal.
+  `UserDefaults["orcaIntegration"]` (Ajustes → Carpetas de configuración).
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación

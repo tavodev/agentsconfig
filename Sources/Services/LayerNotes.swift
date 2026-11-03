@@ -32,7 +32,9 @@ extension ConfigStore {
     /// analyzed within its own project; a user file within the project last
     /// chosen in the sidebar (or globally when there is none).
     func layerContext(for path: String) -> AnalysisContext? {
-        guard let kind = ConfigFileContext.settingsKind(for: path),
+        // The resolver models ~/.claude and ~/.codex only, not Orca homes.
+        guard OrcaIntegration.home(containing: path) == nil,
+              let kind = ConfigFileContext.settingsKind(for: path),
               let scope = DocsCatalog.settingsScope(filePath: path) else { return nil }
         var context = AnalysisContext()
         let url = URL(fileURLWithPath: path)

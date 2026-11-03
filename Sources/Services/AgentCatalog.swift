@@ -31,6 +31,7 @@ enum AgentCatalog {
             tree("~/.codex/plugins/cache", "SKILL.md", .skills, readOnly: true)]
         definitions[1].localSources += [file("AGENTS.override.md", .instructions), file(".codex/hooks.json", .hooks),
             tree(".codex/rules", "*.rules", .permissions)]
+        let orca = OrcaIntegration.definitions(claude: definitions[0], codex: definitions[1])
         let oldGemini = definitions.remove(at: 2)
         var gemini = oldGemini
         gemini.id = "gemini-cli"; gemini.name = "Gemini CLI"; gemini.symbol = "sparkles"
@@ -163,6 +164,6 @@ enum AgentCatalog {
                 definitions[index].sources.append(source)
             }
         }
-        return definitions
+        return definitions + orca
     }
 }

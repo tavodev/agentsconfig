@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Configuration folders managed by Orca are listed as their own agents: one **Claude Code · Orca** per Claude profile (`claude-profiles/<account>/home`, marking the one Orca has selected) and one **Codex · Orca** per account plus the shared runtime home. Their files get the same documentation, value controls and **Add setting** catalog as `~/.claude` / `~/.codex`; folders Orca links back to those homes stay under Claude Code or Codex, Codex credentials are left out, and they are not MCP destinations or part of layer analysis. Settings → Configuration folders can hide them.
 - Gemini CLI (335 keys) and OpenCode (153 keys) get the same descriptions, value controls and **Add setting** catalog, generated from their official JSON schemas; map entries such as `mcpServers.<name>.command` resolve for any name. Gemini `admin.*` keys are offered only in managed settings.
 - Lists of text are edited in place (add, remove, reorder, documented suggestions) in JSON and in TOML; a TOML array is rewritten keeping its single- or multi-line layout and re-parsed to confirm only it changed. Arrays with comments inside stay in Source.
 - Documented objects (`worktree`, `sandbox`, `statusLine`, `voice`, `autoMode`, `modelSettings.<model>`, Codex/Gemini tables…) show **+** to add only their documented fields; per-model entries pre-fill the model name.
