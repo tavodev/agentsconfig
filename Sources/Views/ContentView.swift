@@ -115,6 +115,42 @@ struct SidebarView: View {
         nonmutating set { savedProject = newValue ?? "" }
     }
     @AppStorage("sidebarSubmodule", store: AppSettings.defaults) private var savedSubmodule = ""
+    @AppStorage("sidebarGrouping", store: AppSettings.defaults) private var groupingMode = SidebarGrouping.Mode.product.rawValue
+    /// Newline-joined lists: top-level drag order, hidden and collapsed agent ids.
+    @AppStorage("sidebarAgentOrder", store: AppSettings.defaults) private var savedOrder = ""
+    @AppStorage("sidebarHiddenAgents", store: AppSettings.defaults) private var savedHidden = ""
+    @AppStorage("sidebarCollapsedAgents", store: AppSettings.defaults) private var savedCollapsed = ""
+    private func list(_ text: String) -> [String] { text.split(separator: "\n").map(String.init) }
+    private var hiddenAgents: Set<String> { Set(list(savedHidden)) }
+    private var globalAgents: [Agent] { store.agents.filter { $0.projectRoot == nil } }
+    private var globalSections: [SidebarGrouping.Section] {
+        SidebarGrouping.sections(ids: globalAgents.map(\.id),
+                                 mode: SidebarGrouping.Mode(rawValue: groupingMode) ?? .product,
+                                 order: list(savedOrder), hidden: hiddenAgents)
+    }
+    private var visibleGlobalIDs: [String] {
+        globalSections.flatMap { $0.groups.flatMap { [$0.agentID] + $0.children } }
+    }
+    /// Claude Code homes Orca has selected (`selected-host`), read once per render.
+    private var selectedOrcaAgents: Set<String> {
+        let root = OrcaIntegration.root
+        return Set(globalAgents.filter { OrcaIntegration.isOrcaAgentID($0.id) && $0.id.hasPrefix("claude-code")
+            && OrcaIntegration.isSelectedClaudeHome($0.detectionPath, root: root) }.map(\.id))
+    }
+    private func setHidden(_ id: String, _ hide: Bool) {
+        var hidden = list(savedHidden).filter { $0 != id }
+        if hide { hidden.append(id) }
+        savedHidden = hidden.joined(separator: "\n")
+        if hide { selectVisibleAgent() }
+    }
+    private func expansion(_ id: String) -> Binding<Bool> {
+        Binding(get: { !list(savedCollapsed).contains(id) },
+                set: { open in
+                    var collapsed = list(savedCollapsed).filter { $0 != id }
+                    if !open { collapsed.append(id) }
+                    savedCollapsed = collapsed.joined(separator: "\n")
+                })
+    }
     private var activeSubmodule: String? {
         get { savedSubmodule.isEmpty ? nil : savedSubmodule }
         nonmutating set { savedSubmodule = newValue ?? "" }
@@ -174,10 +210,65 @@ struct SidebarView: View {
     }
 
     private func selectVisibleAgent() {
-        let visible = scope == "global" ? store.agents.filter { $0.projectRoot == nil } : scopedAgents
-        guard !visible.contains(where: { $0.id == store.selectedAgentID }) else { return }
-        store.selectedAgentID = visible.first?.id
+        let visible = scope == "global" ? visibleGlobalIDs : scopedAgents.map(\.id)
+        guard !visible.contains(where: { $0 == store.selectedAgentID }) else { return }
+        store.selectedAgentID = visible.first
         store.selectedPath = nil
+    }
+
+    @ViewBuilder private func groupRow(_ group: SidebarGrouping.Group) -> some View {
+        if let agent = store.agents.first(where: { $0.id == group.agentID }) {
+            if group.children.isEmpty {
+                globalRow(agent, nested: false)
+            } else {
+                DisclosureGroup(isExpanded: expansion(group.agentID)) {
+                    ForEach(group.children, id: \.self) { id in
+                        if let child = store.agents.first(where: { $0.id == id }) { globalRow(child, nested: true) }
+                    }
+                } label: {
+                    globalRow(agent, nested: false)
+                }
+            }
+        }
+    }
+
+    private func globalRow(_ agent: Agent, nested: Bool) -> some View {
+        AgentGroupRow(agent: agent,
+                      displayName: SidebarGrouping.displayName(agent.name, id: agent.id, nested: nested),
+                      badge: selectedOrcaAgents.contains(agent.id) ? L("selected") : nil,
+                      onHide: { setHidden(agent.id, true) })
+    }
+
+    private var organizeMenu: some View {
+        Menu {
+            Picker(L("Group by"), selection: $groupingMode) {
+                Text(L("Product")).tag(SidebarGrouping.Mode.product.rawValue)
+                Text(L("Type")).tag(SidebarGrouping.Mode.kind.rawValue)
+                Text(L("None")).tag(SidebarGrouping.Mode.flat.rawValue)
+            }
+            .pickerStyle(.inline)
+            Divider()
+            Button(L("Restore default order")) { savedOrder = "" }
+                .disabled(savedOrder.isEmpty)
+            let hidden = globalAgents.filter { hiddenAgents.contains($0.id) }
+            if !hidden.isEmpty {
+                Menu(L("Hidden agents (%d)", hidden.count)) {
+                    ForEach(hidden) { agent in
+                        Button(L("Show %@", agent.name)) { setHidden(agent.id, false) }
+                    }
+                    Divider()
+                    Button(L("Show all")) { savedHidden = "" }
+                }
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help(L("Organize agents: grouping, order and hidden agents. Drag rows to reorder."))
+        .accessibilityLabel(L("Organize agents"))
+        .accessibilityIdentifier("organize-agents")
     }
 
     var body: some View {
@@ -222,16 +313,28 @@ struct SidebarView: View {
             .listRowSeparator(.hidden)
 
             if scope == "global" {
-                Section(L("Detected agents")) {
-                    if store.isScanning && store.agents.isEmpty {
+                if store.isScanning && store.agents.isEmpty {
+                    Section(L("Detected agents")) {
                         HStack(spacing: 8) {
                             ProgressView().controlSize(.small)
                             Text(L("Scanning configurations…")).foregroundStyle(.secondary)
                         }
                         .accessibilityIdentifier("initial-scan")
                     }
-                    ForEach(store.agents.filter { $0.projectRoot == nil }) { agent in
-                        AgentGroupRow(agent: agent)
+                }
+                ForEach(Array(globalSections.enumerated()), id: \.element.id) { index, section in
+                    Section {
+                        ForEach(section.groups) { group in groupRow(group) }
+                            .onMove { offsets, destination in
+                                savedOrder = SidebarGrouping.moving(section, from: offsets, to: destination,
+                                                                    order: list(savedOrder)).joined(separator: "\n")
+                            }
+                    } header: {
+                        HStack {
+                            Text(section.kind.map { L($0.title) } ?? L("Detected agents"))
+                            Spacer()
+                            if index == 0 { organizeMenu }
+                        }
                     }
                 }
             } else {
@@ -451,6 +554,7 @@ struct AgentRow: View {
     @Environment(ConfigStore.self) private var store
     let agent: Agent
     var displayName: String? = nil
+    var badge: String? = nil
 
     private var listedFileCount: Int {
         agent.files.filter { store.listsFile($0) }.count
@@ -460,8 +564,17 @@ struct AgentRow: View {
         HStack(spacing: 10) {
             AgentProductIcon(agent: agent, size: 28)
             VStack(alignment: .leading, spacing: 1) {
-                Text(displayName ?? agent.name)
-                    .font(.system(size: 13, weight: .medium))
+                HStack(spacing: 6) {
+                    Text(displayName ?? agent.name)
+                        .font(.system(size: 13, weight: .medium))
+                        .lineLimit(1)
+                    if let badge {
+                        Text(badge)
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 5).padding(.vertical, 1)
+                            .background(.tint.opacity(0.18), in: Capsule())
+                    }
+                }
                 Text(L("%d files", listedFileCount))
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -484,9 +597,13 @@ struct AgentRow: View {
 struct AgentGroupRow: View {
     @Environment(ConfigStore.self) private var store
     let agent: Agent
+    var displayName: String? = nil
+    var badge: String? = nil
+    /// Global rows only: hides the agent from the sidebar (Organize menu restores it).
+    var onHide: (() -> Void)? = nil
 
     var body: some View {
-        AgentRow(agent: agent, displayName: sidebarDisplayName)
+        AgentRow(agent: agent, displayName: displayName ?? sidebarDisplayName, badge: badge)
             .tag(agent.id)
             .accessibilityIdentifier("agent-row:\(agent.id)")
             .help(agent.notes.map { L($0) } ?? "")
@@ -495,6 +612,10 @@ struct AgentGroupRow: View {
                     store.revealInFinder(AppPaths.expand(agent.detectionPath))
                 }
                 Button(L("Re-scan")) { store.scheduleRefresh() }
+                if let onHide {
+                    Divider()
+                    Button(L("Hide from sidebar")) { onHide() }
+                }
             }
     }
 

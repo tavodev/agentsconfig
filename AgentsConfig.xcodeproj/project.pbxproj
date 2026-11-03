@@ -93,6 +93,7 @@
 		40FFACE04616EE5F728BB0C6 /* OrcaMcp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */; };
 		42E8E245A95A16131B6AA321 /* LayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E5008770AF0DE3DA76BA721 /* LayerNotes.swift */; };
 		443D0554A8DE08C3D030A209 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFA37FC1FD1533F599A09BB /* MenuBarView.swift */; };
+		44A26C7ABB04B7045C122227 /* SidebarGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B78FEC6AA4729135FDF451 /* SidebarGrouping.swift */; };
 		46954484AFFAF83FB5A5AB77 /* SettingMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF52948D3811405BF0F38958 /* SettingMerger.swift */; };
 		46A3A676167DF556F1263C39 /* CatalogCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7553A41985051E6773AC951 /* CatalogCoverageTests.swift */; };
 		4892C37999D314AC036DA493 /* Linter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78481F35B1898DC3428E432 /* Linter.swift */; };
@@ -120,6 +121,7 @@
 		5EC049195DDDFA76B43B4096 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEDA2DB166412D5F6A9FCB4D /* SettingsView.swift */; };
 		5F2BE5CCB618D5E373F9FC83 /* LargeSourceEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F35D051F5DE0ACE17AF81F /* LargeSourceEditor.swift */; };
 		5FF6EB30A2A5430E12ADECCC /* SubmoduleDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C09D2DBB4805212E8258BCF /* SubmoduleDiscovery.swift */; };
+		60688B7A7B672051067D185C /* SidebarGroupingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E4673E24FC62993EE755926 /* SidebarGroupingTests.swift */; };
 		608D64B8D450D8B33C1A02F4 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699D270C9D19F52B3A10B8D3 /* AppSettings.swift */; };
 		60C603C3DD8B324140973D95 /* AppUpdates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89AE81E42BD1D80F963C9B43 /* AppUpdates.swift */; };
 		6120AE781BD4DC046E4FE05D /* AgentProductIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E765C85E68F0B1364F121E1 /* AgentProductIcon.swift */; };
@@ -229,6 +231,8 @@
 		CB594709E41256B86FD15BF9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB1C50B1DEF6BB45B028CB1 /* ContentView.swift */; };
 		CC6A3596CF7325BB81AADC91 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A8563B33D43896A8D1D9F0 /* HistoryView.swift */; };
 		CD969E65441FBB02C147D3FA /* ContextBudget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF95F39BD02B0F6909F507B /* ContextBudget.swift */; };
+		CECB3616989107127EEF3DEC /* SidebarGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B78FEC6AA4729135FDF451 /* SidebarGrouping.swift */; };
+		CEE2AD28169B0A40554BE1F1 /* SidebarGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90B78FEC6AA4729135FDF451 /* SidebarGrouping.swift */; };
 		CF0D565FCC61C9DAF452B90A /* WorkspaceAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64E6BB347A6EC7D6E113F01 /* WorkspaceAnalysisView.swift */; };
 		CF74C32E523E6768A63251F1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB1C50B1DEF6BB45B028CB1 /* ContentView.swift */; };
 		CFA085DB4E0649B1A7EE821A /* ResourceLimitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3EDD4BB57206FFCC0B5D0B /* ResourceLimitTests.swift */; };
@@ -361,6 +365,8 @@
 		8A11E305909E063777009572 /* LinterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinterTests.swift; sourceTree = "<group>"; };
 		8A6C2DB41F4F02DCC4AE9409 /* IsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsolationTests.swift; sourceTree = "<group>"; };
 		8E224DBAD5D73D2AAD627082 /* EdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeCaseTests.swift; sourceTree = "<group>"; };
+		8E4673E24FC62993EE755926 /* SidebarGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarGroupingTests.swift; sourceTree = "<group>"; };
+		90B78FEC6AA4729135FDF451 /* SidebarGrouping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarGrouping.swift; sourceTree = "<group>"; };
 		982FAAB7DD1C19EDD5D6A7D8 /* OrcaDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaDetectionTests.swift; sourceTree = "<group>"; };
 		983BB0071F8880D62FDAC415 /* Frontmatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frontmatter.swift; sourceTree = "<group>"; };
 		98AFF3E18E88F8DC1CE2EEE4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -598,6 +604,7 @@
 				DF48CD98C1A977D8281259A9 /* HookMap.swift */,
 				3B15B7B065F5D84CFC1A8623 /* KnowledgeAnalysis.swift */,
 				F583A6FA299A176CB1E2CED5 /* Models.swift */,
+				90B78FEC6AA4729135FDF451 /* SidebarGrouping.swift */,
 				4E85A9EF4EC3C92C78171418 /* SkillOrigin.swift */,
 				7E79D6C3607E8C71B56F987E /* WorkspaceAnalysis.swift */,
 			);
@@ -644,6 +651,7 @@
 				5B5F707255E2E899A68F930D /* SecretsTests.swift */,
 				0870096A8701A549D14481E1 /* SettingEditingTests.swift */,
 				442B97D9FE66A1E1DE72DA78 /* SetupBundleTests.swift */,
+				8E4673E24FC62993EE755926 /* SidebarGroupingTests.swift */,
 				DA34AF631FF65B09F28416A7 /* SkillGroupingTests.swift */,
 				870DF0AA822F33B6AF3BBA98 /* TOMLScalarEditorTests.swift */,
 				4C9BC71E9EB2247B8AEB5D3D /* UpdaterTests.swift */,
@@ -910,6 +918,8 @@
 				82EEAC3627DB2D49315750C2 /* SetupBundle.swift in Sources */,
 				D2A556FFF384EDC460C6E008 /* SetupBundleTests.swift in Sources */,
 				AEF3F388111DF1FBBB0FAB40 /* SetupTransferView.swift in Sources */,
+				44A26C7ABB04B7045C122227 /* SidebarGrouping.swift in Sources */,
+				60688B7A7B672051067D185C /* SidebarGroupingTests.swift in Sources */,
 				1262499AC001341274F0F03C /* SkillGroupingTests.swift in Sources */,
 				09F0A74305E188D205D576A8 /* SkillOrigin.swift in Sources */,
 				B7DD43C3C9EB46BFDA64E312 /* SnapshotStore.swift in Sources */,
@@ -1003,6 +1013,7 @@
 				270C001C90AD92C7C9D3568F /* SettingsView.swift in Sources */,
 				7720788DFB73025A4B45C618 /* SetupBundle.swift in Sources */,
 				73229B58479AF9C1B2D9D20E /* SetupTransferView.swift in Sources */,
+				CECB3616989107127EEF3DEC /* SidebarGrouping.swift in Sources */,
 				E81419490F219B45FBA8358A /* SkillOrigin.swift in Sources */,
 				24150AA9D7738F46FC408EB1 /* SnapshotStore.swift in Sources */,
 				730A7EBAA6647126C623F131 /* StructuredView.swift in Sources */,
@@ -1084,6 +1095,7 @@
 				5EC049195DDDFA76B43B4096 /* SettingsView.swift in Sources */,
 				243A6191D6E7AFCDDDA469E1 /* SetupBundle.swift in Sources */,
 				8C8DE6016CACB9247D4570EB /* SetupTransferView.swift in Sources */,
+				CEE2AD28169B0A40554BE1F1 /* SidebarGrouping.swift in Sources */,
 				78F3AC2639C0D99EEA2A3543 /* SkillOrigin.swift in Sources */,
 				B2308995402C468C5CDF6912 /* SnapshotStore.swift in Sources */,
 				7D5BC190746E375F1F8ECE29 /* StructuredView.swift in Sources */,

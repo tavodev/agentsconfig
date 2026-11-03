@@ -337,6 +337,11 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   Las skills de la lista de archivos y de Configuración → Skills se agrupan
   por origen y, si hay más de un dueño, por carpeta o paquete; la fila de
   skill no repite el path largo (el dueño ya lo nombra).
+- `Sources/Models/SidebarGrouping.swift` — agrupación pura de agentes globales en el
+  sidebar (producto con cuentas Orca anidadas, tipo o lista), orden de arrastre y
+  ocultos. Persistencia en `AppSettings.defaults` (`sidebarGrouping`,
+  `sidebarAgentOrder`, `sidebarHiddenAgents`, `sidebarCollapsedAgents`; listas
+  separadas por saltos de línea). Ocultar solo afecta al sidebar, no al escaneo.
 - `Sources/Views/SettingsView.swift` — `AppSettingsView`, en archivo propio
   (no en `AgentsConfigApp.swift`) porque el target de tests excluye ese
   archivo por el `@main`; se reusa tal cual desde la escena `Settings`
