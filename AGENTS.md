@@ -92,6 +92,13 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   sin origen más reciente queda «no determinado» (Orca reescribe rutas y
   promueve claves usando una línea base que no se lee). El inspector muestra el
   estado y «Abrir origen» (`store.openFile`).
+  - Contrato completo en `docs/ORCA.md`. `OrcaDetection.swift`: carpeta de datos
+    (Ajustes `orcaDataPath` → `ORCA_USER_DATA_PATH` solo fuera de ejecuciones
+    aisladas → predeterminada), cuenta Claude seleccionada (`selected-host`),
+    hooks gestionados de Codex. Sin huérfanos ni cuenta Codex seleccionada (exigen
+    leer el almacén de ajustes de Orca). `OrcaLayerNotes.swift`: notas por clave
+    desde `ConfigStore.layerNotes` (`layerContext` sigue en nil). `HookMap` marca
+    cuenta y `OrcaHookRole` (gestionado/heredado/copia obsoleta/propio).
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación

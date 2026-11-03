@@ -20,9 +20,11 @@
 		08C666CDFFC3F170B2FF0507 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F583A6FA299A176CB1E2CED5 /* Models.swift */; };
 		09F0A74305E188D205D576A8 /* SkillOrigin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E85A9EF4EC3C92C78171418 /* SkillOrigin.swift */; };
 		0A9146E72B845BCD6124F3B1 /* SettingMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF52948D3811405BF0F38958 /* SettingMerger.swift */; };
+		0DA1ED2C28BAA1560EC2816F /* OrcaDetectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982FAAB7DD1C19EDD5D6A7D8 /* OrcaDetectionTests.swift */; };
 		0F78D0F38CF669E7C8ECB09B /* DocsCatalogReference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9179D15E700498368260D1 /* DocsCatalogReference.swift */; };
 		1018D99D1ADE40E050A0A949 /* EditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77430B23A9292519E01F4517 /* EditorView.swift */; };
 		1262499AC001341274F0F03C /* SkillGroupingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA34AF631FF65B09F28416A7 /* SkillGroupingTests.swift */; };
+		12CB787DB6CD4BD7BDE6FA28 /* OrcaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8826DF6FE6A34B3B00DCD407 /* OrcaDetection.swift */; };
 		130B1EDAD7507B34D8BAF3B9 /* McpAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EA3123DA85EFF64AC63ACC1 /* McpAdapter.swift */; };
 		135C9BF8BAAC5C321FB469F5 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2FF70D38C5E429BF6CB63D /* Notifier.swift */; };
 		13A6C0C54FCE371AF55AD59E /* InspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07DCEC9BEAA1DC971B070423 /* InspectorView.swift */; };
@@ -68,6 +70,7 @@
 		2E4B26801EB7FDF3C4AFBDED /* KnowledgeAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B15B7B065F5D84CFC1A8623 /* KnowledgeAnalysis.swift */; };
 		2F68C896E83F159DDAD66052 /* TOMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6C44DB9CB5A8B54BEFC5703D /* TOMLKit */; };
 		32073673A409ABE988BCCC72 /* ContextBudget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EF95F39BD02B0F6909F507B /* ContextBudget.swift */; };
+		3253EDF65B4CDEE3B445B70F /* OrcaLayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EAF1666910C7C2AD384576 /* OrcaLayerNotes.swift */; };
 		33A6C09D5E4251FA2C990183 /* DiscoveryTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFCC88C34909D8F8DACDC1C /* DiscoveryTree.swift */; };
 		3562F42259835778F33AF8FD /* ProjectLocalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A5CDD9683FFF12599EBDDA /* ProjectLocalTests.swift */; };
 		359BC9011C060FEF358CCAC1 /* ScanPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27BE2C680568F52F7D5E71B /* ScanPerformanceTests.swift */; };
@@ -76,6 +79,7 @@
 		3716F4A2BD2D79585AC4375A /* HistoryKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E818BE0D80DB0BD10615F46 /* HistoryKeychain.swift */; };
 		37C210F0B6577B309F487D3F /* DocsCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5973B04BCC33A3CEA71EC7E /* DocsCatalog.swift */; };
 		38EDA9589DE65D5C5B489C7F /* MarkdownPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA28BEF1D888EB708E82A3C /* MarkdownPreview.swift */; };
+		38F3337A9343D70F6040734C /* OrcaLayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EAF1666910C7C2AD384576 /* OrcaLayerNotes.swift */; };
 		3B22F3951B550E8D6077DEAC /* AgentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F29A56C2C8E6654F8FF1CA56 /* AgentCatalog.swift */; };
 		3B5503B30022AD93813D8C6D /* AgentRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5385E29764BCF9FDD56DA2E /* AgentRegistry.swift */; };
 		3B8BDE5CDC5F003C80BB0D2A /* AcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4786519A6A07C3652C90D9F /* AcceptanceTests.swift */; };
@@ -109,6 +113,7 @@
 		57B0249D44500F04E5676FE4 /* LayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E5008770AF0DE3DA76BA721 /* LayerNotes.swift */; };
 		59035E4CD9789B9CF7D2B952 /* KnowledgeInspectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70699174DE8E8F7D880D36F0 /* KnowledgeInspectorTests.swift */; };
 		59438E5063BA1AA08033F72A /* McpStaticCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB5DDA7718434792F4F6557 /* McpStaticCheck.swift */; };
+		5A1F0C21307E1BC9C1AECFD9 /* OrcaLayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EAF1666910C7C2AD384576 /* OrcaLayerNotes.swift */; };
 		5BEB1D5C985A1F32E9EE8C94 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6430A34AB80C4A524F4DAC38 /* ActivityView.swift */; };
 		5EC049195DDDFA76B43B4096 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEDA2DB166412D5F6A9FCB4D /* SettingsView.swift */; };
 		5F2BE5CCB618D5E373F9FC83 /* LargeSourceEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F35D051F5DE0ACE17AF81F /* LargeSourceEditor.swift */; };
@@ -183,8 +188,10 @@
 		9BC983DD96F3A8F3F00870F6 /* HookMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64DBBA60F5B64E1B0493CA45 /* HookMapView.swift */; };
 		9F048049AD0A8F0445E2C95B /* McpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399FFD978CD359D353962C44 /* McpView.swift */; };
 		A0706B837C6C28209AEAAAA1 /* TOMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = 046782BC2A2CF6A52217971A /* TOMLKit */; };
+		A196AE0C6D88C1B3CBA6C2A5 /* OrcaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8826DF6FE6A34B3B00DCD407 /* OrcaDetection.swift */; };
 		A2FF22358298FB56BE90787B /* Parsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D984468D5B84FE1BDA84E8 /* Parsers.swift */; };
 		A307AD9586183956B7F504C9 /* HookMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF48CD98C1A977D8281259A9 /* HookMap.swift */; };
+		A33BED38E5A7254A3F42F832 /* OrcaDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8826DF6FE6A34B3B00DCD407 /* OrcaDetection.swift */; };
 		A3DF925D687A6F793A1ED004 /* KnowledgeAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B15B7B065F5D84CFC1A8623 /* KnowledgeAnalysis.swift */; };
 		A4785E1793F1AF31690E0A6D /* Frontmatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BB0071F8880D62FDAC415 /* Frontmatter.swift */; };
 		A50B81D55C3B00BC89BFF206 /* Divergence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A405AC3A18A15C3DCA7E45 /* Divergence.swift */; };
@@ -305,6 +312,7 @@
 		2DC821C63097E81784E8474B /* LargeFileWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeFileWorker.swift; sourceTree = "<group>"; };
 		30833F433DABE3BBAF38B37F /* PermissionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsTests.swift; sourceTree = "<group>"; };
 		342B283C8283276F8717D253 /* AtomicWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicWriter.swift; sourceTree = "<group>"; };
+		38EAF1666910C7C2AD384576 /* OrcaLayerNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaLayerNotes.swift; sourceTree = "<group>"; };
 		399FFD978CD359D353962C44 /* McpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McpView.swift; sourceTree = "<group>"; };
 		3B15B7B065F5D84CFC1A8623 /* KnowledgeAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KnowledgeAnalysis.swift; sourceTree = "<group>"; };
 		3CFCC88C34909D8F8DACDC1C /* DiscoveryTree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryTree.swift; sourceTree = "<group>"; };
@@ -343,10 +351,12 @@
 		804C9354E504F68EDBE40F38 /* OrcaIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaIntegrationTests.swift; sourceTree = "<group>"; };
 		870DF0AA822F33B6AF3BBA98 /* TOMLScalarEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TOMLScalarEditorTests.swift; sourceTree = "<group>"; };
 		87EC80E014B7C2941173F8E8 /* ConflictTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictTests.swift; sourceTree = "<group>"; };
+		8826DF6FE6A34B3B00DCD407 /* OrcaDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaDetection.swift; sourceTree = "<group>"; };
 		89AE81E42BD1D80F963C9B43 /* AppUpdates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdates.swift; sourceTree = "<group>"; };
 		8A11E305909E063777009572 /* LinterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinterTests.swift; sourceTree = "<group>"; };
 		8A6C2DB41F4F02DCC4AE9409 /* IsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsolationTests.swift; sourceTree = "<group>"; };
 		8E224DBAD5D73D2AAD627082 /* EdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeCaseTests.swift; sourceTree = "<group>"; };
+		982FAAB7DD1C19EDD5D6A7D8 /* OrcaDetectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaDetectionTests.swift; sourceTree = "<group>"; };
 		983BB0071F8880D62FDAC415 /* Frontmatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Frontmatter.swift; sourceTree = "<group>"; };
 		98AFF3E18E88F8DC1CE2EEE4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9C60DD1D719D58B93E6963A0 /* AgentsConfigUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgentsConfigUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -556,7 +566,9 @@
 				184D945CCFA63D794D270A8C /* McpComparison.swift */,
 				7FB5DDA7718434792F4F6557 /* McpStaticCheck.swift */,
 				2B2FF70D38C5E429BF6CB63D /* Notifier.swift */,
+				8826DF6FE6A34B3B00DCD407 /* OrcaDetection.swift */,
 				C67A9FC0C15CFAFE7C45C268 /* OrcaIntegration.swift */,
+				38EAF1666910C7C2AD384576 /* OrcaLayerNotes.swift */,
 				B5E64F4C9A8F18D599F67610 /* OrcaMirror.swift */,
 				D8D984468D5B84FE1BDA84E8 /* Parsers.swift */,
 				E713E821F432E8585885594F /* Secrets.swift */,
@@ -613,6 +625,7 @@
 				543BED188FAE79CF0C381E7C /* McpComparisonTests.swift */,
 				46F2539D6833F14B4DD9493B /* McpStaticCheckTests.swift */,
 				D8BA0DF52FF1CC438EA88F71 /* McpTests.swift */,
+				982FAAB7DD1C19EDD5D6A7D8 /* OrcaDetectionTests.swift */,
 				804C9354E504F68EDBE40F38 /* OrcaIntegrationTests.swift */,
 				FEB3B9E719A918CF9F95DDEE /* ParsersTests.swift */,
 				30833F433DABE3BBAF38B37F /* PermissionsTests.swift */,
@@ -864,8 +877,11 @@
 				B3E2CDD9FBE7B81D48629268 /* MenuBarView.swift in Sources */,
 				153715E988BBAF0B02DBC208 /* Models.swift in Sources */,
 				135C9BF8BAAC5C321FB469F5 /* Notifier.swift in Sources */,
+				A33BED38E5A7254A3F42F832 /* OrcaDetection.swift in Sources */,
+				0DA1ED2C28BAA1560EC2816F /* OrcaDetectionTests.swift in Sources */,
 				6D27B5881D71FBCEDA908E1E /* OrcaIntegration.swift in Sources */,
 				4B733654993E0291CE652341 /* OrcaIntegrationTests.swift in Sources */,
+				5A1F0C21307E1BC9C1AECFD9 /* OrcaLayerNotes.swift in Sources */,
 				85CB2B357747D3742A83B327 /* OrcaMirror.swift in Sources */,
 				B1C66CFB40B8A42EF0000E5C /* Parsers.swift in Sources */,
 				0160A15E47ECCCD20304BE04 /* ParsersTests.swift in Sources */,
@@ -964,7 +980,9 @@
 				443D0554A8DE08C3D030A209 /* MenuBarView.swift in Sources */,
 				65C4053F5C76E388561D3142 /* Models.swift in Sources */,
 				13DFC9BC6B7A7FEB9A2D2843 /* Notifier.swift in Sources */,
+				A196AE0C6D88C1B3CBA6C2A5 /* OrcaDetection.swift in Sources */,
 				2505DCBB01A82A4C86899ADF /* OrcaIntegration.swift in Sources */,
+				3253EDF65B4CDEE3B445B70F /* OrcaLayerNotes.swift in Sources */,
 				00439525E147A015C50FBEC2 /* OrcaMirror.swift in Sources */,
 				DAE1721CBB3D1250E87E1577 /* Parsers.swift in Sources */,
 				FB0F034AF0D14CF98B6FE5F9 /* Secrets.swift in Sources */,
@@ -1042,7 +1060,9 @@
 				683908E322D0C03BF02B7275 /* MenuBarView.swift in Sources */,
 				08C666CDFFC3F170B2FF0507 /* Models.swift in Sources */,
 				C9B53869BCF0B8E6C6842BE9 /* Notifier.swift in Sources */,
+				12CB787DB6CD4BD7BDE6FA28 /* OrcaDetection.swift in Sources */,
 				03BB5AC8E5EEF08FAF68CF2F /* OrcaIntegration.swift in Sources */,
+				38F3337A9343D70F6040734C /* OrcaLayerNotes.swift in Sources */,
 				13B2F13235E20522A7A46380 /* OrcaMirror.swift in Sources */,
 				A2FF22358298FB56BE90787B /* Parsers.swift in Sources */,
 				36779E8FF30BA68A0BCE1D0C /* Secrets.swift in Sources */,

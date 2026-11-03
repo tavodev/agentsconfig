@@ -17,7 +17,9 @@ import Foundation
 /// Which home a given terminal uses is not inferred.
 enum OrcaIntegration {
     static let idPrefix = ":orca:"
-    static var root: String { AppPaths.expand("~/Library/Application Support/orca") }
+    /// Orca's data folder (`dataRootResolution`: Settings, `ORCA_USER_DATA_PATH`
+    /// outside isolated runs, or `~/Library/Application Support/orca`).
+    static var root: String { dataRootResolution.path }
 
     static var isEnabled: Bool {
         AppSettings.defaults.object(forKey: "orcaIntegration") as? Bool ?? true
@@ -37,6 +39,7 @@ enum OrcaIntegration {
     static func homes() -> [Home] {
         guard isEnabled else { return [] }
         let fm = FileManager.default
+        let root = root
         func subfolders(_ relative: String) -> [String] {
             let base = (root as NSString).appendingPathComponent(relative)
             return ((try? fm.contentsOfDirectory(atPath: base)) ?? []).filter { name in
@@ -44,12 +47,9 @@ enum OrcaIntegration {
                 return !name.hasPrefix(".") && fm.fileExists(atPath: base + "/" + name + "/home", isDirectory: &isDir) && isDir.boolValue
             }.sorted()
         }
-        let selectedFile = (root as NSString).appendingPathComponent("claude-profiles/selected-host")
-        let selected = (try? String(contentsOfFile: selectedFile, encoding: .utf8))?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
         var out: [Home] = subfolders("claude-profiles").map { account in
             let path = root + "/claude-profiles/" + account + "/home"
-            return Home(kind: .claude, path: path, account: account, selected: selected == path)
+            return Home(kind: .claude, path: path, account: account, selected: isSelectedClaudeHome(path, root: root))
         }
         out += subfolders("codex-accounts").map {
             Home(kind: .codex, path: root + "/codex-accounts/" + $0 + "/home", account: $0, selected: false)

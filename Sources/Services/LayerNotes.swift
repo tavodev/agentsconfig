@@ -13,6 +13,8 @@ struct LayerNote: Equatable {
     let effectiveSource: String?
     /// Project the analysis assumed when the open file is a user file.
     let project: String?
+    /// Explains where the value comes from without warning (Orca copies in sync).
+    var informational = false
 }
 
 private struct LayerNotesKey: EnvironmentKey {
@@ -57,6 +59,9 @@ extension ConfigStore {
     }
 
     func layerNotes(for path: String) -> [String: LayerNote] {
+        // Orca homes are not modeled by the resolver: explain each key from
+        // what Orca copies, merges or keeps instead (`OrcaIntegration.layerNotes`).
+        if OrcaIntegration.home(containing: path) != nil { return orcaLayerNotes(for: path) }
         guard let context = layerContext(for: path) else { return [:] }
         let analysis = configurationAnalysis(context)
         let target = AppPaths.canonicalPath(path) ?? path
@@ -78,5 +83,17 @@ extension ConfigStore {
                                             effectiveSource: winner?.source, project: project)
         }
         return notes
+    }
+
+    /// Per-key notes for a structured file in an Orca home, from the copy
+    /// and its original (no project layers: Orca does not change them).
+    func orcaLayerNotes(for path: String) -> [String: LayerNote] {
+        guard let relation = OrcaIntegration.relation(for: path), let home = OrcaIntegration.home(containing: path),
+              let copy = parsedObject(at: path) else { return [:] }
+        let source = OrcaIntegration.sourcePath(for: path)
+        return OrcaIntegration.layerNotes(relation: relation, kind: home.kind,
+                                          fileName: (path as NSString).lastPathComponent,
+                                          copy: copy, origin: source.flatMap { parsedObject(at: $0) },
+                                          originPath: source)
     }
 }

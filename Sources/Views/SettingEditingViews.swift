@@ -471,7 +471,7 @@ struct LayerNoteView: View {
                     .textSelection(.enabled)
             }
         }
-        .foregroundStyle(.orange)
+        .foregroundStyle(note.informational ? AnyShapeStyle(.secondary) : AnyShapeStyle(.orange))
         .padding(.top, 2)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("layer-note")
