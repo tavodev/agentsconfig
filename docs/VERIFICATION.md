@@ -49,6 +49,27 @@ Publication review and decisions are tracked in
 [#5](https://github.com/tavodev/agentsconfig/issues/5). Raw logs, temporary paths
 and session inventories are not part of the documentation shipped to readers.
 
+## Release 0.3.0
+
+On 2026-11-03 the 0.3.0 / build 5 candidate (`9b23f42`) was verified on macOS
+26.6.2 and Xcode 26.1.1 (17B100) with XcodeGen 2.46.0:
+
+| Check | Result |
+| --- | --- |
+| Hostless Swift tests | 410 tests in 41 suites passed |
+| Isolated graphical suite | 34 tests executed and passed, zero failures; none covers the Orca views or the sidebar organization yet |
+| Publication guard | No credential-pattern findings; its tests and the legacy-export tests passed |
+| Multiprocess history | Plaintext and encrypted: four writers, 121 unique readable versions each |
+| Universal Release archive/export | arm64 and x86_64; Developer ID, secure timestamp and hardened runtime on the app and the five Sparkle components; no `get-task-allow`; no personal or build paths in the executable |
+| Apple notarization | App and DMG accepted separately, no reported issues; both tickets stapled; Gatekeeper: Notarized Developer ID |
+| Sparkle feed | `sign_update --verify` passed for the DMG and the feed; `releases/latest/download/appcast.xml` serves the 0.3.0 feed |
+
+In one earlier full run of the hostless suite the history-encryption
+concurrency test failed intermittently ([#33](https://github.com/tavodev/agentsconfig/issues/33));
+the candidate runs passed. The Orca integration was checked against fictitious
+Orca layouts only. Updating a real 0.2.0 installation through Sparkle and a
+clean-machine install remain open in [#6](https://github.com/tavodev/agentsconfig/issues/6).
+
 ## Unreleased changes after 0.1.0
 
 On 2026-10-16, after the work for issues #11 and #19–#26, the hostless suite ran
