@@ -92,6 +92,18 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   sin origen más reciente queda «no determinado» (Orca reescribe rutas y
   promueve claves usando una línea base que no se lee). El inspector muestra el
   estado y «Abrir origen» (`store.openFile`).
+  - `OrcaMcp.swift` (Fase 2): `mcpOrigins` clasifica cada MCP de un home Orca
+    (`.mirrored`, `.mirrorDiffers`, `.accountOnly`) contra la misma entrada del
+    origen en el índice; en `.claude.json` un proyecto del origen sustituye el
+    registro del perfil, y en Codex `.orca-config-settings-baseline.json`
+    (`mcpServers`/`mcpServerRoot`) marca lo que Orca copió. El índice lee
+    `projects.<ruta>.mcpServers` también de los perfiles Orca; el comparador
+    agrupa los espejos con su origen y los excluye de divergencias.
+    `promoteOrcaMcpServer` lleva un MCP solo-de-cuenta de usuario a
+    `~/.claude.json`/`~/.codex/config.toml` por `McpReview` (los homes Orca
+    siguen sin ser destino). `parseCodexBaseline` es puro y tolerante
+    (versión desconocida → no reconocido) y `Linter` añade al `config.toml`
+    del home avisos por clave en conflicto (sin valores) o baseline ilegible.
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación

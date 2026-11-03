@@ -60,6 +60,9 @@ enum LintRule: String, CaseIterable {
             issues.append(contentsOf: literalSecretIssues(dict))
         }
 
+        // --- Orca Codex homes: settings conflicts recorded in Orca's baseline
+        issues.append(contentsOf: OrcaIntegration.codexBaselineIssues(configPath: path))
+
         // --- orphan orca references in plain text (TOML hook strings etc.)
         if format == .toml || format == .json || format == .jsonc {
             if text.contains("/.orca/") {

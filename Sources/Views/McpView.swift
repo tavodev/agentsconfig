@@ -125,8 +125,10 @@ struct McpMatrixRow: View {
     @Environment(ConfigStore.self) private var store
 
     var body: some View {
-        let entries = store.contextualMcpIndex.filter { $0.name == name }
-        let ownerIDs = Set(entries.map { mcpAgentFamilyID($0.agentID) })
+        let all = store.contextualMcpIndex.filter { $0.name == name }
+        let entries = all.filter { !store.isOrcaMirror($0) }
+        let mirrors = all.count - entries.count
+        let ownerIDs = Set(all.map { mcpAgentFamilyID($0.agentID) })
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(name).font(.body.monospaced().weight(.medium))
@@ -134,6 +136,11 @@ struct McpMatrixRow: View {
                 HStack(spacing: 6) {
                     Text(entries.count == 1 ? L("1 source") : L("%d sources", entries.count))
                         .font(.callout).foregroundStyle(.secondary)
+                    if mirrors > 0 {
+                        Text(mirrors == 1 ? L("+1 Orca mirror") : L("+%d Orca mirrors", mirrors))
+                            .font(.callout).foregroundStyle(.tertiary)
+                            .help(L("Copies Orca makes for its accounts, identical to their source. Shown with the source in Server details."))
+                    }
                     McpCheckBadge(findings: entries.flatMap { store.mcpChecks(for: $0) })
                     if store.mcpDefinitionsDiverge(name) {
                         Label(L("Differs"), systemImage: "arrow.triangle.branch")
@@ -223,10 +230,13 @@ struct McpDetailView: View {
                         .padding(.vertical, 6)
                     }
 
-                    if entries.count > 1 { McpDefinitionDiffView(entries: entries) }
+                    let distinct = entries.filter { !store.isOrcaMirror($0) }
+                    if distinct.count > 1 { McpDefinitionDiffView(entries: distinct) }
                     ForEach(agents) { agent in
-                        let familyEntries = entries.filter {
-                            mcpAgentFamilyID($0.agentID) == mcpAgentFamilyID(agent.id)
+                        // Orca mirrors are listed on their source's card when it is shown.
+                        let familyEntries = entries.filter { entry in
+                            mcpAgentFamilyID(entry.agentID) == mcpAgentFamilyID(agent.id)
+                                && !(store.isOrcaMirror(entry) && entries.contains { $0.id == store.orcaMcpSource(of: entry)?.id })
                         }
                         if familyEntries.isEmpty {
                             McpMissingCard(agent: agent, source: entries.first)
@@ -259,8 +269,10 @@ struct McpAgentCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     AgentProductIcon(agent: agent, size: 16)
-                    Text(agent.name).font(.system(size: 13, weight: .semibold))
+                    Text(OrcaIntegration.isOrcaAgentID(entry.agentID) ? entry.agentName : agent.name)
+                        .font(.system(size: 13, weight: .semibold))
                     Text(L(entry.scope)).font(.caption).foregroundStyle(.secondary)
+                    if let origin = store.orcaMcpOrigin(entry) { McpOrcaOriginBadge(origin: origin) }
                     if let compared = store.comparedMcpSources.first(where: { $0.id == entry.id }) {
                         Text(L(compared.state)).font(.caption).foregroundStyle(.secondary).help(L(compared.reason))
                     }
@@ -285,10 +297,25 @@ struct McpAgentCard: View {
                         .controlSize(.small)
                         .help(L("Replace this definition with another agent's, after reviewing the diff."))
                     }
+                    if let target = store.orcaPromotionTarget(for: entry) {
+                        Button(L("Promote to %@", target.path.replacingOccurrences(of: AppPaths.home, with: "~"))) {
+                            store.promoteOrcaMcpServer(entry)
+                        }
+                        .controlSize(.small)
+                        .help(L("Copy this account-only server to the regular configuration, after reviewing the diff. Orca then shares it with every account."))
+                        .accessibilityIdentifier("mcp-promote:" + entry.id)
+                    }
                     Button { store.openFile(entry.sourcePath) } label: {
                         Label(L("Open"), systemImage: "doc.text")
                     }
                     .controlSize(.small)
+                }
+                let mirrors = store.orcaMirrors(of: entry)
+                if !mirrors.isEmpty {
+                    Label(L("Also in Orca, same definition: %@", mirrors.map(\.agentName).joined(separator: ", ")),
+                          systemImage: "square.on.square")
+                        .font(.callout).foregroundStyle(.secondary)
+                        .help(L("Orca copies this server to these accounts before each launch."))
                 }
 
                 HStack(spacing: 8) {
@@ -327,6 +354,25 @@ struct McpAgentCard: View {
             }
         }
         .padding(.horizontal, 18)
+    }
+}
+
+/// Where a server of an Orca home comes from (mirror or account-only).
+struct McpOrcaOriginBadge: View {
+    let origin: OrcaIntegration.McpOrigin
+    var body: some View {
+        let (text, help, icon): (String, String, String) = switch origin {
+        case .mirrored:
+            ("Orca mirror", "Orca copies this server from the regular configuration before each launch; same definition.", "square.on.square")
+        case .mirrorDiffers:
+            ("Differs from source", "The regular configuration owns this server but defines it differently or no longer has it; Orca updates this copy on its next launch.", "arrow.triangle.2.circlepath")
+        case .accountOnly:
+            ("Only in this account", "Only this Orca account has this server and Orca keeps it. Promote it to share it with the regular configuration and every account.", "person.crop.circle")
+        }
+        Label(L(text), systemImage: icon)
+            .font(.caption).foregroundStyle(origin == .mirrorDiffers ? Color.orange : Color.secondary)
+            .help(L(help))
+            .accessibilityIdentifier("mcp-orca-origin")
     }
 }
 
