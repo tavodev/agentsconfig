@@ -50,7 +50,8 @@ struct McpComparedSource: Identifiable {
         }
     }
     static func normalized(_ entry: McpServerEntry) -> [String: Any] {
-        let family = family(entry)
+        // Orca homes use their product's schema (`codex:orca:<account>` → codex).
+        let family = OrcaIntegration.baseAgentID(family(entry))
         let raw = entry.raw
         let transport: String
         if !entry.isRemote { transport = "stdio" }

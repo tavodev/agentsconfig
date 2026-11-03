@@ -34,6 +34,7 @@
 		16887DE94F7C52A78F3AFEEF /* DiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CE9ED5F3E9C9BDBEE718A81 /* DiffView.swift */; };
 		17A3CAF19690F3CDEA6A2EF0 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 6167DC45CD8755CDFFEAA468 /* Sparkle */; };
 		18ECB1A5C971E16DA6793CAC /* McpDefinitionDiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8189073E1D17ACC66AF8D57 /* McpDefinitionDiffView.swift */; };
+		19B1453C835CF76939853F93 /* OrcaMcp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */; };
 		1AB2E09D39B6BE9614D109AC /* DivergenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A1B6C554D9A4C47884F423 /* DivergenceTests.swift */; };
 		1AD39224AD8460C1F8E19D05 /* ContextBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5974D43C7599EF2E74BF52 /* ContextBudgetView.swift */; };
 		1B2161337FBDCC880C6887C3 /* ConfigStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9DD61D45FCFA0ABA81FA745 /* ConfigStoreTests.swift */; };
@@ -85,6 +86,7 @@
 		3F8D43D083381F42EC1D1E2B /* McpStaticCheckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F2539D6833F14B4DD9493B /* McpStaticCheckTests.swift */; };
 		403BA30464032A587ED1221A /* McpComparison.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184D945CCFA63D794D270A8C /* McpComparison.swift */; };
 		409469224E44633A88AA74F1 /* DiscoveryTree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFCC88C34909D8F8DACDC1C /* DiscoveryTree.swift */; };
+		40FFACE04616EE5F728BB0C6 /* OrcaMcp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */; };
 		42E8E245A95A16131B6AA321 /* LayerNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E5008770AF0DE3DA76BA721 /* LayerNotes.swift */; };
 		443D0554A8DE08C3D030A209 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFA37FC1FD1533F599A09BB /* MenuBarView.swift */; };
 		46954484AFFAF83FB5A5AB77 /* SettingMerger.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF52948D3811405BF0F38958 /* SettingMerger.swift */; };
@@ -182,6 +184,7 @@
 		9A0C7670F45959EEE5F43E1F /* DiffEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D8DB75C1CEA6C3429B8F78 /* DiffEngine.swift */; };
 		9BC983DD96F3A8F3F00870F6 /* HookMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64DBBA60F5B64E1B0493CA45 /* HookMapView.swift */; };
 		9F048049AD0A8F0445E2C95B /* McpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 399FFD978CD359D353962C44 /* McpView.swift */; };
+		9F076A6D4610DB9BFD902470 /* OrcaMcpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68AF11264B766D9A013EA473 /* OrcaMcpTests.swift */; };
 		A0706B837C6C28209AEAAAA1 /* TOMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = 046782BC2A2CF6A52217971A /* TOMLKit */; };
 		A2FF22358298FB56BE90787B /* Parsers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D984468D5B84FE1BDA84E8 /* Parsers.swift */; };
 		A307AD9586183956B7F504C9 /* HookMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF48CD98C1A977D8281259A9 /* HookMap.swift */; };
@@ -226,6 +229,7 @@
 		D258EA9E95A56A5246BF053D /* ConfigFileContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20F244EEC57D3B1AD1DCBA55 /* ConfigFileContext.swift */; };
 		D2A556FFF384EDC460C6E008 /* SetupBundleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 442B97D9FE66A1E1DE72DA78 /* SetupBundleTests.swift */; };
 		D3D69E9DF169F2F4436069A7 /* Linter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78481F35B1898DC3428E432 /* Linter.swift */; };
+		D47E1B1F62D93E070371959D /* OrcaMcp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */; };
 		D498A4C4C99BE4AE71AF78BD /* ConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CC281915AEC88B517F27D5 /* ConfigStore.swift */; };
 		D68FEA2CEF1F81F027126080 /* HookMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA3BB4690B6AE49BB1BC0EF0 /* HookMapTests.swift */; };
 		D6B8A81B74917C504E9CEDBA /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D54D5BC82D3FA758D23CB8FB /* DiagnosticsView.swift */; };
@@ -328,6 +332,7 @@
 		64C7478631946E8A3CCC377E /* AgentsConfigUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentsConfigUITests.swift; sourceTree = "<group>"; };
 		64DBBA60F5B64E1B0493CA45 /* HookMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookMapView.swift; sourceTree = "<group>"; };
 		6776ABD557C8ED4773C76C50 /* AgentsConfigApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentsConfigApp.swift; sourceTree = "<group>"; };
+		68AF11264B766D9A013EA473 /* OrcaMcpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaMcpTests.swift; sourceTree = "<group>"; };
 		699D270C9D19F52B3A10B8D3 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		6B5974D43C7599EF2E74BF52 /* ContextBudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextBudgetView.swift; sourceTree = "<group>"; };
 		6EF95F39BD02B0F6909F507B /* ContextBudget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextBudget.swift; sourceTree = "<group>"; };
@@ -372,6 +377,7 @@
 		D8BA0DF52FF1CC438EA88F71 /* McpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McpTests.swift; sourceTree = "<group>"; };
 		D8D984468D5B84FE1BDA84E8 /* Parsers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parsers.swift; sourceTree = "<group>"; };
 		DA34AF631FF65B09F28416A7 /* SkillGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillGroupingTests.swift; sourceTree = "<group>"; };
+		DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrcaMcp.swift; sourceTree = "<group>"; };
 		DD3EDD4BB57206FFCC0B5D0B /* ResourceLimitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceLimitTests.swift; sourceTree = "<group>"; };
 		DF48CD98C1A977D8281259A9 /* HookMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HookMap.swift; sourceTree = "<group>"; };
 		DF9D7E9875C2FEC02B77E862 /* SettingSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingSpec.swift; sourceTree = "<group>"; };
@@ -557,6 +563,7 @@
 				7FB5DDA7718434792F4F6557 /* McpStaticCheck.swift */,
 				2B2FF70D38C5E429BF6CB63D /* Notifier.swift */,
 				C67A9FC0C15CFAFE7C45C268 /* OrcaIntegration.swift */,
+				DB76E19D948AE3968A4D28D8 /* OrcaMcp.swift */,
 				B5E64F4C9A8F18D599F67610 /* OrcaMirror.swift */,
 				D8D984468D5B84FE1BDA84E8 /* Parsers.swift */,
 				E713E821F432E8585885594F /* Secrets.swift */,
@@ -614,6 +621,7 @@
 				46F2539D6833F14B4DD9493B /* McpStaticCheckTests.swift */,
 				D8BA0DF52FF1CC438EA88F71 /* McpTests.swift */,
 				804C9354E504F68EDBE40F38 /* OrcaIntegrationTests.swift */,
+				68AF11264B766D9A013EA473 /* OrcaMcpTests.swift */,
 				FEB3B9E719A918CF9F95DDEE /* ParsersTests.swift */,
 				30833F433DABE3BBAF38B37F /* PermissionsTests.swift */,
 				D7A5CDD9683FFF12599EBDDA /* ProjectLocalTests.swift */,
@@ -866,6 +874,8 @@
 				135C9BF8BAAC5C321FB469F5 /* Notifier.swift in Sources */,
 				6D27B5881D71FBCEDA908E1E /* OrcaIntegration.swift in Sources */,
 				4B733654993E0291CE652341 /* OrcaIntegrationTests.swift in Sources */,
+				19B1453C835CF76939853F93 /* OrcaMcp.swift in Sources */,
+				9F076A6D4610DB9BFD902470 /* OrcaMcpTests.swift in Sources */,
 				85CB2B357747D3742A83B327 /* OrcaMirror.swift in Sources */,
 				B1C66CFB40B8A42EF0000E5C /* Parsers.swift in Sources */,
 				0160A15E47ECCCD20304BE04 /* ParsersTests.swift in Sources */,
@@ -965,6 +975,7 @@
 				65C4053F5C76E388561D3142 /* Models.swift in Sources */,
 				13DFC9BC6B7A7FEB9A2D2843 /* Notifier.swift in Sources */,
 				2505DCBB01A82A4C86899ADF /* OrcaIntegration.swift in Sources */,
+				D47E1B1F62D93E070371959D /* OrcaMcp.swift in Sources */,
 				00439525E147A015C50FBEC2 /* OrcaMirror.swift in Sources */,
 				DAE1721CBB3D1250E87E1577 /* Parsers.swift in Sources */,
 				FB0F034AF0D14CF98B6FE5F9 /* Secrets.swift in Sources */,
@@ -1043,6 +1054,7 @@
 				08C666CDFFC3F170B2FF0507 /* Models.swift in Sources */,
 				C9B53869BCF0B8E6C6842BE9 /* Notifier.swift in Sources */,
 				03BB5AC8E5EEF08FAF68CF2F /* OrcaIntegration.swift in Sources */,
+				40FFACE04616EE5F728BB0C6 /* OrcaMcp.swift in Sources */,
 				13B2F13235E20522A7A46380 /* OrcaMirror.swift in Sources */,
 				A2FF22358298FB56BE90787B /* Parsers.swift in Sources */,
 				36779E8FF30BA68A0BCE1D0C /* Secrets.swift in Sources */,
