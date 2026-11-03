@@ -32,6 +32,9 @@ final class Loc {
         String(format: t(en), arguments: args)
     }
 
+    /// Spanish text for an English key, regardless of the current language.
+    static func esTranslation(_ en: String) -> String? { es[en] }
+
     // MARK: - Spanish translations (key = English source string)
 
     private static let es: [String: String] = [
@@ -625,6 +628,23 @@ final class Loc {
 
         // Linter / engine messages (computed at event time)
         "Hook points to a missing file: %@": "Hook referencia un archivo inexistente: %@",
+        "Orca rewrites this file before each launch so it only imports the global CLAUDE.md. Edit the original; read-only here.": "Orca reescribe este archivo antes de cada lanzamiento para que solo importe el CLAUDE.md global. Edita el original; aquí es de solo lectura.",
+        "Copy of the Claude Code user settings that Orca refreshes before each launch and extends with its own status hooks. Edit the original; read-only here.": "Copia de los ajustes de usuario de Claude Code que Orca actualiza antes de cada lanzamiento y amplía con sus propios hooks de estado. Edita el original; aquí es de solo lectura.",
+        "Copy of the matching file in the Claude Code configuration folder; Orca overwrites it before each launch. Edit the original; read-only here.": "Copia del archivo equivalente de la carpeta de configuración de Claude Code; Orca la sobrescribe antes de cada lanzamiento. Edita el original; aquí es de solo lectura.",
+        "Copy of the matching file in the Codex configuration folder; Orca refreshes it before each launch. Edit the original; read-only here.": "Copia del archivo equivalente de la carpeta de configuración de Codex; Orca la actualiza antes de cada lanzamiento. Edita el original; aquí es de solo lectura.",
+        "Orca merges the shared keys of the global Claude Code state (MCP servers, projects…) into this file before each launch; account keys stay here. Read-only to avoid racing Orca.": "Orca fusiona en este archivo las claves compartidas del estado global de Claude Code (servidores MCP, proyectos…) antes de cada lanzamiento; las claves de la cuenta se quedan aquí. Solo lectura para no competir con Orca.",
+        "Orca merges the Codex config into this file before each launch, keeping only this home's project and hook trust, own MCP servers and daemon guard. Model, reasoning effort, approval policy, sandbox mode and some TUI keys changed here are copied back to the Codex config. Edit the original; read-only here.": "Orca fusiona la configuración de Codex en este archivo antes de cada lanzamiento y conserva solo la confianza de proyectos y hooks, los servidores MCP propios y la protección del daemon de este home. Los cambios aquí en modelo, esfuerzo de razonamiento, política de aprobación, modo sandbox y algunas claves de la TUI se copian de vuelta a la configuración de Codex. Edita el original; aquí es de solo lectura.",
+        "Orca copy": "Copia de Orca",
+        "Generated from": "Generado a partir de",
+        "Comparing…": "Comparando…",
+        "Open source": "Abrir origen",
+        "The source file is not listed in the app": "El archivo de origen no aparece en la app",
+        "In sync with the source.": "Sincronizado con el origen.",
+        "The source changed after this copy; Orca updates it on its next launch.": "El origen cambió después de esta copia; Orca la actualizará en su próximo lanzamiento.",
+        "Differs from the source with no newer source change to explain it; Orca overwrites it on its next launch.": "Difiere del origen sin un cambio posterior en el origen que lo explique; Orca la sobrescribirá en su próximo lanzamiento.",
+        "The source file does not exist; Orca leaves this copy as it is.": "El archivo de origen no existe; Orca deja esta copia como está.",
+        "Differs from the source, but Orca may explain it (account-only keys, promoted settings or rewritten paths); not determined.": "Difiere del origen, pero Orca puede explicarlo (claves solo de la cuenta, ajustes promovidos o rutas reescritas); no determinado.",
+        "Not compared.": "Sin comparar.",
         "Orca hooks detected but ~/.orca no longer exists — they are inert.": "Hooks de Orca detectados pero ~/.orca ya no existe — son inertes.",
         "Empty file.": "Archivo vacío.",
         "Unrecognized key: «%@» — typo or new agent key?": "Clave no reconocida: «%@» — ¿typo o key nueva del agente?",

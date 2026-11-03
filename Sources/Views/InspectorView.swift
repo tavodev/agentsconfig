@@ -23,6 +23,9 @@ struct FileInspectorView: View {
                         aboutSection(fd)
                     }
                     metaSection(path: path, file: file)
+                    if let source = OrcaIntegration.sourcePath(for: path) {
+                        OrcaSyncSection(path: path, sourcePath: source, copyModified: file.mtime)
+                    }
                     if !file.issues.isEmpty { issuesSection(file) }
                     if !file.managedBlocks.isEmpty { managedSection(file) }
                     actionsSection(path: path)
@@ -152,5 +155,83 @@ struct InspectorAction: View {
         .buttonStyle(.borderless)
         .foregroundStyle(Color.primary)
         .padding(.vertical, 2)
+    }
+}
+
+/// Origin and sync status of a file Orca regenerates from ~/.claude / ~/.codex.
+/// Recomputed off the main actor when either side changes on disk.
+private struct OrcaSyncSection: View {
+    let path: String
+    let sourcePath: String
+    let copyModified: Date?
+    @Environment(ConfigStore.self) private var store
+    @State private var status: OrcaIntegration.SyncStatus?
+
+    private var sourceFile: TrackedFile? {
+        for agent in store.agents {
+            if let f = agent.files.first(where: { $0.path == sourcePath }) { return f }
+        }
+        return nil
+    }
+
+    private struct Key: Equatable { var path: String; var copy: Date?; var source: Date?; var exists: Bool? }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L("Orca copy")).font(.headline)
+                .foregroundStyle(.secondary)
+            HStack {
+                Text(L("Generated from")).font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Text(sourcePath.replacingOccurrences(of: AppPaths.home, with: "~"))
+                    .font(.caption.monospaced()).textSelection(.enabled)
+                    .lineLimit(1).truncationMode(.middle)
+            }
+            HStack(alignment: .top, spacing: 6) {
+                Image(systemName: icon).foregroundStyle(tint).font(.callout)
+                Text(status.map { L(Self.label($0)) } ?? L("Comparing…"))
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+            InspectorAction(icon: "arrow.right.doc.on.clipboard", label: L("Open source")) {
+                store.openFile(sourcePath)
+            }
+            .disabled(sourceFile == nil)
+            .help(sourceFile == nil ? L("The source file is not listed in the app") : "")
+        }
+        .task(id: Key(path: path, copy: copyModified, source: sourceFile?.mtime, exists: sourceFile?.exists)) {
+            let path = path
+            status = nil
+            status = await Task.detached(priority: .utility) { OrcaIntegration.syncStatus(for: path) }.value
+        }
+    }
+
+    private var icon: String {
+        switch status {
+        case .synced?: "checkmark.circle.fill"
+        case .pending?: "clock.arrow.circlepath"
+        case .differs?, .sourceMissing?: "exclamationmark.triangle.fill"
+        default: "questionmark.circle"
+        }
+    }
+
+    private var tint: Color {
+        switch status {
+        case .synced?: .green
+        case .differs?, .sourceMissing?: .orange
+        default: .secondary
+        }
+    }
+
+    static func label(_ status: OrcaIntegration.SyncStatus) -> String {
+        switch status {
+        case .synced: "In sync with the source."
+        case .pending: "The source changed after this copy; Orca updates it on its next launch."
+        case .differs: "Differs from the source with no newer source change to explain it; Orca overwrites it on its next launch."
+        case .sourceMissing: "The source file does not exist; Orca leaves this copy as it is."
+        case .undetermined: "Differs from the source, but Orca may explain it (account-only keys, promoted settings or rewritten paths); not determined."
+        case .notApplicable: "Not compared."
+        }
     }
 }

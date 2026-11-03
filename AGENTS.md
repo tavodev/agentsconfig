@@ -74,6 +74,24 @@ Límite: `AGENTSCONFIG_HOME` solo redirige rutas. Para UI aislada, usar
   para docs, `settingsKind` y alcance usuario; `LayerNotes` lo excluye porque el
   resolver no modela esos homes. No infiere qué home usa una terminal.
   `UserDefaults["orcaIntegration"]` (Ajustes → Carpetas de configuración).
+  `OrcaMirror.swift` (API pura, verificada contra Orca 1.4.246) modela qué hace
+  Orca con cada archivo antes de cada lanzamiento: `relation(for:)`
+  (`.mirroredCopy` sobrescrito desde el origen — `settings.json` más los hooks
+  de estado de Orca, archivos sueltos compartidos, `AGENTS.md` copiado,
+  `rules/_orca-global-*.rules` —; `.importStub` para el `CLAUDE.md` del perfil
+  cuando la raíz es `~/.claude`; `.mergedState` para `.claude.json` y el
+  `config.toml` de Codex; `.accountOwned` para el resto) y `sourcePath(for:)`
+  sobre `AgentCatalog.root(for:)`. `resolveFiles` marca `readOnly` todo archivo
+  no propio de la cuenta con una `note` estática. `syncStatus(for:)` compara
+  copia y origen: sincronizado, pendiente (origen más reciente), difiere,
+  origen ausente, no determinado o no aplicable. `settings.json` ignora los
+  hooks que Orca reconoce como suyos (`agent-hooks/claude-hook.{sh,cmd,ps1}` o
+  el lanzador nativo, también en `-EncodedCommand`); `.claude.json` compara
+  solo claves compartidas; `config.toml` ignora `projects`, `hooks`,
+  `features.daemon_auto_start` y MCP solo del home, y cualquier otra diferencia
+  sin origen más reciente queda «no determinado» (Orca reescribe rutas y
+  promueve claves usando una línea base que no se lee). El inspector muestra el
+  estado y «Abrir origen» (`store.openFile`).
 - `Sources/Services/ConfigStore.swift` — `@Observable` store: documentos,
   buffers de edición, cambios externos, historiales, índice MCP, guardado
   atómico con control de conflictos (base de edición explícita + verificación

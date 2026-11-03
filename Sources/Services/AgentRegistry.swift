@@ -285,7 +285,9 @@ enum AgentRegistry {
                 unique[file.path] = previous
             } else { unique[file.path] = file }
         }
-        return unique.values.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+        let sorted = unique.values.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+        // Files Orca regenerates from ~/.claude / ~/.codex are read-only copies.
+        return def.id.contains(OrcaIntegration.idPrefix) ? sorted.map(OrcaIntegration.annotate) : sorted
     }
 
     private static func makeTracked(path: String, src: ConfigSource, exists: Bool) -> TrackedFile {
