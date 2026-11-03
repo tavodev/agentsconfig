@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.0 — 2026-11-03
+
+Build 5. Arrives through Sparkle for users of 0.2.0.
+
 - The sidebar can be organized: the **Organize** menu groups global agents by product (Orca accounts nest under Claude Code or Codex, collapsible, with the account Orca selected marked), by type (configurable, read-only inventory, Orca) or not at all; rows can be dragged to reorder and hidden from their context menu, and the menu restores the order and hidden agents. The choices are saved.
 - Configuration folders managed by Orca are listed as their own agents: one **Claude Code · Orca** per Claude profile (`claude-profiles/<account>/home`, marking the one Orca has selected) and one **Codex · Orca** per account plus the shared runtime home. Their files get the same documentation, value controls and **Add setting** catalog as `~/.claude` / `~/.codex`; folders Orca links back to those homes stay under Claude Code or Codex, Codex credentials are left out, and they are not MCP destinations or part of layer analysis. Files Orca regenerates from those homes before each launch (`settings.json`, the `CLAUDE.md` import, copied loose files, `.claude.json`, Codex `config.toml` and imported global rules) are read-only with a note on where they come from; the inspector shows whether each copy is in sync with its source — ignoring Orca's own status hooks in `settings.json` — or pending Orca's next launch, and **Open source** jumps to the original. Settings → Configuration folders can hide them.
 - MCP servers of Orca homes, including per-project servers of Claude profiles, are marked in the MCP comparator as an **Orca mirror** (grouped with their source and left out of divergences), **Differs from source** or **Only in this account**; account-only servers can be promoted to `~/.claude.json` or `~/.codex/config.toml` through the usual reviewed diff. The `config.toml` of each Codex home warns about keys Orca keeps in conflict with `~/.codex` (key names only) and about an unreadable or unrecognized Orca settings baseline.

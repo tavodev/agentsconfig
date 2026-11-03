@@ -36,8 +36,8 @@ targets:
         CFBundleDisplayName: AgentsConfig
         CFBundleIconFile: AppIcon.icns
         CFBundleIconName: AppIcon
-        CFBundleShortVersionString: "0.2.0"
-        CFBundleVersion: "4"
+        CFBundleShortVersionString: "0.3.0"
+        CFBundleVersion: "5"
         LSMinimumSystemVersion: "15.0"
         NSPrincipalClass: NSApplication
         NSHighResolutionCapable: true
@@ -63,8 +63,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
         GENERATE_INFOPLIST_FILE: NO
-        MARKETING_VERSION: "0.2.0"
-        CURRENT_PROJECT_VERSION: "4"
+        MARKETING_VERSION: "0.3.0"
+        CURRENT_PROJECT_VERSION: "5"
         SWIFT_STRICT_CONCURRENCY: minimal
       # Debug gets its own identity so it never shares TCC grants or
       # UserDefaults with the installed Developer ID build.
