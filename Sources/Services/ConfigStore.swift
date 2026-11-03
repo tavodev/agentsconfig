@@ -527,10 +527,30 @@ final class ConfigStore {
             for file in agent.files where file.exists && file.format.isStructured
                 && seen.insert(family + "|" + file.path).inserted {
                 guard let tree = documents[file.path]?.tree as? [String: Any], tree["hooks"] is [String: Any] else { continue }
-                sources.append(.init(agentID: family, agentName: name, path: file.path, tree: tree))
+                sources.append(.init(agentID: family, agentName: name, path: file.path, tree: tree,
+                                     orca: orcaHookSource(for: file.path)))
             }
         }
         return HookMap.build(sources, projectRoot: projectRoot.isEmpty ? nil : projectRoot)
+    }
+
+    /// Account and origin of a hooks file inside an Orca home: copied files
+    /// (`settings.json`) are compared with their original so inherited hooks
+    /// are not shown as new ones.
+    private func orcaHookSource(for path: String) -> OrcaHookSource? {
+        guard let home = OrcaIntegration.home(containing: path) else { return nil }
+        let selected = home.kind == .claude && OrcaIntegration.isSelectedClaudeHome(home.path, root: OrcaIntegration.root)
+        let relation = OrcaIntegration.relation(for: path)
+        let origin = relation == .mirroredCopy || relation == .mergedState ? OrcaIntegration.sourcePath(for: path) : nil
+        return OrcaHookSource(account: OrcaIntegration.accountLabel(home), selected: selected, originPath: origin,
+                              originCommands: origin.flatMap { parsedObject(at: $0) }.map(HookMap.commandKeys))
+    }
+
+    /// Loaded document tree, or the file read and parsed now (nil when absent or unparsable).
+    func parsedObject(at path: String) -> [String: Any]? {
+        if let tree = documents[path]?.tree as? [String: Any] { return tree }
+        guard let text = try? Parsers.readText(at: path) else { return nil }
+        return Parsers.parse(text, format: AgentRegistry.inferFormat(path: path)).tree as? [String: Any]
     }
 
     // MARK: - scanning
@@ -829,6 +849,26 @@ final class ConfigStore {
         AppSettings.defaults.set(enabled, forKey: "orcaIntegration")
         selectedPath = nil
         refresh()
+    }
+
+    /// Orca's data folder for detection (nil: `ORCA_USER_DATA_PATH` or the default).
+    func setOrcaDataFolder(path: String?) {
+        guard dirtyPaths.isEmpty, savingPaths.isEmpty else {
+            actionError = L("Save or discard drafts before changing configuration roots."); return
+        }
+        if let path, !path.isEmpty {
+            AppSettings.defaults.set(path, forKey: OrcaIntegration.dataPathKey)
+        } else {
+            AppSettings.defaults.removeObject(forKey: OrcaIntegration.dataPathKey)
+        }
+        selectedPath = nil
+        refresh()
+    }
+
+    func pickOrcaDataFolder() {
+        let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        setOrcaDataFolder(path: url.path)
     }
 
     func pickConfigurationRoot(agentID: String) {
